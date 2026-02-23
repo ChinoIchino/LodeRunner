@@ -53,7 +53,10 @@ public class GameScreen implements Screen{
         }
         
         // Handle player movement
-        handlePlayerInput(delta);
+        // TODO Find a better way to manage the sprite of the player
+        this.player.spriteChangeToIdle();
+        handlePlayerInput();
+        System.out.println("Position of player on x = " + this.player.getPosX());
         // Render player after the movement
         this.player.render(batch);
 
@@ -62,13 +65,50 @@ public class GameScreen implements Screen{
         this.batch.setProjectionMatrix(stretchViewport.getCamera().combined);
     }
 
-    private void handlePlayerInput(float delta){
-        if (Gdx.input.isKeyPressed(Input.Keys.A)) {
-            player.moveX(-3);
+    private void handlePlayerInput(){
+        if (Gdx.input.isKeyPressed(Input.Keys.A)){
+            player.spriteChangeToMovingLeft();
+            player.physicalBodyMoveX(-this.player.speed);
+            player.syncSpriteToPhysicalBody();
+            
+            // -7 is a offset based on the player sprite
+            if(player.getPosX() < (this.SCREEN_WIDTH / 2 * -1 - 7) || !this.worldCreator.playerDoesntOverlapWorld(this.player)){
+                player.physicalBodyMoveX(this.player.speed);
+                player.syncSpriteToPhysicalBody();
+            }
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.D)) {
-            player.moveX(3);
+        if (Gdx.input.isKeyPressed(Input.Keys.D)){
+            player.spriteChangeToMovingRight();
+            player.physicalBodyMoveX(this.player.speed);
+            player.syncSpriteToPhysicalBody();
+            
+            // -13 is a offset based on the player sprite
+            if(player.getPosX() > (this.SCREEN_WIDTH / 2 - 13) || !this.worldCreator.playerDoesntOverlapWorld(this.player)){
+                player.physicalBodyMoveX(-this.player.speed);
+                player.syncSpriteToPhysicalBody();
+            }
         }
+
+        // Old logic
+        // if (Gdx.input.isKeyPressed(Input.Keys.A) && this.worldCreator.playerDoesntOverlapWorld(this.player)) {
+        //     player.spriteChangeToMovingLeft();
+
+        //     int futurPosition = this.player.getPosX() - 3;
+        //     // -7 is a offset based on the player sprite
+        //     if(futurPosition > (this.SCREEN_WIDTH / 2 * -1 - 7)){
+        //         player.physicalBodyMoveX(-3);
+        //         player.syncSpriteToPhysicalBody();
+        //     }
+        // }
+        // if (Gdx.input.isKeyPressed(Input.Keys.D) && this.worldCreator.playerDoesntOverlapWorld(this.player)) {
+        //     player.spriteChangeToMovingRight();
+        //     int futurPosition = this.player.getPosX() + 3;
+        //     // -13 is a offset based on the player sprite
+        //     if(futurPosition < (this.SCREEN_WIDTH / 2 - 13)){
+        //         player.physicalBodyMoveX(3);
+        //         player.syncSpriteToPhysicalBody();
+        //     }
+        // }
     }
 
     @Override

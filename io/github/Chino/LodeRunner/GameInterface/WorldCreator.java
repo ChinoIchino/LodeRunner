@@ -9,12 +9,19 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
+
+import io.github.Chino.LodeRunner.GameInterface.Player.Player;
 
 public class WorldCreator{
     private SpriteBatch batch;
     private String nameOfTxtFile;
 
-    //Textures used
+    /** Hitboxes of the world*/
+    //Rectangle[y][x]
+    private Rectangle[][] worldHitboxes = new Rectangle[9][16];
+
+    // Textures used
     private Texture blockTexture;
     private Texture ladderTexture;
 
@@ -49,11 +56,14 @@ public class WorldCreator{
         
         // To get the word that represent the block/ladder/gold/etc...
         int currentWorldYPosition = (windowHeight / 2) - 20;
+        int currentLineIndex = 0;
         // Draw the world
         this.batch.begin();
         while(line != null){
-            this.drawLine(line, currentWorldYPosition, windowWidth);
+            this.drawLine(line, currentLineIndex, currentWorldYPosition, windowWidth);
             
+            // Increase the line so the hitboxes doesnt overlap
+            currentLineIndex++;
             // Get the next Y position for block placement (blocks are 20x20)
             currentWorldYPosition -= 20;
             // Get the next line in the txt
@@ -67,12 +77,13 @@ public class WorldCreator{
      *  currentYPos: To track the ammount of the world that was already built
      *  ammountOfSlots: Get the ammount of blocks in a single line
      */
-    private void drawLine(String currentLine, int currentYPos, int windowWidth){
+    private void drawLine(String currentLine, int currentLineIndex, int currentYPos, int windowWidth){
         // i += 2 to skip the commas
         String currentBlock;
 
         // Window width is 180 and we want to start at -90 because de widow is in range of [-90, 90] 
         int currentXPos = windowWidth / 2 * -1;
+        int hitboxXIndex = 0;
         for (int i = 0; i < (windowWidth / 20 * 2); i += 2) {
             currentBlock = currentLine.substring(i, i + 1);
 
@@ -85,6 +96,8 @@ public class WorldCreator{
                 case "b":
                     // Param: texture, positionX, positionY, sizeXTexture, sizeYOfTexture
                     this.batch.draw(this.blockTexture, currentXPos, currentYPos, 20, 20);
+                    // Create a hitbox for the brick so the player cant faze through it
+                    this.worldHitboxes[currentLineIndex][hitboxXIndex] = new Rectangle(currentXPos, currentYPos, 13, 20);
                     currentXPos += 20;
                     break;
                 case "l":
@@ -95,6 +108,7 @@ public class WorldCreator{
                 default:
                     throw new AssertionError();
             }
+            hitboxXIndex++;
 
         }
     }
@@ -107,5 +121,28 @@ public class WorldCreator{
             e.printStackTrace();
         } 
         return null;
+    }
+
+
+    public boolean playerDoesntOverlapWorld(Player player){
+        for (int i = 0; i < 9; i++) {
+            for(int j = 0; j < 16; j++){
+                if((this.worldHitboxes[i][j] != null) && (player.getHitbox().overlaps(this.worldHitboxes[i][j]))){
+                    System.out.println("Player is colliding with something");
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /** Used in debugging of hitboxes */
+    public void printHitbox(){
+        for (int y = 0; y < 9; y++) {
+            for(int x = 0; x < 16; x++){
+                System.out.print(this.worldHitboxes[y][x] + " ");
+            }
+            System.out.println("");
+        }
     }
 }
