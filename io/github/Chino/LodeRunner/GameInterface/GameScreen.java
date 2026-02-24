@@ -7,6 +7,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 
 import io.github.Chino.LodeRunner.GameInterface.Player.Player;
@@ -50,6 +51,7 @@ public class GameScreen implements Screen{
         //Delete previous frame
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        
         // Render world
         try{
             this.worldCreator.drawWorld(this.SCREEN_WIDTH, this.SCREEN_HEIGH);
@@ -57,15 +59,19 @@ public class GameScreen implements Screen{
             System.err.println("\nERROR GameInterface/GameScreen.java: Function render catched IOException while rendering the world");
             e.printStackTrace();
         }
-        
+                
         // Handle player movement
         // TODO Find a better way to manage the sprite of the player
         this.player.spriteChangeToIdle();
         handlePlayerInput();
-        System.out.println("Position of player on x = " + this.player.getPosX());
+        handlePlayerGravity();
+        // System.out.println("Position of player on x = " + this.player.getPosX());
         // Render player after the movement
         this.player.render(batch);
-
+                
+        this.worldCreator.displayHitboxes();
+        this.player.displayHitboxes();
+        
         // apply the stretched view on the screen
         this.stretchViewport.apply();
         this.batch.setProjectionMatrix(stretchViewport.getCamera().combined);
@@ -94,27 +100,28 @@ public class GameScreen implements Screen{
                 player.syncSpriteToPhysicalBody();
             }
         }
+        if(Gdx.input.isKeyPressed(Input.Keys.W)){
+            Rectangle collidingLadder = this.worldCreator.playerOverlapWithALadder(player);
+            if(collidingLadder != null){
+                // Snap player to ladder
+                player.snapToLadder(collidingLadder);
 
-        // Old logic
-        // if (Gdx.input.isKeyPressed(Input.Keys.A) && this.worldCreator.playerDoesntOverlapWorld(this.player)) {
-        //     player.spriteChangeToMovingLeft();
+                //Ignore gravitation bacause the player is on a ladder
+                player.isOnALadder = true;
 
-        //     int futurPosition = this.player.getPosX() - 3;
-        //     // -7 is a offset based on the player sprite
-        //     if(futurPosition > (this.SCREEN_WIDTH / 2 * -1 - 7)){
-        //         player.physicalBodyMoveX(-3);
-        //         player.syncSpriteToPhysicalBody();
-        //     }
-        // }
-        // if (Gdx.input.isKeyPressed(Input.Keys.D) && this.worldCreator.playerDoesntOverlapWorld(this.player)) {
-        //     player.spriteChangeToMovingRight();
-        //     int futurPosition = this.player.getPosX() + 3;
-        //     // -13 is a offset based on the player sprite
-        //     if(futurPosition < (this.SCREEN_WIDTH / 2 - 13)){
-        //         player.physicalBodyMoveX(3);
-        //         player.syncSpriteToPhysicalBody();
-        //     }
-        // }
+                //Move the player up
+                player.physicalBodyMoveY(5);
+                player.syncSpriteToPhysicalBody();
+            }
+        }else{
+            player.isOnALadder = false;
+        }
+    }
+    private void handlePlayerGravity(){
+        if(!this.worldCreator.playerIsOnGround(this.player) && !player.isOnALadder){
+            this.player.physicalBodyMoveY(-5);
+            this.player.syncSpriteToPhysicalBody();
+        }
     }
 
     @Override

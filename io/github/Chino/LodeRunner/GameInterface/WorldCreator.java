@@ -7,8 +7,10 @@ import java.io.IOException;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 
 import io.github.Chino.LodeRunner.GameInterface.Player.Player;
@@ -20,7 +22,8 @@ public class WorldCreator{
     private Texture[][] worldTextures = new Texture[9][16];
     //Rectangle[y][x]
     /** Hitboxes of the world*/
-    private Rectangle[][] worldHitboxes = new Rectangle[9][16];
+    private Rectangle[][] worldBlockHitboxes = new Rectangle[9][16];
+    private Rectangle[][] worldLadderHitboxes = new Rectangle[9][16];
 
     // Textures used
     private Texture blockTexture;
@@ -54,7 +57,8 @@ public class WorldCreator{
         String line = bufferedReader.readLine();
     
         int currentYPosIndex = windowHeight / 20 - 1;
-        int currentYPos = windowHeight / 2 * -1;
+        // int currentYPos = windowHeight / 2 * -1 + 20;
+        int currentYPos = windowHeight / 2 - 20;
         
         while(line != null){
             initLine(currentYPosIndex, currentYPos, windowHeight, windowWidth, line);
@@ -62,7 +66,8 @@ public class WorldCreator{
             // Goes to the next line index
             currentYPosIndex--;
             // Goes to the next pixel position
-            currentYPos += 20;
+            // currentYPos += 20;
+            currentYPos -= 20;
             // Get the next line
             line = bufferedReader.readLine();
         }
@@ -74,22 +79,23 @@ public class WorldCreator{
         int currentXPos = windowWidth / 2 * -1;
         int currentXIndex = 0;
 
+        // System.out.println("coordX = " + currentXPos + " // coordY = " + currentYPos);
         for (int i = 0; i < (windowWidth / 20) * 2; i += 2) {
             sliceString = currentLine.substring(i, i + 1);
             
-            System.out.println("yIndexToinit = " + yIndexToInit + " // currentXIndex = " + currentXIndex + " // currentYPos = " + currentYPos + " // currentXPos = " + currentXPos);
+            // System.out.println("yIndexToinit = " + yIndexToInit + " // currentXIndex = " + currentXIndex + " // currentYPos = " + currentYPos + " // currentXPos = " + currentXPos);
             switch (sliceString){
                 case "e":
-                    this.worldTextures[yIndexToInit][currentXIndex] = null;
-                    this.worldHitboxes[yIndexToInit][currentXIndex] = null;
+                    // this.worldTextures[yIndexToInit][currentXIndex] = null;
+                    // this.worldHitboxes[yIndexToInit][currentXIndex] = null;
                     break;
                 case "b":
                     this.worldTextures[yIndexToInit][currentXIndex] = this.blockTexture;
-                    this.worldHitboxes[yIndexToInit][currentXIndex] = new Rectangle(currentXPos, currentYPos, 13, 20);
+                    this.worldBlockHitboxes[yIndexToInit][currentXIndex] = new Rectangle(currentXPos, currentYPos, 13, 20);
                     break;
                 case "l":
                     this.worldTextures[yIndexToInit][currentXIndex] = this.ladderTexture;
-                    this.worldHitboxes[yIndexToInit][currentXIndex] = new Rectangle(currentXPos, currentYPos, 13, 20);
+                    this.worldLadderHitboxes[yIndexToInit][currentXIndex] = new Rectangle(currentXPos, currentYPos, 13, 20);
                     break;
                 default:
                     throw new AssertionError();
@@ -148,22 +154,86 @@ public class WorldCreator{
     public boolean playerDoesntOverlapWorld(Player player){
         for (int i = 0; i < 9; i++) {
             for(int j = 0; j < 16; j++){
-                if((this.worldHitboxes[i][j] != null) && (player.getHitbox().overlaps(this.worldHitboxes[i][j]))){
-                    System.out.println("Player is colliding with something");
+                if((this.worldBlockHitboxes[i][j] != null) && (player.getHitbox().overlaps(this.worldBlockHitboxes[i][j]))){
+                    System.out.println("Player is colliding with a wall");
                     return false;
                 }
             }
         }
         return true;
     }
+    public Rectangle playerOverlapWithALadder(Player player){
+        for (int i = 0; i < 9; i++) {
+            for(int j = 0; j < 16; j++){
+                if((this.worldLadderHitboxes[i][j] != null) && (player.getHitbox().overlaps(this.worldLadderHitboxes[i][j]))){
+                    System.out.println("Player is colliding with a ladder");
+                    return this.worldLadderHitboxes[i][j];
+                }
+            }
+        }
+        return null;
+    }
+
+    //TODO make this func
+    public boolean playerIsOnGround(Player player){
+        for (int i = 0; i < 9; i++) {
+            for(int j = 0; j < 16; j++){
+                if((this.worldBlockHitboxes[i][j] != null) && (player.getIsOnGroundHitbox().overlaps(this.worldBlockHitboxes[i][j]))){
+                    System.out.println("Player is colliding with a floor");
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     /** Used in debugging of hitboxes */
     public void printHitbox(){
         for (int y = 0; y < 9; y++) {
             for(int x = 0; x < 16; x++){
-                System.out.print(this.worldHitboxes[y][x] + " ");
+                System.out.print(this.worldBlockHitboxes[y][x] + " ");
             }
             System.out.println("");
         }
+    }
+
+    /** Used in debugging to see hitboxes
+     * Red for walls
+     * Green for ladders
+     */
+    public void displayHitboxes(){
+        ShapeRenderer shapeRenderer = new ShapeRenderer();
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.RED);
+
+        Rectangle currentHitbox;
+        for (int y = 8; y >= 0; y--) {
+            for(int x = 0; x < 16; x++){
+                currentHitbox = this.worldBlockHitboxes[y][x];
+                if(currentHitbox != null){
+                    shapeRenderer.rect(
+                        currentHitbox.x + 200,
+                        currentHitbox.y + 200,
+                        currentHitbox.width,
+                        currentHitbox.height
+                    );
+                }
+            }
+        }
+        shapeRenderer.setColor(Color.GREEN);
+        for (int y = 8; y >= 0; y--) {
+            for(int x = 0; x < 16; x++){
+                currentHitbox = this.worldLadderHitboxes[y][x];
+                if(currentHitbox != null){
+                    shapeRenderer.rect(
+                        currentHitbox.x + 200,
+                        currentHitbox.y + 200,
+                        currentHitbox.width,
+                        currentHitbox.height
+                    );
+                }
+            }
+        }
+        shapeRenderer.end();
     }
 }

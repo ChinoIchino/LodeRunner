@@ -1,14 +1,16 @@
 package io.github.Chino.LodeRunner.GameInterface.Player;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 
 public class Player extends InputListener{
     // Sprite position on the screen
     private int posX = 20;
-    private int posY = 20;
+    private int posY = -20; // -70 for the player to be on the ground
 
     public int speed = 4;
 
@@ -20,6 +22,9 @@ public class Player extends InputListener{
     private Texture currentPlayerSprite;
 
     private Rectangle hitbox;
+    private Rectangle isOnGroundHitbox;
+
+    public boolean isOnALadder = false;
 
     public Player() {
         this.playerSpriteIdle = new Texture("data/textures/character/characterIdle.png");
@@ -29,6 +34,7 @@ public class Player extends InputListener{
         this.currentPlayerSprite = this.playerSpriteIdle;
 
         this.hitbox = new Rectangle(this.posX, this.posY, 13, 20);
+        this.isOnGroundHitbox = new Rectangle(this.posX, this.posY - 1, 13, 1);
     }
 
     public void spriteChangeToMovingLeft(){
@@ -44,21 +50,60 @@ public class Player extends InputListener{
     public int getPosX(){
         return this.posX;
     }
+    
     public Rectangle getHitbox(){
         return this.hitbox;
+    }
+    public Rectangle getIsOnGroundHitbox(){
+        return this.isOnGroundHitbox;
     }
 
     public void syncSpriteToPhysicalBody(){
         this.posX = (int) this.hitbox.x;
+        this.posY = (int) this.hitbox.y;
     }
+
     public void physicalBodyMoveX(int xMovement){
         this.hitbox.x += xMovement;
+        this.isOnGroundHitbox.x += xMovement;
+    }
+    public void physicalBodyMoveY(int yMovement){
+        this.hitbox.y += yMovement;
+        this.isOnGroundHitbox.y += yMovement;
+    }
+
+    public void snapToLadder(Rectangle ladderHitbox){
+        this.hitbox.x = (int) ladderHitbox.x;
+        this.isOnGroundHitbox.x = this.hitbox.x;
     }
 
     public void render(SpriteBatch batch){
         batch.begin();
         batch.draw(this.currentPlayerSprite, this.posX, this.posY);
         batch.end();
+    }
+
+    /** Player hitbox for debugging.
+     * Displayed by blue squares */
+    public void displayHitboxes(){
+        ShapeRenderer shapeRenderer = new ShapeRenderer();
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.BLUE);
+
+        shapeRenderer.rect(
+            this.hitbox.x + 200,
+            this.hitbox.y + 200,
+            this.hitbox.width,
+            this.hitbox.height
+        );
+        
+        shapeRenderer.rect(
+            this.isOnGroundHitbox.x + 200,
+            this.isOnGroundHitbox.y + 200,
+            this.isOnGroundHitbox.width,
+            this.isOnGroundHitbox.height
+        );
+        shapeRenderer.end();
     }
 
     
