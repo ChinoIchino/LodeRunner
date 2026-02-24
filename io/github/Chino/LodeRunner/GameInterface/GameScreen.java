@@ -37,6 +37,12 @@ public class GameScreen implements Screen{
         
         this.worldCreator = new WorldCreator(this.batch, this.WORLD_FILE);
 
+        try {
+            this.worldCreator.initWorld(this.SCREEN_WIDTH, this.SCREEN_HEIGH);
+        } catch (IOException e) {
+            System.out.println("\nERROR GameInterface/GameScreen.java: Constructor catched IOException will initializing the world");
+        }
+
     }
 
     @Override

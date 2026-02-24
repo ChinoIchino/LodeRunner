@@ -17,8 +17,9 @@ public class WorldCreator{
     private SpriteBatch batch;
     private String nameOfTxtFile;
 
-    /** Hitboxes of the world*/
+    private Texture[][] worldTextures = new Texture[9][16];
     //Rectangle[y][x]
+    /** Hitboxes of the world*/
     private Rectangle[][] worldHitboxes = new Rectangle[9][16];
 
     // Textures used
@@ -30,6 +31,8 @@ public class WorldCreator{
         this.batch = batch;
 
         this.initTextures();
+
+        // this.initWorld(windowWidth, windowHeight);
     }
 
     /** Initiate the textures used in the world creation */
@@ -40,34 +43,76 @@ public class WorldCreator{
         this.ladderTexture = new Texture("data/textures/blocks/ladder.png");
     }
 
-
-    // Screen Res: X = [-180, 180] Y = [-90, 90]
-    public void drawWorld(int windowWidth, int windowHeight) throws IOException{
+    public void initWorld(int windowWidth, int windowHeight) throws IOException{
         BufferedReader bufferedReader = this.getWorldTxt();
         // Skip to line 21 of the WorldFile.txt
         for (int i = 0; i < 21; i++) {
             bufferedReader.readLine();
         }
-        
-        StringBuilder stringBuilder = new StringBuilder();
 
+        StringBuilder stringBuilder = new StringBuilder();
         String line = bufferedReader.readLine();
-        char currentBlock;
+    
+        int currentYPosIndex = windowHeight / 20 - 1;
+        int currentYPos = windowHeight / 2 * -1;
         
+        while(line != null){
+            initLine(currentYPosIndex, currentYPos, windowHeight, windowWidth, line);
+
+            // Goes to the next line index
+            currentYPosIndex--;
+            // Goes to the next pixel position
+            currentYPos += 20;
+            // Get the next line
+            line = bufferedReader.readLine();
+        }
+    }
+
+    private void initLine(int yIndexToInit, int currentYPos, int windowHeight, int windowWidth, String currentLine){
+        String sliceString;
+
+        int currentXPos = windowWidth / 2 * -1;
+        int currentXIndex = 0;
+
+        for (int i = 0; i < (windowWidth / 20) * 2; i += 2) {
+            sliceString = currentLine.substring(i, i + 1);
+            
+            System.out.println("yIndexToinit = " + yIndexToInit + " // currentXIndex = " + currentXIndex + " // currentYPos = " + currentYPos + " // currentXPos = " + currentXPos);
+            switch (sliceString){
+                case "e":
+                    this.worldTextures[yIndexToInit][currentXIndex] = null;
+                    this.worldHitboxes[yIndexToInit][currentXIndex] = null;
+                    break;
+                case "b":
+                    this.worldTextures[yIndexToInit][currentXIndex] = this.blockTexture;
+                    this.worldHitboxes[yIndexToInit][currentXIndex] = new Rectangle(currentXPos, currentYPos, 13, 20);
+                    break;
+                case "l":
+                    this.worldTextures[yIndexToInit][currentXIndex] = this.ladderTexture;
+                    this.worldHitboxes[yIndexToInit][currentXIndex] = new Rectangle(currentXPos, currentYPos, 13, 20);
+                    break;
+                default:
+                    throw new AssertionError();
+            }
+            
+            currentXPos += 20;
+            currentXIndex++;
+        }
+    }
+
+    // Screen Res: X = [-180, 180] Y = [-90, 90]
+    public void drawWorld(int windowWidth, int windowHeight) throws IOException{
         // To get the word that represent the block/ladder/gold/etc...
         int currentWorldYPosition = (windowHeight / 2) - 20;
-        int currentLineIndex = 0;
+        
         // Draw the world
         this.batch.begin();
-        while(line != null){
-            this.drawLine(line, currentLineIndex, currentWorldYPosition, windowWidth);
-            
-            // Increase the line so the hitboxes doesnt overlap
-            currentLineIndex++;
+        for (int y = (windowHeight / 20) - 1; y >= 0; y--) {
+            for (int x = 0; x < (windowWidth / 20); x++) {
+                this.drawLine(y, currentWorldYPosition, windowWidth);
+            }
             // Get the next Y position for block placement (blocks are 20x20)
             currentWorldYPosition -= 20;
-            // Get the next line in the txt
-            line = bufferedReader.readLine();
         }
         this.batch.end();
     }
@@ -77,39 +122,15 @@ public class WorldCreator{
      *  currentYPos: To track the ammount of the world that was already built
      *  ammountOfSlots: Get the ammount of blocks in a single line
      */
-    private void drawLine(String currentLine, int currentLineIndex, int currentYPos, int windowWidth){
-        // i += 2 to skip the commas
-        String currentBlock;
-
-        // Window width is 180 and we want to start at -90 because de widow is in range of [-90, 90] 
-        int currentXPos = windowWidth / 2 * -1;
-        int hitboxXIndex = 0;
-        for (int i = 0; i < (windowWidth / 20 * 2); i += 2) {
-            currentBlock = currentLine.substring(i, i + 1);
-
-            // batch.draw(this.logoImage, -500, -500, 1000, 1000);
-            switch (currentBlock) {
-                // Empty block does nothing
-                case "e":
-                    currentXPos += 20;
-                    break;
-                case "b":
-                    // Param: texture, positionX, positionY, sizeXTexture, sizeYOfTexture
-                    this.batch.draw(this.blockTexture, currentXPos, currentYPos, 20, 20);
-                    // Create a hitbox for the brick so the player cant faze through it
-                    this.worldHitboxes[currentLineIndex][hitboxXIndex] = new Rectangle(currentXPos, currentYPos, 13, 20);
-                    currentXPos += 20;
-                    break;
-                case "l":
-                    // Param: texture, positionX, positionY, sizeXTexture, sizeYOfTexture
-                    this.batch.draw(this.ladderTexture, currentXPos, currentYPos, 20, 20);
-                    currentXPos += 20;
-                    break;
-                default:
-                    throw new AssertionError();
+    private void drawLine(int currentYIndex, int currentYPosition, int windowWidth){
+        int currentXPosition = windowWidth / 2 * -1;
+        
+        for (int i = 0; i < windowWidth / 20; i++) {
+            if(this.worldTextures[currentYIndex][i] != null){
+                this.batch.draw(this.worldTextures[currentYIndex][i], currentXPosition, currentYPosition);
             }
-            hitboxXIndex++;
 
+            currentXPosition += 20;
         }
     }
 
