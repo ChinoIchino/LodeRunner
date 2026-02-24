@@ -15,14 +15,14 @@ public class Player extends InputListener{
     public int speed = 4;
 
     // Player sprites
-    private Texture playerSpriteIdle;
-    private Texture playerSpriteMovingLeft;
-    private Texture playerSpriteMovingRight;
+    private final Texture playerSpriteIdle;
+    private final Texture playerSpriteMovingLeft;
+    private final Texture playerSpriteMovingRight;
 
     private Texture currentPlayerSprite;
 
-    private Rectangle hitbox;
-    private Rectangle isOnGroundHitbox;
+    private final Rectangle hitbox;
+    private final Rectangle isOnGroundHitbox;
 
     public boolean isOnALadder = false;
 

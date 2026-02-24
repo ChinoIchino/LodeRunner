@@ -11,11 +11,14 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 
 import io.github.Chino.LodeRunner.GameInterface.Player.Player;
+import io.github.Chino.LodeRunner.GameInterface.World.WorldCreator;
+import io.github.Chino.LodeRunner.GameInterface.World.WorldManager;
 
 public class GameScreen implements Screen{
     /** Class that manage the WORLD_FILE
      *  and create the level based on it */
     private WorldCreator worldCreator;
+    private WorldManager worldManager;
     
     /** The txt that contain the canvas of the world to draw */
     private final String WORLD_FILE = "WorldFile"; 
@@ -39,7 +42,7 @@ public class GameScreen implements Screen{
         this.worldCreator = new WorldCreator(this.batch, this.WORLD_FILE);
 
         try {
-            this.worldCreator.initWorld(this.SCREEN_WIDTH, this.SCREEN_HEIGH);
+            this.worldManager = this.worldCreator.initWorld(this.SCREEN_WIDTH, this.SCREEN_HEIGH);
         } catch (IOException e) {
             System.out.println("\nERROR GameInterface/GameScreen.java: Constructor catched IOException will initializing the world");
         }
@@ -47,6 +50,7 @@ public class GameScreen implements Screen{
     }
 
     @Override
+    @SuppressWarnings("CallToPrintStackTrace")
     public void render(float delta){
         //Delete previous frame
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -54,22 +58,23 @@ public class GameScreen implements Screen{
         
         // Render world
         try{
-            this.worldCreator.drawWorld(this.SCREEN_WIDTH, this.SCREEN_HEIGH);
+            this.worldManager.drawWorld(this.SCREEN_WIDTH, this.SCREEN_HEIGH);
         }catch(IOException e){
             System.err.println("\nERROR GameInterface/GameScreen.java: Function render catched IOException while rendering the world");
             e.printStackTrace();
         }
-                
-        // Handle player movement
+
         // TODO Find a better way to manage the sprite of the player
         this.player.spriteChangeToIdle();
+                
+        // Handle player movement
         handlePlayerInput();
         handlePlayerGravity();
-        // System.out.println("Position of player on x = " + this.player.getPosX());
+
         // Render player after the movement
         this.player.render(batch);
                 
-        this.worldCreator.displayHitboxes();
+        this.worldManager.displayHitboxes();
         this.player.displayHitboxes();
         
         // apply the stretched view on the screen
@@ -84,7 +89,7 @@ public class GameScreen implements Screen{
             player.syncSpriteToPhysicalBody();
             
             // -7 is a offset based on the player sprite
-            if(player.getPosX() < (this.SCREEN_WIDTH / 2 * -1 - 7) || !this.worldCreator.playerDoesntOverlapWorld(this.player)){
+            if(player.getPosX() < (this.SCREEN_WIDTH / 2 * -1 - 7) || !this.worldManager.playerDoesntOverlapWorld(this.player)){
                 player.physicalBodyMoveX(this.player.speed);
                 player.syncSpriteToPhysicalBody();
             }
@@ -95,13 +100,13 @@ public class GameScreen implements Screen{
             player.syncSpriteToPhysicalBody();
             
             // -13 is a offset based on the player sprite
-            if(player.getPosX() > (this.SCREEN_WIDTH / 2 - 13) || !this.worldCreator.playerDoesntOverlapWorld(this.player)){
+            if(player.getPosX() > (this.SCREEN_WIDTH / 2 - 13) || !this.worldManager.playerDoesntOverlapWorld(this.player)){
                 player.physicalBodyMoveX(-this.player.speed);
                 player.syncSpriteToPhysicalBody();
             }
         }
         if(Gdx.input.isKeyPressed(Input.Keys.W)){
-            Rectangle collidingLadder = this.worldCreator.playerOverlapWithALadder(player);
+            Rectangle collidingLadder = this.worldManager.playerOverlapWithALadder(player);
             if(collidingLadder != null){
                 // Snap player to ladder
                 player.snapToLadder(collidingLadder);
@@ -118,8 +123,8 @@ public class GameScreen implements Screen{
         }
     }
     private void handlePlayerGravity(){
-        if(!this.worldCreator.playerIsOnGround(this.player) && !player.isOnALadder){
-            this.player.physicalBodyMoveY(-5);
+        if(!this.worldManager.playerIsOnGround(this.player) && !player.isOnALadder){
+            this.player.physicalBodyMoveY(-10);
             this.player.syncSpriteToPhysicalBody();
         }
     }
