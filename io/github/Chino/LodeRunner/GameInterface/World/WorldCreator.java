@@ -20,11 +20,7 @@ public class WorldCreator{
 
     private Vector2 worldResolution;
 
-    private Texture[][] worldTextures;
-    //Rectangle[y][x]
-    /** Hitboxes of the world*/
-    private Rectangle[][] worldBlockHitboxes;
-    private Rectangle[][] worldLadderHitboxes;
+    private Block[][] blockMatrix;
 
     // Textures used
     private Texture blockTexture;
@@ -44,17 +40,14 @@ public class WorldCreator{
         this.ladderTexture = new Texture("data/textures/blocks/ladder.png");
     }
 
-    private void initMatricesFromWorldResolution(){
-        this.worldTextures = new Texture[(int) this.worldResolution.y][(int) this.worldResolution.x];
-
-        this.worldBlockHitboxes = new Rectangle[(int) this.worldResolution.y][(int) this.worldResolution.x];
-        this.worldLadderHitboxes = new Rectangle[(int) this.worldResolution.y][(int) this.worldResolution.x];
+    private void initMatrixFromWorldResolution(){
+        this.blockMatrix = new Block[(int) this.worldResolution.y][(int) this.worldResolution.x];
     }
 
     public WorldManager initWorld() throws IOException{
         this.worldResolution = getResolutionOfWorld();
 
-        initMatricesFromWorldResolution();
+        initMatrixFromWorldResolution();
 
         int worldWidth = (int) (this.worldResolution.x * 32);
         int worldHeight = (int) (this.worldResolution.y * 32);
@@ -80,7 +73,7 @@ public class WorldCreator{
             // Get the next line
             line = readerOfFile.readLine();
         }
-        return new WorldManager(this.worldResolution, this.worldTextures, this.worldBlockHitboxes, this.worldLadderHitboxes, this.batch);
+        return new WorldManager(this.worldResolution, this.blockMatrix, this.batch);
     }
 
     private void initLine(int yIndexToInit, int currentYPos, int worldWidth, String currentLine){
@@ -100,12 +93,18 @@ public class WorldCreator{
                     // this.worldHitboxes[yIndexToInit][currentXIndex] = null;
                     break;
                 case "b":
-                    this.worldTextures[yIndexToInit][currentXIndex] = this.blockTexture;
-                    this.worldBlockHitboxes[yIndexToInit][currentXIndex] = new Rectangle(currentXPos, currentYPos, 32, 32);
+                    this.blockMatrix[yIndexToInit][currentXIndex] = new Block(
+                        this.blockTexture,
+                        new Rectangle(currentXPos, currentYPos, 32, 32),
+                        true
+                    );
                     break;
                 case "l":
-                    this.worldTextures[yIndexToInit][currentXIndex] = this.ladderTexture;
-                    this.worldLadderHitboxes[yIndexToInit][currentXIndex] = new Rectangle(currentXPos, currentYPos, 32, 32);
+                    this.blockMatrix[yIndexToInit][currentXIndex] = new Block(
+                        this.ladderTexture,
+                        new Rectangle(currentXPos, currentYPos, 32, 32),
+                        false
+                    );
                     break;
                 default:
                     throw new AssertionError();

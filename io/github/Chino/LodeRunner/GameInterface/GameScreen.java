@@ -134,6 +134,10 @@ public class GameScreen implements Screen{
         }else{
             player.isOnALadder = false;
         }
+
+        if(Gdx.input.isKeyPressed(Input.Keys.E)){
+            
+        }
     }
     private void handlePlayerGravity(){
         if(!this.worldManager.playerIsOnGround(this.player) && !player.isOnALadder){
