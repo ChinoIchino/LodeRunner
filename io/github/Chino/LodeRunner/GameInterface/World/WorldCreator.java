@@ -9,17 +9,22 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 
 public class WorldCreator{
     private final String nameOfTxtFile;
 
+    private BufferedReader readerOfFile;
+
     private final SpriteBatch batch;
 
-    private final Texture[][] worldTextures = new Texture[9][16];
+    private Vector2 worldResolution;
+
+    private Texture[][] worldTextures;
     //Rectangle[y][x]
     /** Hitboxes of the world*/
-    private final Rectangle[][] worldBlockHitboxes = new Rectangle[9][16];
-    private final Rectangle[][] worldLadderHitboxes = new Rectangle[9][16];
+    private Rectangle[][] worldBlockHitboxes;
+    private Rectangle[][] worldLadderHitboxes;
 
     // Textures used
     private Texture blockTexture;
@@ -39,42 +44,53 @@ public class WorldCreator{
         this.ladderTexture = new Texture("data/textures/blocks/ladder.png");
     }
 
-    public WorldManager initWorld(int windowWidth, int windowHeight) throws IOException{
-        BufferedReader bufferedReader = this.getWorldTxt();
-        // Skip to line 21 of the WorldFile.txt
-        for (int i = 0; i < 21; i++) {
-            bufferedReader.readLine();
-        }
+    private void initMatricesFromWorldResolution(){
+        this.worldTextures = new Texture[(int) this.worldResolution.y][(int) this.worldResolution.x];
 
-        String line = bufferedReader.readLine();
+        this.worldBlockHitboxes = new Rectangle[(int) this.worldResolution.y][(int) this.worldResolution.x];
+        this.worldLadderHitboxes = new Rectangle[(int) this.worldResolution.y][(int) this.worldResolution.x];
+    }
+
+    public WorldManager initWorld() throws IOException{
+        this.worldResolution = getResolutionOfWorld();
+
+        initMatricesFromWorldResolution();
+
+        int worldWidth = (int) (this.worldResolution.x * 32);
+        int worldHeight = (int) (this.worldResolution.y * 32);
+
+        // Skip to line 3 of the WorldFile.txt
+        this.readerOfFile.readLine();
+
+        String line = readerOfFile.readLine();
     
-        int currentYPosIndex = windowHeight / 20 - 1;
-        // int currentYPos = windowHeight / 2 * -1 + 20;
-        int currentYPos = windowHeight / 2 - 20;
-        
-        while(line != null){
-            initLine(currentYPosIndex, currentYPos, windowWidth, line);
+        int currentYPosIndex = worldHeight / 32 - 1;
+        // int currentYPos = worldHeight / 2 * -1 + 20;
+        int currentYPos = worldHeight / 2 - 32;
+        System.out.println("Got the line:");
+        for (int i = 0; i < (int) this.worldResolution.y - 1; i++) {
+            System.out.println(line);
+            initLine(currentYPosIndex, currentYPos, worldWidth, line);
 
             // Goes to the next line index
             currentYPosIndex--;
             // Goes to the next pixel position
             // currentYPos += 20;
-            currentYPos -= 20;
+            currentYPos -= 32;
             // Get the next line
-            line = bufferedReader.readLine();
+            line = readerOfFile.readLine();
         }
-
-        return new WorldManager(this.worldTextures, this.worldBlockHitboxes, this.worldLadderHitboxes, this.batch);
+        return new WorldManager(this.worldResolution, this.worldTextures, this.worldBlockHitboxes, this.worldLadderHitboxes, this.batch);
     }
 
-    private void initLine(int yIndexToInit, int currentYPos, int windowWidth, String currentLine){
+    private void initLine(int yIndexToInit, int currentYPos, int worldWidth, String currentLine){
         String sliceString;
 
-        int currentXPos = windowWidth / 2 * -1;
+        int currentXPos = worldWidth / 2 * -1;
         int currentXIndex = 0;
 
         // System.out.println("coordX = " + currentXPos + " // coordY = " + currentYPos);
-        for (int i = 0; i < (windowWidth / 20) * 2; i += 2) {
+        for (int i = 0; i < (worldWidth / 32) * 2; i += 2) {
             sliceString = currentLine.substring(i, i + 1);
             
             // System.out.println("yIndexToinit = " + yIndexToInit + " // currentXIndex = " + currentXIndex + " // currentYPos = " + currentYPos + " // currentXPos = " + currentXPos);
@@ -85,20 +101,41 @@ public class WorldCreator{
                     break;
                 case "b":
                     this.worldTextures[yIndexToInit][currentXIndex] = this.blockTexture;
-                    this.worldBlockHitboxes[yIndexToInit][currentXIndex] = new Rectangle(currentXPos, currentYPos, 13, 20);
+                    this.worldBlockHitboxes[yIndexToInit][currentXIndex] = new Rectangle(currentXPos, currentYPos, 32, 32);
                     break;
                 case "l":
                     this.worldTextures[yIndexToInit][currentXIndex] = this.ladderTexture;
-                    this.worldLadderHitboxes[yIndexToInit][currentXIndex] = new Rectangle(currentXPos, currentYPos, 13, 20);
+                    this.worldLadderHitboxes[yIndexToInit][currentXIndex] = new Rectangle(currentXPos, currentYPos, 32, 32);
                     break;
                 default:
                     throw new AssertionError();
             }
             
-            currentXPos += 20;
+            currentXPos += 32;
             currentXIndex++;
         }
     }
+    
+    private Vector2 getResolutionOfWorld(){
+        Vector2 worldResolution = new Vector2();
+        
+        this.readerOfFile = getWorldTxt();
+        try {
+
+            String line = this.readerOfFile.readLine();
+            worldResolution.x = Float.parseFloat(line.substring(2,4));
+            worldResolution.y = Float.parseFloat(line.substring(7));
+
+            System.out.println("Got the vector2 x = " + worldResolution.x + " // y = " + worldResolution.y);
+
+            return worldResolution;
+        } catch (IOException e) {
+            System.err.println("\nERROR GameInterface/World/WorldCreator.java: Function getResolutionOfWorld catched a IOException");
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 
     @SuppressWarnings("CallToPrintStackTrace")
     private BufferedReader getWorldTxt(){

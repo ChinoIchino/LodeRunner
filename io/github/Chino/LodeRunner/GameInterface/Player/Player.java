@@ -1,6 +1,7 @@
 package io.github.Chino.LodeRunner.GameInterface.Player;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -8,9 +9,11 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 
 public class Player extends InputListener{
+    public OrthographicCamera camera;
+
     // Sprite position on the screen
     private int posX = 20;
-    private int posY = -20; // -70 for the player to be on the ground
+    private int posY = -16; // -70 for the player to be on the ground
 
     public int speed = 4;
 
@@ -33,8 +36,10 @@ public class Player extends InputListener{
     
         this.currentPlayerSprite = this.playerSpriteIdle;
 
-        this.hitbox = new Rectangle(this.posX, this.posY, 13, 20);
-        this.isOnGroundHitbox = new Rectangle(this.posX, this.posY - 1, 13, 1);
+        this.hitbox = new Rectangle(this.posX, this.posY, 25, 32);
+        this.isOnGroundHitbox = new Rectangle(this.posX, this.posY - 1, 25, 1);
+    
+        this.camera = new OrthographicCamera(320,320);
     }
 
     public void spriteChangeToMovingLeft(){
@@ -50,6 +55,9 @@ public class Player extends InputListener{
     public int getPosX(){
         return this.posX;
     }
+    public int getPosY(){
+        return this.posY;
+    }
     
     public Rectangle getHitbox(){
         return this.hitbox;
@@ -61,6 +69,10 @@ public class Player extends InputListener{
     public void syncSpriteToPhysicalBody(){
         this.posX = (int) this.hitbox.x;
         this.posY = (int) this.hitbox.y;
+    }
+    public void syncCameraToPhysicalBody(){
+        this.camera.position.x = (int) this.hitbox.x + 10;
+        this.camera.position.y = (int) this.hitbox.y + 5;
     }
 
     public void physicalBodyMoveX(int xMovement){
@@ -91,14 +103,15 @@ public class Player extends InputListener{
         shapeRenderer.setColor(Color.BLUE);
 
         shapeRenderer.rect(
-            this.hitbox.x + 200,
+            this.hitbox.x + 900,
             this.hitbox.y + 200,
             this.hitbox.width,
             this.hitbox.height
         );
         
+        shapeRenderer.setColor(Color.CYAN);
         shapeRenderer.rect(
-            this.isOnGroundHitbox.x + 200,
+            this.isOnGroundHitbox.x + 900,
             this.isOnGroundHitbox.y + 200,
             this.isOnGroundHitbox.width,
             this.isOnGroundHitbox.height
