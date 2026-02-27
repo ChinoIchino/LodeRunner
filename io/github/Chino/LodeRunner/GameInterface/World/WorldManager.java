@@ -11,11 +11,11 @@ import com.badlogic.gdx.math.Vector2;
 import io.github.Chino.LodeRunner.GameInterface.Player.Player;
 
 public class WorldManager {
-    private SpriteBatch batch;
+    private final SpriteBatch batch;
 
     public Vector2 worldResolution;
 
-    private Block[][] blockMatrix;
+    private final Block[][] blockMatrix;
 
     //TODO to implement
     // private final BreakBlockThreadManager breakBlockManager = new BreakBlockThreadManager(this);
@@ -54,7 +54,6 @@ public class WorldManager {
      */
     private void drawLine(int currentYIndex, int currentYPosition){
         int currentXPosition = (int) (this.worldResolution.x) * 32 / 2 * -1;
-        
         for (int i = 0; i < (int) (this.worldResolution.x); i++) {
             if(this.blockMatrix[currentYIndex][i] != null){
                 this.batch.draw(this.blockMatrix[currentYIndex][i].getTexture(), currentXPosition, currentYPosition);
@@ -94,6 +93,8 @@ public class WorldManager {
         }
         return null;
     }
+
+    //TODO To fix, getting the level of the player but cant get the block for a reason
     public boolean playerOverlapWithFloor(Player player){
         int level = 0;
         int yPosition = (int) (this.worldResolution.y) * -10;
@@ -128,14 +129,41 @@ public class WorldManager {
         return false;
     }
 
-    // private Rectangle isBlockThere(int x, int y){
-    //     int blockXIndex = (int) x / 32;
-    //     int blockYIndex = (int) y / 32;
+    public Collectible playerOverlapWithCollectible(Player player){
+        int[] possibleLevels = new int[3];
+        
+        int currentY = (int) this.worldResolution.y * -16;
+        for (int i = 0; i < (int) this.worldResolution.y; i++) {
+            if(currentY <= player.getPosY() && (currentY + 32) >= player.getPosY()){
+                possibleLevels[1] = i;
+                break;
+            }
+        }
+        possibleLevels[0] = possibleLevels[1] - 1;
+        possibleLevels[2] = possibleLevels[1] + 1;
 
-    //     return this.worldBlockHitboxes[]
+        for (int y = 0; y < 3; y++) {
+            for (int x = 0; x < (int) this.worldResolution.x; x++) {
+                if(this.blockMatrix[y][x] != null && this.blockMatrix[y][x] instanceof Collectible){
+                    if(this.blockMatrix[y][x].getHitbox().overlaps(player.getHitbox())){
+                        // Casted Collectible because if the statement is correctly it must be a Collectible
+                        Collectible toReturn = (Collectible) this.blockMatrix[y][x];
+                        this.blockMatrix[y][x] = null;
+                        return toReturn;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    //TODO connect it with BreakBlockThreadManager
+    public void breakBlockAtPos(int x, int y){
+        int blockXIndex = (int) x / 32;
+        int blockYIndex = (int) y / 32;
 
 
-    // }
+    }
 
     /** Used in debugging of hitboxes */
     public void printHitbox(){

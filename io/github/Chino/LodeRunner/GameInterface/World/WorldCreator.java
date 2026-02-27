@@ -25,6 +25,10 @@ public class WorldCreator{
     // Textures used
     private Texture blockTexture;
     private Texture ladderTexture;
+    
+    private Texture greenGemTexture;
+    private Texture blueGemTexture;
+    private Texture redGemTexture;
 
     public WorldCreator(SpriteBatch batch, String nameOfFile) {
         this.nameOfTxtFile = nameOfFile;
@@ -36,8 +40,12 @@ public class WorldCreator{
 
     /** Initiate the textures used in the world creation */
     private void initTextures(){
-        this.blockTexture = new Texture("data/textures/blocks/brick.png");
+        this.blockTexture = new Texture("data/textures/blocks/dirt.png");
         this.ladderTexture = new Texture("data/textures/blocks/ladder.png");
+
+        this.greenGemTexture = new Texture("data/textures/collectibles/greenGem.png");
+        this.blueGemTexture = new Texture("data/textures/collectibles/blueGem.png");
+        this.redGemTexture = new Texture("data/textures/collectibles/redGem.png");
     }
 
     private void initMatrixFromWorldResolution(){
@@ -92,7 +100,7 @@ public class WorldCreator{
                     // this.worldTextures[yIndexToInit][currentXIndex] = null;
                     // this.worldHitboxes[yIndexToInit][currentXIndex] = null;
                     break;
-                case "b":
+                case "c":
                     this.blockMatrix[yIndexToInit][currentXIndex] = new Block(
                         this.blockTexture,
                         new Rectangle(currentXPos, currentYPos, 32, 32),
@@ -104,6 +112,28 @@ public class WorldCreator{
                         this.ladderTexture,
                         new Rectangle(currentXPos, currentYPos, 32, 32),
                         false
+                    );
+                    break;
+
+                case "g":
+                    this.blockMatrix[yIndexToInit][currentXIndex] = new Collectible(
+                        this.greenGemTexture,
+                        new Rectangle(currentXPos, currentYPos, 25, 25),
+                        100
+                    );
+                    break;
+                case "r":
+                    this.blockMatrix[yIndexToInit][currentXIndex] = new Collectible(
+                        this.redGemTexture,
+                        new Rectangle(currentXPos, currentYPos, 25, 25),
+                        200
+                    );
+                    break;
+                case "b":
+                    this.blockMatrix[yIndexToInit][currentXIndex] = new Collectible(
+                        this.blueGemTexture,
+                        new Rectangle(currentXPos, currentYPos, 25, 25),
+                        500
                     );
                     break;
                 default:

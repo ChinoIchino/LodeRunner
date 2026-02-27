@@ -11,6 +11,8 @@ import com.badlogic.gdx.scenes.scene2d.InputListener;
 public class Player extends InputListener{
     public OrthographicCamera camera;
 
+    private int score = 0;
+
     // Sprite position on the screen
     private int posX = 20;
     private int posY = -16; // -70 for the player to be on the ground
@@ -18,9 +20,9 @@ public class Player extends InputListener{
     public int speed = 4;
 
     // Player sprites
-    private final Texture playerSpriteIdle;
-    private final Texture playerSpriteMovingLeft;
-    private final Texture playerSpriteMovingRight;
+    private Texture playerSpriteIdle;
+    private Texture playerSpriteMovingLeft;
+    private Texture playerSpriteMovingRight;
 
     private Texture currentPlayerSprite;
 
@@ -28,18 +30,27 @@ public class Player extends InputListener{
     private final Rectangle isOnGroundHitbox;
 
     public boolean isOnALadder = false;
+    public boolean isFacingLeft = false;
 
     public Player() {
-        this.playerSpriteIdle = new Texture("data/textures/character/characterIdle.png");
-        this.playerSpriteMovingLeft = new Texture("data/textures/character/characterMovingLeft.png");
-        this.playerSpriteMovingRight = new Texture("data/textures/character/characterMovingRight.png");
-    
+        initPlayerTextures();
+
         this.currentPlayerSprite = this.playerSpriteIdle;
 
         this.hitbox = new Rectangle(this.posX, this.posY, 25, 32);
         this.isOnGroundHitbox = new Rectangle(this.posX, this.posY - 1, 25, 1);
     
-        this.camera = new OrthographicCamera(320,320);
+        this.camera = new OrthographicCamera(480,320);
+    }
+
+    private void initPlayerTextures(){
+        this.playerSpriteIdle = new Texture("data/textures/character/characterIdle.png");
+        this.playerSpriteMovingLeft = new Texture("data/textures/character/characterMovingLeft.png");
+        this.playerSpriteMovingRight = new Texture("data/textures/character/characterMovingRight.png");
+    }
+
+    public void addToScore(int toAdd){
+        this.score += toAdd;
     }
 
     public void spriteChangeToMovingLeft(){
@@ -66,6 +77,15 @@ public class Player extends InputListener{
         return this.isOnGroundHitbox;
     }
 
+    public int getScore(){
+        return this.score;
+    }
+
+    public void syncAll(){
+        syncSpriteToPhysicalBody();
+        syncCameraToPhysicalBody();
+        // syncScoreLabelToPhysicalBody();
+    }
     public void syncSpriteToPhysicalBody(){
         this.posX = (int) this.hitbox.x;
         this.posY = (int) this.hitbox.y;

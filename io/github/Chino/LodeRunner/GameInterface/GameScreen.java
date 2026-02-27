@@ -5,12 +5,18 @@ import java.io.IOException;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 
 import io.github.Chino.LodeRunner.GameInterface.Player.Player;
+import io.github.Chino.LodeRunner.GameInterface.World.Collectible;
 import io.github.Chino.LodeRunner.GameInterface.World.WorldCreator;
 import io.github.Chino.LodeRunner.GameInterface.World.WorldManager;
 
@@ -26,11 +32,14 @@ public class GameScreen implements Screen{
     //** Resize the window size based on the resolution */
     private StretchViewport stretchViewport;
 
-    private final int SCREEN_WIDTH = 320;
-    private final int SCREEN_HEIGH = 180;
+    private final int SCREEN_WIDTH = 854;//480;
+    private final int SCREEN_HEIGH = 480;//320;
     
     private Player player;
     private SpriteBatch batch;
+
+    private Stage uiStage;
+    private Label scoreLabel;
 
     public GameScreen() {
         this.batch = new SpriteBatch();
@@ -38,7 +47,7 @@ public class GameScreen implements Screen{
         this.player = new Player();
         
         this.stretchViewport = new StretchViewport(this.SCREEN_WIDTH, this.SCREEN_HEIGH);
-        
+
         this.worldCreator = new WorldCreator(this.batch, this.WORLD_FILE);
 
         try {
@@ -46,7 +55,6 @@ public class GameScreen implements Screen{
         } catch (IOException e) {
             System.out.println("\nERROR GameInterface/GameScreen.java: Constructor catched IOException will initializing the world");
         }
-
     }
 
     @Override
@@ -68,51 +76,58 @@ public class GameScreen implements Screen{
         this.player.spriteChangeToIdle();
                 
         // Handle player movement
-        handlePlayerGravity();
         handlePlayerInput();
+        handlePlayerGravity();
+        handlePlayerCollection();
 
         // Render player after the movement
-        this.player.render(batch);
         this.player.camera.update();
+        this.player.render(batch);
                 
         this.worldManager.displayHitboxes();
         this.player.displayHitboxes();
         
         // apply the stretched view on the screen
         this.stretchViewport.apply();
+        // this.stage.act(delta);
+        // this.stage.draw();
         this.batch.setProjectionMatrix(this.player.camera.combined);
         // this.batch.setProjectionMatrix(stretchViewport.getCamera().combined);
+
+        this.uiStage.act(delta);
+        this.uiStage.draw();
+
     }
 
     private void handlePlayerInput(){
         if (Gdx.input.isKeyPressed(Input.Keys.A)){
+            this.player.isFacingLeft = true;
+
             player.spriteChangeToMovingLeft();
             player.physicalBodyMoveX(-this.player.speed);
             
-            player.syncSpriteToPhysicalBody();
-            player.syncCameraToPhysicalBody();
+            player.syncAll();
 
             // -7 is a offset based on the player sprite
             if(player.getPosX() < (this.worldManager.worldResolution.x * -16 - 7) || !this.worldManager.playerDoesntOverlapWorld(this.player)){
                 player.physicalBodyMoveX(this.player.speed);
                 
-                player.syncSpriteToPhysicalBody();
-                player.syncCameraToPhysicalBody();
+                player.syncAll();
             }
         }
         if (Gdx.input.isKeyPressed(Input.Keys.D)){
+            this.player.isFacingLeft = false;
+
             player.spriteChangeToMovingRight();
             player.physicalBodyMoveX(this.player.speed);
             
-            player.syncSpriteToPhysicalBody();
-            player.syncCameraToPhysicalBody();
+            player.syncAll();
             
             // -13 is a offset based on the player sprite
             if(player.getPosX() > (this.worldManager.worldResolution.x * 16 - 13) || !this.worldManager.playerDoesntOverlapWorld(this.player)){
                 player.physicalBodyMoveX(-this.player.speed);
                 
-                player.syncSpriteToPhysicalBody();
-                player.syncCameraToPhysicalBody();
+                player.syncAll();
             }
         }
         if (Gdx.input.isKeyPressed(Input.Keys.W)){
@@ -128,15 +143,19 @@ public class GameScreen implements Screen{
                 //Move the player up
                 player.physicalBodyMoveY(4);
                 
-                player.syncSpriteToPhysicalBody();
-                player.syncCameraToPhysicalBody();
+                player.syncAll();
             }
         }else{
             player.isOnALadder = false;
         }
 
+        //TODO Connect function to BreakBlockThreadManager
         if(Gdx.input.isKeyPressed(Input.Keys.E)){
-            
+            if(player.isFacingLeft){
+                this.worldManager.breakBlockAtPos(this.player.getPosY() - 17, this.player.getPosX() + 10);
+            }else{
+
+            }
         }
     }
     private void handlePlayerGravity(){
@@ -148,9 +167,20 @@ public class GameScreen implements Screen{
                 this.player.physicalBodyMoveY(8);
             }
 
-            this.player.syncSpriteToPhysicalBody();
-            this.player.syncCameraToPhysicalBody();
+            player.syncAll();
         }
+    }
+    private void handlePlayerCollection(){
+        Collectible possibleCollectible = this.worldManager.playerOverlapWithCollectible(this.player);
+        if(possibleCollectible != null){
+            this.player.addToScore(possibleCollectible.getScore());
+            updateScoreLabel(this.player);
+            // System.out.println("Score was modified into: " + player.getScore());
+        }
+    }
+
+    private void updateScoreLabel(Player player){
+        this.scoreLabel.setText("Score: " + player.getScore());
     }
 
     @Override
@@ -170,7 +200,22 @@ public class GameScreen implements Screen{
     
     @Override
     public void show(){
+        // Create a stage to draw based on the screen
+        this.uiStage = new Stage(new ScreenViewport());
+        initScoreLabel();
+    }
+
+    private void initScoreLabel(){
+        Label label = new Label(
+            "Score: 0",
+            new Label.LabelStyle(new BitmapFont(), Color.WHITE)
+        );
+        label.setSize(70, 30);
+        label.setPosition(10, Gdx.graphics.getHeight() - 30);
         
+        this.scoreLabel = label;
+
+        this.uiStage.addActor(label);
     }
     
     @Override
