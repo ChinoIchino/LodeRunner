@@ -97,8 +97,6 @@ public class WorldCreator{
             // System.out.println("yIndexToinit = " + yIndexToInit + " // currentXIndex = " + currentXIndex + " // currentYPos = " + currentYPos + " // currentXPos = " + currentXPos);
             switch (sliceString){
                 case "e":
-                    // this.worldTextures[yIndexToInit][currentXIndex] = null;
-                    // this.worldHitboxes[yIndexToInit][currentXIndex] = null;
                     break;
                 case "c":
                     this.blockMatrix[yIndexToInit][currentXIndex] = new Block(
