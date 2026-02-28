@@ -1,5 +1,7 @@
 package io.github.Chino.LodeRunner.GameInterface.Interface;
 
+import java.io.IOException;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
@@ -17,9 +19,10 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import io.github.Chino.LodeRunner.GameInterface.GDXMain;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.ClientSide;
 
 public class JoinClientScreen implements Screen{
-    private final GDXMain main;
+    private GDXMain main;
 
     private SpriteBatch batch;
 
@@ -83,9 +86,7 @@ public class JoinClientScreen implements Screen{
         this.submitButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y){
-                if(findServer()){
-                    //TODO send to lobby
-                }
+                connectToServer();
             }
         });
         this.goBackButton.addListener(new ClickListener() {
@@ -121,23 +122,57 @@ public class JoinClientScreen implements Screen{
         }
     } 
 
-    private boolean findServer(){
+    private void connectToServer(){
+        // Added that in a thread so the game dont freeze when the user try to connect to a server
+        Thread tryToConnectThread = new Thread(connectToServerRunnable);
+        tryToConnectThread.start();
+
+        // String ipFromFromTextField = this.ipAdresseTextField.getText();
+        // String passwordFromTextField = this.passwordTextField.getText();
+
+        // if(passwordFromTextField.isEmpty()){
+        //     updateErrorLabel("ERROR: Password Is Empty");
+        // }
+
+        // try {
+        //     ClientSide client = new ClientSide();
+        //     client.connectToServer(ipFromFromTextField, 5000);
+
+        //     this.main.getLobbyScreen().setLobbyInformation(ipFromFromTextField, "5000", passwordFromTextField);
+
+        //     this.main.setScreen(this.main.getLobbyScreen());
+        // } catch (IOException e) {
+        //     updateErrorLabel("ERROR: Didn't Found Server");
+        // }
+    }
+
+    private final Runnable connectToServerRunnable = () ->{
+        // Added that in a thread so the game dont freeze when the user try to connect to a server
         String ipFromFromTextField = this.ipAdresseTextField.getText();
         String passwordFromTextField = this.passwordTextField.getText();
-        System.out.println("Got the text : " + passwordFromTextField);
 
         if(passwordFromTextField.isEmpty()){
-            updateErrorLabel("ERROR: Password Is Empty");
+            Gdx.app.postRunnable(() -> updateErrorLabel("ERROR: Password Is Empty"));
+            return;
         }
-        return false;
 
-    }
+        try {
+            ClientSide client = new ClientSide();
+            client.connectToServer(ipFromFromTextField, 5000);
+
+            // Used so Gdx handle the rendering/UI, else it send a error.
+            Gdx.app.postRunnable(() ->{
+                main.getLobbyScreen().setLobbyInformationForClient(ipFromFromTextField, "5000", passwordFromTextField);
+                main.setScreen(this.main.getLobbyScreen());
+            });
+        } catch (IOException e) {
+            Gdx.app.postRunnable(() -> updateErrorLabel("ERROR: Couldn't Connect To Server"));
+        }
+        Gdx.app.postRunnable(() -> updateErrorLabel("ERROR: Didn't Found Server"));
+    };
+
     private void updateErrorLabel(String errorMesssage){
         this.errorLabel.setText(errorMesssage);
-    }
-
-    private void incorrectServerInformation(){
-
     }
 
     @Override

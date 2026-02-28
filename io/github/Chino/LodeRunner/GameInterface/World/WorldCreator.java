@@ -68,9 +68,9 @@ public class WorldCreator{
         int currentYPosIndex = worldHeight / 32 - 1;
         // int currentYPos = worldHeight / 2 * -1 + 20;
         int currentYPos = worldHeight / 2 - 32;
-        System.out.println("Got the line:");
+        // System.out.println("Got the line:");
         for (int i = 0; i < (int) this.worldResolution.y - 1; i++) {
-            System.out.println(line);
+            // System.out.println(line);
             initLine(currentYPosIndex, currentYPos, worldWidth, line);
 
             // Goes to the next line index
@@ -153,7 +153,7 @@ public class WorldCreator{
             worldResolution.x = Float.parseFloat(line.substring(2,4));
             worldResolution.y = Float.parseFloat(line.substring(7));
 
-            System.out.println("Got the vector2 x = " + worldResolution.x + " // y = " + worldResolution.y);
+            // System.out.println("Got the vector2 x = " + worldResolution.x + " // y = " + worldResolution.y);
 
             return worldResolution;
         } catch (IOException e) {

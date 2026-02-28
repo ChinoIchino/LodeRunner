@@ -16,9 +16,12 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import io.github.Chino.LodeRunner.GameInterface.GDXMain;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.Server;
 
 public class LobbyScreen implements Screen{
     private final GDXMain main;
+
+    private Server hostedServer;
 
     private String serverPassword;
 
@@ -76,6 +79,9 @@ public class LobbyScreen implements Screen{
         this.goBackButton.addListener(new ClickListener(){
             @Override
             public void clicked(InputEvent e, float x, float y){
+                if(hostedServer != null){
+                    hostedServer.closeServerSocket();
+                }
                 main.getMultiplayerScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
                 main.setScreen(main.getMultiplayerScreen());
             }
@@ -99,9 +105,16 @@ public class LobbyScreen implements Screen{
         this.currentBackgroundXOffset = currentXOffset;
         this.isBackgroundMovingLeft = isMovingLeft;
     }
-    protected void setPassword(String newPassword){
-        this.serverPassword = newPassword;
-    } 
+    protected void setLobbyInformationForHost(Server server, String ip, String port, String password){
+        this.hostedServer = server;
+        
+        this.ipLabel.setText("Ip: " + ip);
+        this.passwordLabel.setText("Passsword: " + password);
+    }
+    protected void setLobbyInformationForClient(String ip, String port, String password){
+        this.ipLabel.setText("Ip: " + ip);
+        this.passwordLabel.setText("Password: " + password);
+    }
     private void moveBackground(){
         if(this.isBackgroundMovingLeft){
             this.currentBackgroundXOffset -= 1;

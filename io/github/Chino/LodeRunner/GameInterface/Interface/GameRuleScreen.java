@@ -1,5 +1,9 @@
 package io.github.Chino.LodeRunner.GameInterface.Interface;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
@@ -17,9 +21,12 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import io.github.Chino.LodeRunner.GameInterface.GDXMain;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.Server;
 
 public class GameRuleScreen implements Screen{
     private final GDXMain main;
+
+    private Server serverHosted;
 
     private SpriteBatch batch;
 
@@ -86,9 +93,20 @@ public class GameRuleScreen implements Screen{
             @Override
             public void clicked(InputEvent e, float x, float y){
                 if(isPasswordValid()){
-                    main.getLobbyScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
-                    main.getLobbyScreen().setPassword(passwordTextField.getText());
-                    main.setScreen(main.getLobbyScreen());
+                    try {
+                        main.getLobbyScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
+    
+                        //TODO implement passwords
+                        serverHosted = new Server(new ServerSocket(5000), main.getLobbyScreen(), "NOT IMPLEMENTED");
+                        serverHosted.start();
+                        
+                        main.getLobbyScreen().setLobbyInformationForHost(serverHosted, InetAddress.getLocalHost().getHostAddress(), "5000", passwordTextField.getText());        
+                        
+                        main.setScreen(main.getLobbyScreen());
+                        
+                    } catch (IOException ioe) {
+                        updateErrorLabel("ServerSocket wasn't created");
+                    }
                 }
             }
         });
