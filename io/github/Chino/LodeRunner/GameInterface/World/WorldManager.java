@@ -3,27 +3,27 @@ package io.github.Chino.LodeRunner.GameInterface.World;
 import java.io.IOException;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 
 import io.github.Chino.LodeRunner.GameInterface.Player.Player;
 
 public class WorldManager {
     private final SpriteBatch batch;
 
-    private Texture[][] worldTextures = new Texture[9][16];
-    //Rectangle[y][x]
-    /** Hitboxes of the world*/
-    private Rectangle[][] worldBlockHitboxes = new Rectangle[9][16];
-    private Rectangle[][] worldLadderHitboxes = new Rectangle[9][16];
+    public Vector2 worldResolution;
 
-    public WorldManager(Texture[][] worldTextures, Rectangle[][] worldBlockHitboxes, Rectangle[][] worldLadderHitboxes, SpriteBatch batch) {
-        this.worldTextures = worldTextures;
+    private final Block[][] blockMatrix;
 
-        this.worldBlockHitboxes = worldBlockHitboxes;
-        this.worldLadderHitboxes = worldLadderHitboxes;
+    //TODO to implement
+    // private final BreakBlockThreadManager breakBlockManager = new BreakBlockThreadManager(this);
+
+    public WorldManager(Vector2 worldResolution, Block[][] blockMatrix, SpriteBatch batch) {
+        this.worldResolution = worldResolution;
+
+        this.blockMatrix = blockMatrix;
 
         this.batch = batch;
     }
@@ -31,18 +31,18 @@ public class WorldManager {
     
 
     // Screen Res: X = [-180, 180] Y = [-90, 90]
-    public void drawWorld(int windowWidth, int windowHeight) throws IOException{
+    public void drawWorld() throws IOException{
         // To get the word that represent the block/ladder/gold/etc...
-        int currentWorldYPosition = (windowHeight / 2) - 20;
+        int currentWorldYPosition = ((int) (this.worldResolution.y) * 32 / 2) - 32;
         
         // Draw the world
         this.batch.begin();
-        for (int y = (windowHeight / 20) - 1; y >= 0; y--) {
-            for (int x = 0; x < (windowWidth / 20); x++) {
-                this.drawLine(y, currentWorldYPosition, windowWidth);
+        for (int y = (int) (this.worldResolution.y) - 1; y >= 0; y--) {
+            for (int x = 0; x < (int) (this.worldResolution.x) - 1; x++) {
+                this.drawLine(y, currentWorldYPosition);
             }
-            // Get the next Y position for block placement (blocks are 20x20)
-            currentWorldYPosition -= 20;
+            // Get the next Y position for block placement (blocks are 32x32)
+            currentWorldYPosition -= 32;
         }
         this.batch.end();
     }
@@ -52,46 +52,64 @@ public class WorldManager {
      *  currentYPos: To track the ammount of the world that was already built
      *  ammountOfSlots: Get the ammount of blocks in a single line
      */
-    private void drawLine(int currentYIndex, int currentYPosition, int windowWidth){
-        int currentXPosition = windowWidth / 2 * -1;
-        
-        for (int i = 0; i < windowWidth / 20; i++) {
-            if(this.worldTextures[currentYIndex][i] != null){
-                this.batch.draw(this.worldTextures[currentYIndex][i], currentXPosition, currentYPosition);
+    private void drawLine(int currentYIndex, int currentYPosition){
+        int currentXPosition = (int) (this.worldResolution.x) * 32 / 2 * -1;
+        for (int i = 0; i < (int) (this.worldResolution.x); i++) {
+            if(this.blockMatrix[currentYIndex][i] != null){
+                this.batch.draw(this.blockMatrix[currentYIndex][i].getTexture(), currentXPosition, currentYPosition);
             }
 
-            currentXPosition += 20;
+            currentXPosition += 32;
         }
     }
+
+    // public playerBreakBlock(Player player){
+    //     Rectangle toBreak = isBlockThere(x, y);
+    // }
     
     public boolean playerDoesntOverlapWorld(Player player){
-        for (int i = 0; i < 9; i++) {
-            for(int j = 0; j < 16; j++){
-                if((this.worldBlockHitboxes[i][j] != null) && (player.getHitbox().overlaps(this.worldBlockHitboxes[i][j]))){
-                    System.out.println("Player is colliding with a wall");
+        for (int i = 0; i < (int) (this.worldResolution.y); i++) {
+            for(int j = 0; j < (int) (this.worldResolution.x); j++){
+                if(
+                    (this.blockMatrix[i][j] != null)
+                    && this.blockMatrix[i][j].isSolid() 
+                    && player.getHitbox().overlaps(this.blockMatrix[i][j].getHitbox())
+                ){
+                    // System.out.println("Player is colliding with a wall");
                     return false;
                 }
             }
         }
         return true;
     }
-    public Rectangle playerOverlapWithALadder(Player player){
-        for (int i = 0; i < 9; i++) {
-            for(int j = 0; j < 16; j++){
-                if((this.worldLadderHitboxes[i][j] != null) && (player.getHitbox().overlaps(this.worldLadderHitboxes[i][j]))){
-                    System.out.println("Player is colliding with a ladder");
-                    return this.worldLadderHitboxes[i][j];
+    public Rectangle playerOverlapWithALadder(Rectangle hitboxOfPlayer){
+        for (int i = 0; i < (int) (this.worldResolution.y); i++) {
+            for(int j = 0; j < (int) (this.worldResolution.x); j++){
+                if((this.blockMatrix[i][j] != null) && (hitboxOfPlayer.overlaps(this.blockMatrix[i][j].getHitbox()))){
+                    // System.out.println("Player is colliding with a ladder");
+                    return this.blockMatrix[i][j].getHitbox();
                 }
             }
         }
         return null;
     }
 
-    public boolean playerIsOnGround(Player player){
-        for (int i = 0; i < 9; i++) {
-            for(int j = 0; j < 16; j++){
-                if((this.worldBlockHitboxes[i][j] != null) && (player.getIsOnGroundHitbox().overlaps(this.worldBlockHitboxes[i][j]))){
-                    System.out.println("Player is colliding with a floor");
+    //TODO To fix, getting the level of the player but cant get the block for a reason
+    public boolean playerOverlapWithFloor(Player player){
+        int level = 0;
+        int yPosition = (int) (this.worldResolution.y) * -10;
+        for (int j = (int) this.worldResolution.y; j >= 0; j++) {
+            if(player.getPosY() < yPosition){
+                break;
+            }
+            yPosition += 32;
+            level++;
+        }
+        // this.printHitbox();
+        System.out.println("Got the level " + level + " // and the yPos =" + yPosition);
+        for(int x = 0; x < (int) (this.worldResolution.x); x++){
+            if(this.blockMatrix[level][x] != null){
+                if(player.getHitbox().overlaps(this.blockMatrix[level][x].getHitbox())){
                     return true;
                 }
             }
@@ -99,13 +117,63 @@ public class WorldManager {
         return false;
     }
 
+    public boolean playerIsOnGround(Player player){
+        for (int i = 0; i < (int) (this.worldResolution.y); i++) {
+            for(int j = 0; j < (int) (this.worldResolution.x); j++){
+                if((this.blockMatrix[i][j] != null) && (player.getIsOnGroundHitbox().overlaps(this.blockMatrix[i][j].getHitbox()))){
+                    // System.out.println("Player is colliding with a floor");
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public Collectible playerOverlapWithCollectible(Player player){
+        int[] possibleLevels = new int[3];
+        
+        int currentY = (int) this.worldResolution.y * -16;
+        for (int i = 0; i < (int) this.worldResolution.y; i++) {
+            if(currentY <= player.getPosY() && (currentY + 32) >= player.getPosY()){
+                possibleLevels[1] = i;
+                break;
+            }
+        }
+        possibleLevels[0] = possibleLevels[1] - 1;
+        possibleLevels[2] = possibleLevels[1] + 1;
+
+        for (int y = 0; y < 3; y++) {
+            for (int x = 0; x < (int) this.worldResolution.x; x++) {
+                if(this.blockMatrix[y][x] != null && this.blockMatrix[y][x] instanceof Collectible){
+                    if(this.blockMatrix[y][x].getHitbox().overlaps(player.getHitbox())){
+                        // Casted Collectible because if the statement is correctly it must be a Collectible
+                        Collectible toReturn = (Collectible) this.blockMatrix[y][x];
+                        this.blockMatrix[y][x] = null;
+                        return toReturn;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    //TODO connect it with BreakBlockThreadManager
+    public void breakBlockAtPos(int x, int y){
+        int blockXIndex = (int) x / 32;
+        int blockYIndex = (int) y / 32;
+
+
+    }
+
     /** Used in debugging of hitboxes */
     public void printHitbox(){
-        for (int y = 0; y < 9; y++) {
-            for(int x = 0; x < 16; x++){
-                System.out.print(this.worldBlockHitboxes[y][x] + " ");
+        for (int y = 0; y < (int) (this.worldResolution.y); y++) {
+            for(int x = 0; x < (int) (this.worldResolution.x); x++){
+                if(this.blockMatrix[y][x] != null){
+                    System.out.print(this.blockMatrix[y][x].getHitbox() + " ");
+                }
             }
-            System.out.println("");
+            System.out.println("\n");
         }
     }
 
@@ -118,30 +186,25 @@ public class WorldManager {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(Color.RED);
 
-        Rectangle currentHitbox;
-        for (int y = 8; y >= 0; y--) {
-            for(int x = 0; x < 16; x++){
-                currentHitbox = this.worldBlockHitboxes[y][x];
-                if(currentHitbox != null){
+        Block currentBlock;
+        for (int y = (int) (this.worldResolution.y) - 1; y >= 0; y--) {
+            for(int x = 0; x < (int) (this.worldResolution.x); x++){
+                currentBlock = this.blockMatrix[y][x];
+                if(currentBlock != null && currentBlock.isSolid()){
+                    shapeRenderer.setColor(Color.RED);
                     shapeRenderer.rect(
-                        currentHitbox.x + 200,
-                        currentHitbox.y + 200,
-                        currentHitbox.width,
-                        currentHitbox.height
+                        currentBlock.getHitbox().x + 900,
+                        currentBlock.getHitbox().y + 200,
+                        currentBlock.getHitbox().width,
+                        currentBlock.getHitbox().height
                     );
-                }
-            }
-        }
-        shapeRenderer.setColor(Color.GREEN);
-        for (int y = 8; y >= 0; y--) {
-            for(int x = 0; x < 16; x++){
-                currentHitbox = this.worldLadderHitboxes[y][x];
-                if(currentHitbox != null){
+                }else if(currentBlock != null){
+                    shapeRenderer.setColor(Color.GREEN);
                     shapeRenderer.rect(
-                        currentHitbox.x + 200,
-                        currentHitbox.y + 200,
-                        currentHitbox.width,
-                        currentHitbox.height
+                        currentBlock.getHitbox().x + 900,
+                        currentBlock.getHitbox().y + 200,
+                        currentBlock.getHitbox().width,
+                        currentBlock.getHitbox().height
                     );
                 }
             }

@@ -1,4 +1,4 @@
-package io.github.Chino.LodeRunner.GameInterface;
+package io.github.Chino.LodeRunner.GameInterface.Interface;
 
 import java.io.IOException;
 
@@ -15,12 +15,15 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 
+import io.github.Chino.LodeRunner.GameInterface.GDXMain;
 import io.github.Chino.LodeRunner.GameInterface.Player.Player;
 import io.github.Chino.LodeRunner.GameInterface.World.Collectible;
 import io.github.Chino.LodeRunner.GameInterface.World.WorldCreator;
 import io.github.Chino.LodeRunner.GameInterface.World.WorldManager;
 
+/** Manage the screen when the player is playing */
 public class GameScreen implements Screen{
+    private GDXMain main;
     /** Class that manage the WORLD_FILE
      *  and create the level based on it */
     private WorldCreator worldCreator;
@@ -41,8 +44,11 @@ public class GameScreen implements Screen{
     private Stage uiStage;
     private Label scoreLabel;
 
-    public GameScreen() {
+    public GameScreen(GDXMain main) {
+        this.main = main;
+
         this.batch = new SpriteBatch();
+        initScoreLabel();
         
         this.player = new Player();
         
@@ -55,6 +61,7 @@ public class GameScreen implements Screen{
         } catch (IOException e) {
             System.out.println("\nERROR GameInterface/GameScreen.java: Constructor catched IOException will initializing the world");
         }
+
     }
 
     @Override
@@ -62,7 +69,6 @@ public class GameScreen implements Screen{
     public void render(float delta){
         //Delete previous frame
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
         
         // Render world
         try{
@@ -190,22 +196,27 @@ public class GameScreen implements Screen{
 
     @Override
     public void resume(){
-        
+        Gdx.graphics.setForegroundFPS(15);
     }
 
     @Override
     public void pause(){
-
+        //if the game was minimized, set the fps to 10 to save user performance
+        Gdx.graphics.setForegroundFPS(10);
     }
     
     @Override
     public void show(){
+        Gdx.graphics.setForegroundFPS(15);
+        Gdx.input.setInputProcessor(this.uiStage);
+
         // Create a stage to draw based on the screen
-        this.uiStage = new Stage(new ScreenViewport());
-        initScoreLabel();
+        // this.uiStage = new Stage(new ScreenViewport());
+        // initScoreLabel();
     }
 
     private void initScoreLabel(){
+        this.uiStage = new Stage(new ScreenViewport());
         Label label = new Label(
             "Score: 0",
             new Label.LabelStyle(new BitmapFont(), Color.WHITE)
