@@ -1,0 +1,41 @@
+X=34/Y=10
+Here put the world to generate:
+e,e,e,e,e,e,e,e,e,e,e,e,e,e,l,e,c,e,e,e,e,e,e,e,e,e,e,e,e,e,e,l,e,b
+e,e,e,e,g,e,e,e,e,e,e,e,e,e,l,e,c,e,e,e,e,e,e,e,e,e,e,e,e,e,e,l,e,b
+e,e,e,e,e,e,e,e,e,e,e,e,e,e,l,e,c,e,e,e,e,e,e,e,e,e,e,e,e,e,e,l,e,b
+c,c,c,l,c,c,c,e,e,e,c,c,c,c,l,e,c,c,c,c,l,c,c,c,e,e,l,c,c,c,c,l,e,b
+e,e,e,l,c,e,e,e,e,e,c,e,e,c,l,e,c,e,e,e,l,c,e,e,e,e,l,c,e,e,c,l,e,b
+e,e,e,l,c,e,e,e,e,e,c,e,e,c,l,e,c,e,e,e,l,c,e,e,l,l,l,c,e,e,c,l,e,b
+e,e,e,l,c,e,e,e,e,e,c,e,e,e,l,e,c,e,e,e,l,c,e,e,e,e,e,c,e,e,e,l,e,b
+e,e,e,l,e,e,e,e,e,b,b,r,r,g,l,e,e,e,e,g,l,g,e,e,e,e,e,e,e,e,e,l,e,e
+c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,b
+
+DISCLAMER: 
+Do not change the syntax in line 1 (except the numbers to change the generated size of the map)
+If the resolution is a digit, place a 0 before it (ex: 03, 05).
+And do not delete the information in line 2.
+Start the world at line 3.
+
+HOW TO USE THE WORLD FILE:
+    -The world is generated based on the resolution given in line 1 
+    -Every block is in a 20x20 resolution
+
+Here is a example of a world:
+e,e,e,e,e,e,e,e,e,e,e,e,e,e,l,e
+e,e,e,e,e,e,e,e,e,e,e,e,e,e,l,e
+e,e,e,e,e,e,e,e,e,e,e,e,e,e,l,e
+e,e,e,e,e,e,e,e,e,e,e,e,e,e,l,e
+e,e,e,e,e,e,e,e,e,e,e,e,e,e,l,e
+e,e,e,e,e,e,e,e,e,e,e,e,e,e,l,e
+e,e,e,e,e,e,e,e,e,e,e,e,e,e,l,e
+e,e,e,e,e,e,e,e,e,e,e,e,e,e,l,e
+c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,b
+
+Legend of the letters used:
+    -e = Empty, there is nothing in this square slot
+    -c = Walkable block
+    -l = Ladder
+    
+    -g = Green Gem (+100 score)
+    -r = Red Gem (+200 score)
+    -b = Blue Gem (+500 score)
