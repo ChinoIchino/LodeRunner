@@ -1,4 +1,4 @@
-package io.github.Chino.LodeRunner.GameInterface.Player;
+package io.github.Chino.LodeRunner.GameInterface.Entity;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -6,9 +6,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.scenes.scene2d.InputListener;
 
-public class Player extends InputListener{
+public class Player extends Entity{
     public OrthographicCamera camera;
 
     private int score = 0;
@@ -32,7 +31,7 @@ public class Player extends InputListener{
     public boolean isOnALadder = false;
 
     public Player() {
-        initPlayerTextures();
+        initEntityTextures();
 
         this.currentPlayerSprite = this.playerSpriteIdle;
 
@@ -42,7 +41,7 @@ public class Player extends InputListener{
         this.camera = new OrthographicCamera(480,320);
     }
 
-    private void initPlayerTextures(){
+    protected void initEntityTextures(){
         this.playerSpriteIdle = new Texture("data/textures/character/characterIdle.png");
         this.playerSpriteMovingLeft = new Texture("data/textures/character/characterMovingLeft.png");
         this.playerSpriteMovingRight = new Texture("data/textures/character/characterMovingRight.png");

@@ -82,6 +82,7 @@ public class MenuScreen implements Screen {
             @Override
             public void clicked(InputEvent e, float x, float y){
                 main.setScreen(main.getGameScreen());
+                //start ia
             }
         });
         this.multiplayerButton.addListener(new ClickListener(){

@@ -9,7 +9,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
-import io.github.Chino.LodeRunner.GameInterface.Player.Player;
+import io.github.Chino.LodeRunner.GameInterface.Entity.*;
 
 public class WorldManager {
     private final SpriteBatch batch;
@@ -67,13 +67,13 @@ public class WorldManager {
     //     Rectangle toBreak = isBlockThere(x, y);
     // }
     
-    public boolean playerDoesntOverlapWorld(Player player){
+    public boolean entityDoesntOverlapWorld(Entity entity){
         for (int i = 0; i < (int) (this.worldResolution.y); i++) {
             for(int j = 0; j < (int) (this.worldResolution.x); j++){
                 if(
                     (this.blockMatrix[i][j] != null)
                     && this.blockMatrix[i][j].isSolid() 
-                    && player.getHitbox().overlaps(this.blockMatrix[i][j].getHitbox())
+                    && entity.getHitbox().overlaps(this.blockMatrix[i][j].getHitbox())
                 ){
                     // System.out.println("Player is colliding with a wall");
                     return false;
@@ -82,10 +82,10 @@ public class WorldManager {
         }
         return true;
     }
-    public Rectangle playerOverlapWithALadder(Rectangle hitboxOfPlayer){
+    public Rectangle entityOverlapWithALadder(Rectangle hitboxOfEntity){
         for (int i = 0; i < (int) (this.worldResolution.y); i++) {
             for(int j = 0; j < (int) (this.worldResolution.x); j++){
-                if((this.blockMatrix[i][j] != null) && (hitboxOfPlayer.overlaps(this.blockMatrix[i][j].getHitbox()))){
+                if((this.blockMatrix[i][j] != null) && (hitboxOfEntity.overlaps(this.blockMatrix[i][j].getHitbox()))){
                     // System.out.println("Player is colliding with a ladder");
                     return this.blockMatrix[i][j].getHitbox();
                 }
@@ -95,11 +95,11 @@ public class WorldManager {
     }
 
     //TODO To fix, getting the level of the player but cant get the block for a reason
-    public boolean playerOverlapWithFloor(Player player){
+    public boolean entityOverlapWithFloor(Entity entity){
         int level = 0;
         int yPosition = (int) (this.worldResolution.y) * -10;
         for (int j = (int) this.worldResolution.y; j >= 0; j++) {
-            if(player.getPosY() < yPosition){
+            if(entity.getPosY() < yPosition){
                 break;
             }
             yPosition += 32;
@@ -109,7 +109,7 @@ public class WorldManager {
         System.out.println("Got the level " + level + " // and the yPos =" + yPosition);
         for(int x = 0; x < (int) (this.worldResolution.x); x++){
             if(this.blockMatrix[level][x] != null){
-                if(player.getHitbox().overlaps(this.blockMatrix[level][x].getHitbox())){
+                if(entity.getHitbox().overlaps(this.blockMatrix[level][x].getHitbox())){
                     return true;
                 }
             }
@@ -117,16 +117,29 @@ public class WorldManager {
         return false;
     }
 
-    public boolean playerIsOnGround(Player player){
+    public boolean entityIsOnGround(Entity entity){
         for (int i = 0; i < (int) (this.worldResolution.y); i++) {
             for(int j = 0; j < (int) (this.worldResolution.x); j++){
-                if((this.blockMatrix[i][j] != null) && (player.getIsOnGroundHitbox().overlaps(this.blockMatrix[i][j].getHitbox()))){
+                if((this.blockMatrix[i][j] != null) && (entity.getIsOnGroundHitbox().overlaps(this.blockMatrix[i][j].getHitbox()))){
                     // System.out.println("Player is colliding with a floor");
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    public void aiOverlapsWithBlock(AI ai){
+        Rectangle blockHitbox = null; 
+        for (int i = 0; i < (int) (this.worldResolution.y); i++) {
+            for(int j = 0; j < (int) (this.worldResolution.x); j++){
+                if((this.blockMatrix[i][j] != null) && (this.blockMatrix[i][j].isSolid()) && (ai.getHitbox().overlaps(this.blockMatrix[i][j].getHitbox()))){
+                    System.out.println("AI is colliding with a block");
+                    blockHitbox = blockMatrix[i][j].getHitbox();
+                    ai.snapToBlock(blockHitbox);
+                }
+            }
+        }
     }
 
     public Collectible playerOverlapWithCollectible(Player player){
@@ -157,7 +170,6 @@ public class WorldManager {
         return null;
     }
 
-    //TODO connect it with BreakBlockThreadManager
     public void breakBlockAtPos(int x, int y){
         int blockXIndex = ((int) x / 32) + 17;
         int blockYIndex = (((int) y / 32)-1)+5;

@@ -16,7 +16,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 
 import io.github.Chino.LodeRunner.GameInterface.GDXMain;
-import io.github.Chino.LodeRunner.GameInterface.Player.Player;
+import io.github.Chino.LodeRunner.GameInterface.Entity.*;
 import io.github.Chino.LodeRunner.GameInterface.World.Collectible;
 import io.github.Chino.LodeRunner.GameInterface.World.WorldCreator;
 import io.github.Chino.LodeRunner.GameInterface.World.WorldManager;
@@ -37,6 +37,10 @@ public class GameScreen implements Screen{
 
     private final int SCREEN_WIDTH = 854;//480;
     private final int SCREEN_HEIGH = 480;//320;
+
+    private final int AI_NUMBER = 3;
+    public AI[] aiList = new AI[AI_NUMBER];
+
     
     private Player player;
     private SpriteBatch batch;
@@ -55,17 +59,26 @@ public class GameScreen implements Screen{
         this.stretchViewport = new StretchViewport(this.SCREEN_WIDTH, this.SCREEN_HEIGH);
 
         this.worldCreator = new WorldCreator(this.batch, this.WORLD_FILE);
-
+        
         try {
             this.worldManager = this.worldCreator.initWorld();
         } catch (IOException e) {
             System.out.println("\nERROR GameInterface/GameScreen.java: Constructor catched IOException will initializing the world");
         }
+        
+        initAIinWorld();
+    }
 
+    private void initAIinWorld(){
+        int resolutionX = (int)this.worldManager.worldResolution.x*16;
+        int resolutionY = (int)this.worldManager.worldResolution.y*16;
+        for(int i = 0 ; i< this.AI_NUMBER;i++){
+            AI entity = new AI((int)(Math.random()*(resolutionX*2))-resolutionX, (int)(Math.random()*(resolutionY*2))-resolutionY);
+            this.aiList[i] = entity;
+        }
     }
 
     @Override
-    @SuppressWarnings("CallToPrintStackTrace")
     public void render(float delta){
         //Delete previous frame
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -75,7 +88,6 @@ public class GameScreen implements Screen{
             this.worldManager.drawWorld();
         }catch(IOException e){
             System.err.println("\nERROR GameInterface/GameScreen.java: Function render catched IOException while rendering the world");
-            e.printStackTrace();
         }
 
         // TODO Find a better way to manage the sprite of the player
@@ -83,15 +95,24 @@ public class GameScreen implements Screen{
                 
         // Handle player movement
         handlePlayerInput();
-        handlePlayerGravity();
+        handleEntityGravity(this.player);
         handlePlayerCollection();
-
+        
         // Render player after the movement
         this.player.camera.update();
         this.player.render(batch);
-                
+        
         this.worldManager.displayHitboxes();
         this.player.displayHitboxes();
+        
+        //render IAs
+        batch.begin();
+        for(int i = 0; i<AI_NUMBER;i++){
+            handleEntityGravity(this.aiList[i]);
+            handleAIOverlaps(this.aiList[i]);
+            this.aiList[i].render(batch);
+        }
+        batch.end();
         
         // apply the stretched view on the screen
         this.stretchViewport.apply();
@@ -99,10 +120,14 @@ public class GameScreen implements Screen{
         // this.stage.draw();
         this.batch.setProjectionMatrix(this.player.camera.combined);
         // this.batch.setProjectionMatrix(stretchViewport.getCamera().combined);
-
+        
         this.uiStage.act(delta);
         this.uiStage.draw();
-
+        
+    }
+    private void handleAIOverlaps(AI ai){
+        worldManager.aiOverlapsWithBlock(ai);
+        
     }
 
     private void handlePlayerInput(){
@@ -113,7 +138,7 @@ public class GameScreen implements Screen{
             player.syncAll();
 
             // -7 is a offset based on the player sprite
-            if(player.getPosX() < (this.worldManager.worldResolution.x * -16 - 7) || !this.worldManager.playerDoesntOverlapWorld(this.player)){
+            if(player.getPosX() < (this.worldManager.worldResolution.x * -16 - 7) || !this.worldManager.entityDoesntOverlapWorld(this.player)){
                 player.physicalBodyMoveX(this.player.speed);
                 
                 player.syncAll();
@@ -126,14 +151,14 @@ public class GameScreen implements Screen{
             player.syncAll();
             
             // -13 is a offset based on the player sprite
-            if(player.getPosX() > (this.worldManager.worldResolution.x * 16 - 13) || !this.worldManager.playerDoesntOverlapWorld(this.player)){
+            if(player.getPosX() > (this.worldManager.worldResolution.x * 16 - 13) || !this.worldManager.entityDoesntOverlapWorld(this.player)){
                 player.physicalBodyMoveX(-this.player.speed);
                 
                 player.syncAll();
             }
         }
         if (Gdx.input.isKeyPressed(Input.Keys.W)){
-            Rectangle collidingLadder = this.worldManager.playerOverlapWithALadder(this.player.getHitbox());
+            Rectangle collidingLadder = this.worldManager.entityOverlapWithALadder(this.player.getHitbox());
             
             if(collidingLadder != null){
                 // Snap player to ladder
@@ -156,16 +181,15 @@ public class GameScreen implements Screen{
             this.worldManager.breakBlockAtPos(this.player.getPosX(),this.player.getPosY());
         }
     }
-    private void handlePlayerGravity(){
-        if(!this.worldManager.playerIsOnGround(this.player) && !player.isOnALadder){
-            this.player.physicalBodyMoveY(-8);
+    private void handleEntityGravity(Entity entity){
+        if(!this.worldManager.entityIsOnGround(entity) && !entity.isOnALadder){
+            entity.physicalBodyMoveY(-8);
 
-            if(this.worldManager.playerOverlapWithFloor(player)){
-                System.out.println("REPLACING THE PLAYER");
-                this.player.physicalBodyMoveY(8);
+            if(this.worldManager.entityOverlapWithFloor(entity)){
+                entity.physicalBodyMoveY(4);
             }
 
-            player.syncAll();
+            entity.syncAll();
         }
     }
     private void handlePlayerCollection(){

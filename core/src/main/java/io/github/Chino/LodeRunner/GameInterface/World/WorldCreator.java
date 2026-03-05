@@ -142,6 +142,8 @@ public class WorldCreator{
             currentXIndex++;
         }
     }
+
+    
     
     private Vector2 getResolutionOfWorld(){
         Vector2 worldResolution = new Vector2();

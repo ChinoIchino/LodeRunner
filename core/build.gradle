@@ -11,5 +11,4 @@ dependencies {
     implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
   }
 
-  implementation 'io.netty:netty-all:4.1.108.Final'
 }
