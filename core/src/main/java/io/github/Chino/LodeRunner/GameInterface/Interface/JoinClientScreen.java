@@ -82,10 +82,10 @@ public class JoinClientScreen implements Screen{
 
         this.uiStage.addActor(this.tableOfContent);
 
-        //TODO send to createdLobby
         this.submitButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y){
+                // If the connection succeed, client get sent to the Lobby screen
                 connectToServer();
             }
         });

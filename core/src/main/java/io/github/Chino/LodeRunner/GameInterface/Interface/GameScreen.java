@@ -146,6 +146,8 @@ public class GameScreen implements Screen{
                 player.physicalBodyMoveY(4);
                 
                 player.syncAll();
+            }else{
+                player.isOnALadder = false;
             }
         }else{
             player.isOnALadder = false;
@@ -162,7 +164,7 @@ public class GameScreen implements Screen{
 
             if(this.worldManager.playerOverlapWithFloor(player)){
                 System.out.println("REPLACING THE PLAYER");
-                this.player.physicalBodyMoveY(8);
+                this.player.physicalBodyMoveY(4);
             }
 
             player.syncAll();

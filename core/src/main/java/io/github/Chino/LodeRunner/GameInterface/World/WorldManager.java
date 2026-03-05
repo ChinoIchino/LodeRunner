@@ -29,8 +29,6 @@ public class WorldManager {
     }
     
     
-
-    // Screen Res: X = [-180, 180] Y = [-90, 90]
     public void drawWorld() throws IOException{
         // To get the word that represent the block/ladder/gold/etc...
         int currentWorldYPosition = ((int) (this.worldResolution.y) * 32 / 2) - 32;
@@ -62,10 +60,6 @@ public class WorldManager {
             currentXPosition += 32;
         }
     }
-
-    // public playerBreakBlock(Player player){
-    //     Rectangle toBreak = isBlockThere(x, y);
-    // }
     
     public boolean playerDoesntOverlapWorld(Player player){
         for (int i = 0; i < (int) (this.worldResolution.y); i++) {
@@ -109,7 +103,7 @@ public class WorldManager {
         System.out.println("Got the level " + level + " // and the yPos =" + yPosition);
         for(int x = 0; x < (int) (this.worldResolution.x); x++){
             if(this.blockMatrix[level][x] != null){
-                if(player.getHitbox().overlaps(this.blockMatrix[level][x].getHitbox())){
+                if(player.getHitbox().overlaps(this.blockMatrix[level][x].getHitbox()) && this.blockMatrix[level][x].isSolid()){
                     return true;
                 }
             }
