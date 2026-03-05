@@ -149,6 +149,7 @@ public class LobbyScreen implements Screen{
         // Change the input proc back to this menu
         // this.uiStage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(this.uiStage);
+        
     }
 
     @Override

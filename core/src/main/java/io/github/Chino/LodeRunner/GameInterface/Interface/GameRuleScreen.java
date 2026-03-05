@@ -2,7 +2,6 @@ package io.github.Chino.LodeRunner.GameInterface.Interface;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.ServerSocket;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -88,7 +87,6 @@ public class GameRuleScreen implements Screen{
 
         this.uiStage.addActor(this.tableOfContent);
 
-        //TODO send to createdLobby
         this.createLobbyButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y){
@@ -97,7 +95,7 @@ public class GameRuleScreen implements Screen{
                         main.getLobbyScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
     
                         //TODO implement passwords
-                        serverHosted = new Server(new ServerSocket(5000), main, "NOT IMPLEMENTED");
+                        // serverHosted = new Server(new ServerSocket(5000), main, "NOT IMPLEMENTED");
                         serverHosted.start();
                         
                         main.getLobbyScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);

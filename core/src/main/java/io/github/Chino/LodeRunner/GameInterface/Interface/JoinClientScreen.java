@@ -1,7 +1,5 @@
 package io.github.Chino.LodeRunner.GameInterface.Interface;
 
-import java.io.IOException;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
@@ -19,7 +17,6 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import io.github.Chino.LodeRunner.GameInterface.GDXMain;
-import io.github.Chino.LodeRunner.GameInterface.LanConnection.ClientSide;
 
 public class JoinClientScreen implements Screen{
     private GDXMain main;
@@ -138,20 +135,21 @@ public class JoinClientScreen implements Screen{
             return;
         }
 
-        try {
-            ClientSide client = new ClientSide();
-            client.connectToServer(this.main, ipFromFromTextField, 5000);
+        //TODO after test put back
+        // try {
+        //     ClientSide client = new ClientSide();
+        //     client.connectToServer(this.main, ipFromFromTextField, 5000);
 
-            // Used so Gdx handle the rendering/UI, else it send a error.
-            Gdx.app.postRunnable(() ->{
-                main.getLobbyScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
-                main.getLobbyScreen().setLobbyInformationForClient(client, ipFromFromTextField, "5000", passwordFromTextField);
-                main.setScreen(this.main.getLobbyScreen());
-            });
-        } catch (IOException e) {
-            Gdx.app.postRunnable(() -> updateErrorLabel("ERROR: Couldn't Connect To Server"));
-        }
-        Gdx.app.postRunnable(() -> updateErrorLabel("ERROR: Didn't Found Server"));
+        //     // Used so Gdx handle the rendering/UI, else it send a error.
+        //     Gdx.app.postRunnable(() ->{
+        //         main.getLobbyScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
+        //         main.getLobbyScreen().setLobbyInformationForClient(client, ipFromFromTextField, "5000", passwordFromTextField);
+        //         main.setScreen(this.main.getLobbyScreen());
+        //     });
+        // } catch (IOException e) {
+        //     Gdx.app.postRunnable(() -> updateErrorLabel("ERROR: Couldn't Connect To Server"));
+        // }
+        // Gdx.app.postRunnable(() -> updateErrorLabel("ERROR: Didn't Found Server"));
     };
 
     private void updateErrorLabel(String errorMesssage){

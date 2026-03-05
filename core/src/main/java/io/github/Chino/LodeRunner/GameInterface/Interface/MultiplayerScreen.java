@@ -61,7 +61,6 @@ public class MultiplayerScreen implements Screen{
 
         this.uiStage.addActor(this.tableForButtons);
 
-        //TODO send to gameruleScreen
         this.hostButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y){
@@ -69,7 +68,6 @@ public class MultiplayerScreen implements Screen{
                 main.setScreen(main.getGameRuleScreen());
             }
         });
-        //TODO send to joinClientToHostScreen
         this.joinButton.addListener(new ClickListener(){
             @Override
             public void clicked(InputEvent e, float x, float y){

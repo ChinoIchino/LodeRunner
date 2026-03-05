@@ -88,7 +88,6 @@ public class WorldManager {
         return null;
     }
 
-    //TODO To fix, getting the level of the player but cant get the block for a reason
     public boolean playerOverlapWithFloor(Player player){
         int level = 0;
         int yPosition = (int) (this.worldResolution.y) * -10;
@@ -99,7 +98,7 @@ public class WorldManager {
             yPosition += 32;
             level++;
         }
-        // this.printHitbox();
+
         System.out.println("Got the level " + level + " // and the yPos =" + yPosition);
         for(int x = 0; x < (int) (this.worldResolution.x); x++){
             if(this.blockMatrix[level][x] != null){
@@ -151,7 +150,6 @@ public class WorldManager {
         return null;
     }
 
-    //TODO connect it with BreakBlockThreadManager
     public void breakBlockAtPos(int x, int y){
         int blockXIndex = ((int) x / 32) + 17;
         int blockYIndex = (((int) y / 32)-1)+5;

@@ -153,7 +153,6 @@ public class GameScreen implements Screen{
             player.isOnALadder = false;
         }
 
-        //TODO Connect function to BreakBlockThreadManager
         if(Gdx.input.isKeyPressed(Input.Keys.E)){
             this.worldManager.breakBlockAtPos(this.player.getPosX(),this.player.getPosY());
         }
