@@ -4,26 +4,30 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
+import io.github.Chino.LodeRunner.GameInterface.GDXMain;
+import io.github.Chino.LodeRunner.GameInterface.Interface.LobbyScreen;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketDecoder;
-import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketEncoder;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.Packet;
 
 public class ClientSide{
+    public LobbyScreen currentClientLobbyScreen;
+    public String username;
+
     private Socket socket;
 
     private BufferedInputStream readStream;
-    private BufferedOutputStream writeStream;
+    public BufferedOutputStream writeStream;
 
     /** Used to decode byte[] into predetermined packets */
     private PacketDecoder packetDecoder;
-    /** Used to encode packets to be sent to other clients/server */
-    private PacketEncoder packetEncoder;
 
     private ByteBuffer buffer;
 
-    public ClientSide(Socket socket) {
+    public ClientSide(Socket socket, GDXMain main, String username) {
         try{
             this.socket = socket;
     
@@ -31,35 +35,68 @@ public class ClientSide{
             this.writeStream = new BufferedOutputStream(this.socket.getOutputStream());
 
             this.packetDecoder = new PacketDecoder();
-            this.packetEncoder = new PacketEncoder();
 
             this.buffer = new ByteBuffer(1024);
 
+            this.currentClientLobbyScreen = main.getLobbyScreen();
+
+            this.username = username;
         }catch(IOException e){
             closeEverything(this.socket, this.writeStream, this.readStream);
         }
     }
 
-    // "Event Listener" that react when ClientHandler.java broadcastPacket give out a packet
+    // "Event Listener" that react when Server.java broadcastPacket give out a packet
     public void listenForPackets(){
         new Thread(new Runnable() {
             @Override
             public void run(){
                 Packet decodedPacket;
-                int packetType;
+                List<Object> packetItems = new ArrayList<>();
+
                 while(socket.isConnected()){
-                //     client.writerStream.write(buffer.getBytesList());
-                // client.writerStream.flush();
                     try{
                         readStream.read(buffer.bytes, 0, 1024);
-                        if(buffer.readInt() != 0){
-                            // System.out.println("In listen for packets got the type " + packetType);
+                        
+                        if(buffer.readInt() > 0){
                             buffer.resetCursor();
-                            decodedPacket = packetDecoder.decodeByte(buffer);
+                            System.out.println("In listenForPackets with the packet type = " + buffer.readInt());
+                            buffer.resetCursor();
+
+                            decodedPacket = packetDecoder.decodeStream(buffer);
+                            buffer.clear();
+                            System.out.println("Client got the packet: " + decodedPacket.toString());
+                            
+                            //Getting all the attributs from the packet into a List
+                            packetItems = decodedPacket.unpackPacket();
+
+                            switch(decodedPacket.getPacketId()){
+                                    // Lobby all player list
+                                    case 1:
+                                        for (Object item : packetItems) {
+                                            currentClientLobbyScreen.addANewPlayerToList((String) item);
+                                        }
+                                        packetItems.clear();
+                                        break;
+
+                                        // Lobby a new client joined
+                                    case 2:
+                                        // Casting String because unpackPacket return a Object List
+                                        currentClientLobbyScreen.addANewPlayerToList((String) packetItems.get(0));
+                                        // Clearing the list for the next use
+                                        packetItems.remove(0);
+                                        break;
+
+                                    // Lobby chat packet
+                                    case 3:
+
+                            }
                         }
-                        buffer.flush();
                     }catch(IOException e){
+                        System.out.println("ABOUT TO CLOSE CONNECTION!!!!!!!!!");
                         closeEverything(socket, writeStream, readStream);
+                        //End the while loop (for some reason socket.isConnected() doesn't seem to do the job)
+                        break;
                     }
                 }
             }
@@ -79,12 +116,17 @@ public class ClientSide{
             }
         }catch(IOException e){}
     }
-
-    public static void main(String[] args) throws Exception{
-        Socket socket = new Socket("10.192.56.61", 5000);
-        ClientSide client = new ClientSide(socket);
-        client.listenForPackets();
-
+    public void closeEverything() {
+                try{
+            if(this.socket != null){
+                socket.close();
+            }
+            if(this.writeStream != null){
+                this.writeStream.close();
+            }
+            if(this.readStream != null){
+                readStream.close();
+            }
+        }catch(IOException e){}
     }
-    
 }

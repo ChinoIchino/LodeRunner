@@ -2,6 +2,8 @@ package io.github.Chino.LodeRunner.GameInterface.Interface;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -20,7 +22,9 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import io.github.Chino.LodeRunner.GameInterface.GDXMain;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.ClientSide;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Server;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.TranslateToBytes;
 
 public class GameRuleScreen implements Screen{
     private final GDXMain main;
@@ -38,10 +42,12 @@ public class GameRuleScreen implements Screen{
     private Table tableOfContent;
 
     private Label errorLabel;
+    private Label usernameLabel;
     private Label isVersusLabel;
     private Label isCoopLabel;
     private Label passwordLabel;
     private Slider gamemodeTypeSlider;
+    private TextField usernameTextField;
     private TextField passwordTextField;
     private TextButton createLobbyButton;
     private TextButton goBackButton;
@@ -58,12 +64,14 @@ public class GameRuleScreen implements Screen{
         Skin skin = new Skin(Gdx.files.internal("textbuttonskin/textbuttonSkin.json"));
 
         this.errorLabel = new Label("", skin);
+        this.usernameLabel = new Label("Username: ", skin);
         this.isVersusLabel = new Label("Versus", skin);
         this.isCoopLabel = new Label("Coop", skin);
         this.passwordLabel = new Label("Password: ", skin);
 
         this.gamemodeTypeSlider = new Slider(0, 1, 1, false, skin);
 
+        this.usernameTextField = new TextField("", skin);
         this.passwordTextField = new TextField("", skin);
 
         this.createLobbyButton = new TextButton("Create Lobby", skin);
@@ -77,6 +85,8 @@ public class GameRuleScreen implements Screen{
         );
 
         this.tableOfContent.add(this.errorLabel).pad(10).colspan(3).row();
+        this.tableOfContent.add(this.usernameLabel).pad(10);
+        this.tableOfContent.add(this.usernameTextField).pad(10).colspan(2).row();
         this.tableOfContent.add(this.isVersusLabel).pad(10);
         this.tableOfContent.add(this.gamemodeTypeSlider).pad(10);
         this.tableOfContent.add(this.isCoopLabel).pad(10).row();
@@ -90,16 +100,32 @@ public class GameRuleScreen implements Screen{
         this.createLobbyButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y){
-                if(isPasswordValid()){
+                if(isPasswordValid() && isUsernameValid()){
                     try {
                         main.getLobbyScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
     
                         //TODO implement passwords
-                        // serverHosted = new Server(new ServerSocket(5000), main, "NOT IMPLEMENTED");
+                        ServerSocket serverSocket = new ServerSocket(5000);
+                        serverHosted = new Server(serverSocket);
                         serverHosted.start();
+
+                        // Add also the host as a client
+                        Socket socket = new Socket("localhost", 5000);
+                        ClientSide hostClient = new ClientSide(socket, main, usernameTextField.getText());
+                        hostClient.listenForPackets();
+
+                        System.out.println("about to write the translated username");
+                        hostClient.writeStream.write(TranslateToBytes.toPlayerListPacket(usernameTextField.getText()));
+                        hostClient.writeStream.flush();
                         
                         main.getLobbyScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
-                        main.getLobbyScreen().setLobbyInformationForHost(serverHosted, InetAddress.getLocalHost().getHostAddress(), "5000", passwordTextField.getText());        
+                        main.getLobbyScreen().setLobbyInformationForHost(
+                            serverHosted,
+                            InetAddress.getLocalHost().getHostAddress(),
+                            "5000",
+                            usernameTextField.getText(),
+                            passwordTextField.getText()
+                        );        
                         
                         main.setScreen(main.getLobbyScreen());
                         
@@ -128,6 +154,22 @@ public class GameRuleScreen implements Screen{
         String passwordFromTextField = this.passwordTextField.getText();
         if(passwordFromTextField.isEmpty()){
             updateErrorLabel("ERROR: Password Is Empty");
+            return false;
+        }
+        if(passwordFromTextField.length() > 10){
+            updateErrorLabel("ERROR: Password must be under 10 characters");
+            return false;
+        }
+        return true;
+    }
+    private boolean isUsernameValid(){
+        String usernameFromTextField = this.usernameTextField.getText();
+        if(usernameFromTextField.isEmpty()){
+            updateErrorLabel("ERROR: Username Is Empty");
+            return false;
+        }
+        if(usernameFromTextField.length() > 14){
+            updateErrorLabel("ERROR: Username must be under 14 characters");
             return false;
         }
         return true;

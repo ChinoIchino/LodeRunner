@@ -20,6 +20,7 @@ public class PacketForLobbyChat extends Packet{
 
     @Override
     public void read(ByteBuffer toEncode){
+        toEncode.resetCursor();
         toEncode.writeInt(this.getPacketId());
 
         toEncode.writeInt(this.nameOfPlayer.length());
@@ -31,7 +32,9 @@ public class PacketForLobbyChat extends Packet{
 
     @Override
     public void write(ByteBuffer toDecode) {
-        // First number is the id so we skip it
+        // Just in case we reset the cursor to the start of the list
+        toDecode.resetCursor();
+        // Skip the id int
         toDecode.readInt();
 
         int sizeOfUsername = toDecode.readInt();
@@ -43,7 +46,7 @@ public class PacketForLobbyChat extends Packet{
 
     @Override
     public int getPacketId() {
-        return 1;
+        return 3;
     }
 
     @Override
@@ -54,6 +57,11 @@ public class PacketForLobbyChat extends Packet{
         list.add(this.message);
 
         return list;
+    }
+
+    @Override
+    public String toString(){
+        return "PacketForLobbyChat:\n   -Username : " + this.nameOfPlayer + "\n   -Message : " + this.message;
     }
     
     

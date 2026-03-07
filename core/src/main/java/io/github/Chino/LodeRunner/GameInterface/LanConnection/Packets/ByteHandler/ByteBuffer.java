@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets;
 
 public class ByteBuffer {
     // Public for easier access via the in/out streams
-    private byte[] bytes;
+    public byte[] bytes;
     private int cursor;
     private int currentUsedSize;
 
@@ -57,8 +57,8 @@ public class ByteBuffer {
             return null;
         }
 
-        byte[] temp = new byte[sizeToRead * 2];
-        for (int i = 0; i < sizeToRead * 2; i++) {
+        byte[] temp = new byte[sizeToRead];
+        for (int i = 0; i < sizeToRead; i++) {
             temp[i] = this.bytes[this.cursor++];
         }
         return new String(temp, StandardCharsets.UTF_8);
@@ -83,7 +83,7 @@ public class ByteBuffer {
 
     }
 
-    public void flush(){
+    public void clear(){
         this.bytes = new byte[1024];
         this.cursor = 0;
         this.currentUsedSize = 0;
@@ -104,20 +104,4 @@ public class ByteBuffer {
     public void setCurrentUsedSize(int currentUsedSize) {
         this.currentUsedSize = currentUsedSize;
     }
-    
-    
-    // public static void main(String[] args) {
-
-    //     ByteBuffer b = new ByteBuffer();
-    //     b.malloc(30);
-
-    //     b.writeInt(11);
-    //     b.writeString("tartiflette");
-        
-    //     int sizeOfWord = b.readInt();
-    //     String wordReturned = b.readString(sizeOfWord);
-
-    //     System.out.println("Got to reading");
-    //     System.out.println("Got the size of the word = " + sizeOfWord + " and the word: " + wordReturned);
-    // }
 }

@@ -2,7 +2,6 @@ package io.github.Chino.LodeRunner.GameInterface.Interface;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -14,6 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import io.github.Chino.LodeRunner.GameInterface.GDXMain;
@@ -26,6 +26,7 @@ public class LobbyScreen implements Screen{
     private Server hostedServer;
     private ClientSide clientSide;
 
+    private String username;
     private String serverPassword;
 
     private SpriteBatch batch;
@@ -35,12 +36,16 @@ public class LobbyScreen implements Screen{
     private boolean isBackgroundMovingLeft = false;
 
     private Stage uiStage;
+    private static Skin skin = new Skin(Gdx.files.internal("textbuttonskin/textbuttonSkin.json"));
 
     private Table tableOfContent;
-    private Table tableForScrollPane;
+    private Table tableOfPlayersList;
+    private Table tablePlayersContent;
+    private Table tableRightSide;
 
     private Label ipLabel;
     private Label passwordLabel;
+    private ScrollPane playerListScroll;
     private ScrollPane logScrollPane;
     private TextButton goBackButton;
 
@@ -55,45 +60,44 @@ public class LobbyScreen implements Screen{
     private void initButtons(){
         Skin skin = new Skin(Gdx.files.internal("textbuttonskin/textbuttonSkin.json"));
 
+        this.tableOfContent = new Table();
+        this.tableOfContent.setFillParent(true);
+        this.uiStage.addActor(this.tableOfContent);
+
+        // Left Side
+        this.tableOfPlayersList = new Table();
+        this.tablePlayersContent = new Table();
+        this.tablePlayersContent.align(Align.top);
+
+        Label playersLabel = new Label("Players:", skin);
+        this.tablePlayersContent.add(playersLabel).left().expandX().fillX().row();
+
+        this.playerListScroll = new ScrollPane(this.tablePlayersContent, skin);
+
+        this.tableOfPlayersList.add(this.playerListScroll).align(Align.right).grow();
+        this.tableOfContent.add(this.tableOfPlayersList).width(Gdx.graphics.getWidth() * 0.40f).height(Gdx.graphics.getHeight() * 0.75f).pad(10);
+
+        //Right Side
         this.ipLabel = new Label("", skin);
-        this.passwordLabel = new Label("", skin);
+        this.passwordLabel = new Label(this.serverPassword, skin);
 
-        this.tableForScrollPane = new Table();
+        this.tableRightSide = new Table();
 
-        this.logScrollPane = new ScrollPane(this.tableForScrollPane);
-        this.logScrollPane.setColor(Color.BLACK);
-        this.logScrollPane.setSize(400, 500);
+        this.tableRightSide.add(ipLabel).center().row();
+        this.tableRightSide.add(passwordLabel).center().row();
+        this.tableRightSide.add(goBackButton).center().row();
 
-        //TODO delete after i tested everything for the logScrollPane
-        // for (int i = 0; i < 10; i++) {
-        //     Label l = new Label("Item " + i, skin);
-        //     this.tableForScrollPane.add(l).left().row();
-        //     // this.tableForScrollPane.invalidateHierarchy();
-        // }
+        this.tableOfContent.add(this.tableRightSide).width(Gdx.graphics.getWidth() * 0.40f).height(Gdx.graphics.getHeight() * 0.75f).pad(10);
+        this.tableOfContent.setDebug(true); // TODO delete after testing
 
         this.goBackButton = new TextButton("Go Back", skin);
-
-        this.tableOfContent = new Table();
-        this.tableOfContent.setFillParent(false);
-        this.tableOfContent.setSize(250, 250);
-        this.tableOfContent.setPosition(
-            this.uiStage.getViewport().getScreenWidth() / 2 - this.tableOfContent.getWidth() / 2,
-            this.uiStage.getViewport().getScreenHeight() / 2 - this.tableOfContent.getHeight() / 2
-        );
-
-        this.tableOfContent.add(this.ipLabel).pad(10).row();
-        this.tableOfContent.add(this.passwordLabel).pad(10).row();
-        this.tableOfContent.add(this.goBackButton).pad(10).row();
-        this.tableOfContent.add(this.logScrollPane).pad(10).height(150).expandX().fillX();
-
-        this.uiStage.addActor(this.tableOfContent);
-        this.uiStage.setScrollFocus(this.logScrollPane);
-
         this.goBackButton.addListener(new ClickListener(){
             @Override
             public void clicked(InputEvent e, float x, float y){
                 if(hostedServer != null){
                     hostedServer.closeServerSocket();
+                }else{
+                    clientSide.closeEverything();
                 }
                 main.getMultiplayerScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
                 main.setScreen(main.getMultiplayerScreen());
@@ -107,21 +111,29 @@ public class LobbyScreen implements Screen{
         this.backgroundTexture = new Texture("menuBackground.png");
     }
 
+    public void addANewPlayerToList(String username){
+        Label nameLabel = new Label(username, skin);
+        System.out.println("In addANewPlayerToList");
+        Gdx.app.postRunnable(() ->{
+            this.tablePlayersContent.add(nameLabel).left().expandX().fillX().row();
+        });
+    }
+
     public void logMessageSend(String message){
         Skin skin = new Skin(Gdx.files.internal("textbuttonskin/textbuttonSkin.json"));
 
         Label messageLabel = new Label(message, skin);
         
-        this.tableForScrollPane.add(messageLabel).expandX().fillX().center().row();
+        this.tableRightSide.add(messageLabel).expandX().fillX().center().row();
     }
 
     public void setMovingBackgroundInfo(int currentXOffset, boolean isMovingLeft){
         this.currentBackgroundXOffset = currentXOffset;
         this.isBackgroundMovingLeft = isMovingLeft;
     }
-    protected void setLobbyInformationForHost(Server server, String ip, String port, String password){
+    protected void setLobbyInformationForHost(Server server, String ip, String port, String username, String password){
         this.hostedServer = server;
-        
+        this.username = username;
         this.ipLabel.setText("Ip: " + ip);
         this.passwordLabel.setText("Passsword: " + password);
     }
@@ -149,7 +161,7 @@ public class LobbyScreen implements Screen{
         // Change the input proc back to this menu
         // this.uiStage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(this.uiStage);
-        
+        this.uiStage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
     }
 
     @Override
@@ -170,11 +182,6 @@ public class LobbyScreen implements Screen{
     @Override
     public void resize(int width, int height) {
         this.uiStage.getViewport().update(width, height, true);
-
-        this.tableOfContent.setPosition(
-            this.uiStage.getViewport().getScreenWidth() / 2 - this.tableOfContent.getWidth() / 2,
-            this.uiStage.getViewport().getScreenHeight() / 2 - this.tableOfContent.getHeight() / 2
-        );
     }
 
     @Override

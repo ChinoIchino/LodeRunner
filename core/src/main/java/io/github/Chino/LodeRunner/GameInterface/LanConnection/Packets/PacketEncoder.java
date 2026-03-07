@@ -1,20 +1,19 @@
 package io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets;
 
-// import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.Packet;
 
 public class PacketEncoder{
-    // private ByteBuffer buffer;
+    private ByteBuffer buffer;
 
-    // public PacketEncoder() {
-    //     this.buffer.malloc(1024);
-    // }
+    public PacketEncoder() {
+        this.buffer = new ByteBuffer(1024);
+    }
 
 
-    // public List<Object> decodePacket(Packet packet){
-    //     List<Object> items;
-        
-    //     packet.read(buffer);
-    //     int packetType = buffer.readInt();
-
-    // }
+    public ByteBuffer encodePacket(Packet packetToEncode){
+        this.buffer.clear();
+        packetToEncode.read(this.buffer);
+        return this.buffer;
+    }
 }

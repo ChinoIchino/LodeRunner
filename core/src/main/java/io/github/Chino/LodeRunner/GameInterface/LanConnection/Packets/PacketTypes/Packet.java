@@ -10,4 +10,7 @@ public abstract class Packet {
     
     public abstract int getPacketId();
     public abstract List<Object> unpackPacket();
+
+    @Override
+    public abstract String toString();
 }
