@@ -1,10 +1,13 @@
 package io.github.Chino.LodeRunner.GameInterface.Interface;
 
+import java.io.IOException;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -19,6 +22,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import io.github.Chino.LodeRunner.GameInterface.GDXMain;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.ClientSide;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Server;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.TranslateToBytes;
 
 public class LobbyScreen implements Screen{
     private final GDXMain main;
@@ -58,8 +62,6 @@ public class LobbyScreen implements Screen{
         initBackground();
     }
     private void initButtons(){
-        Skin skin = new Skin(Gdx.files.internal("textbuttonskin/textbuttonSkin.json"));
-
         this.tableOfContent = new Table();
         this.tableOfContent.setFillParent(true);
         this.uiStage.addActor(this.tableOfContent);
@@ -80,6 +82,7 @@ public class LobbyScreen implements Screen{
         //Right Side
         this.ipLabel = new Label("", skin);
         this.passwordLabel = new Label(this.serverPassword, skin);
+        this.goBackButton = new TextButton("Go Back", skin);
 
         this.tableRightSide = new Table();
 
@@ -90,15 +93,22 @@ public class LobbyScreen implements Screen{
         this.tableOfContent.add(this.tableRightSide).width(Gdx.graphics.getWidth() * 0.40f).height(Gdx.graphics.getHeight() * 0.75f).pad(10);
         this.tableOfContent.setDebug(true); // TODO delete after testing
 
-        this.goBackButton = new TextButton("Go Back", skin);
         this.goBackButton.addListener(new ClickListener(){
             @Override
             public void clicked(InputEvent e, float x, float y){
+                try {
+                    clientSide.writeStream.write(TranslateToBytes.toPlayerLeaveListPacket(clientSide.username));
+                    clientSide.writeStream.flush();
+                } catch (IOException ioe) {}
+
                 if(hostedServer != null){
-                    hostedServer.closeServerSocket();
+                    hostedServer.closeServerProperly();
                 }else{
                     clientSide.closeEverything();
                 }
+
+                resetPlayerList();
+
                 main.getMultiplayerScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
                 main.setScreen(main.getMultiplayerScreen());
             }
@@ -115,13 +125,31 @@ public class LobbyScreen implements Screen{
         Label nameLabel = new Label(username, skin);
         System.out.println("In addANewPlayerToList");
         Gdx.app.postRunnable(() ->{
-            this.tablePlayersContent.add(nameLabel).left().expandX().fillX().row();
+            this.tablePlayersContent.add(nameLabel).expandX().fillX().row();
         });
+    }
+    public void removeAPlayerFromTheList(String username){
+        Label currentLabel;
+
+        for(Actor actor: this.tablePlayersContent.getChildren()){
+            // Just in case verify if the actor is a label
+            if(actor instanceof Label){
+                currentLabel = (Label) actor;
+                if(currentLabel.getText().toString().equals(username.trim())){
+                    System.out.println("In lobbyScreen about to remove a username");
+                    currentLabel.remove();
+                    break;
+                }
+            }
+        }
+    }
+    private void resetPlayerList(){
+        this.tablePlayersContent.clear();
+        Label playersLabel = new Label("Players:", skin);
+        this.tablePlayersContent.add(playersLabel).expandX().fillX().row();
     }
 
     public void logMessageSend(String message){
-        Skin skin = new Skin(Gdx.files.internal("textbuttonskin/textbuttonSkin.json"));
-
         Label messageLabel = new Label(message, skin);
         
         this.tableRightSide.add(messageLabel).expandX().fillX().center().row();
@@ -135,7 +163,7 @@ public class LobbyScreen implements Screen{
         this.hostedServer = server;
         this.username = username;
         this.ipLabel.setText("Ip: " + ip);
-        this.passwordLabel.setText("Passsword: " + password);
+        this.passwordLabel.setText("Password: " + password);
     }
     protected void setLobbyInformationForClient(ClientSide clientSide,String ip, String port, String password){
         this.clientSide = clientSide;
@@ -205,7 +233,7 @@ public class LobbyScreen implements Screen{
         this.batch.dispose();
 
         if(this.hostedServer != null){
-            this.hostedServer.closeServerSocket();
+            this.hostedServer.closeServerProperly();
         }
     }
     

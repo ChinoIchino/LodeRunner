@@ -39,9 +39,11 @@ public class ClientHandler implements Runnable{
 
         //Before we get in the loop we wait for the username
         try {
-            this.readerStream.read(bytes);
-            server.sendUsernameToPlayerList(bytes);
-            this.username = new String(bytes).trim();
+            int sizeOfItem = this.readerStream.read(bytes);
+            this.username = new String(bytes, 0, sizeOfItem).trim();
+            
+            server.sendUsernameToPlayerList(this.username);
+            
             this.server.broadcastPacket(TranslateToBytes.toPlayerListPacket(this.username));
             
         } catch (IOException e) {}

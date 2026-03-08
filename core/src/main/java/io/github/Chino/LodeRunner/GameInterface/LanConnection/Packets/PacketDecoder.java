@@ -5,6 +5,7 @@ import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketType
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForLobbyAllPlayerList;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForLobbyChat;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForLobbyPlayersList;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForPlayerListLeave;
 
 public class PacketDecoder {
     public Packet decodeStream(ByteBuffer bytes){
@@ -23,8 +24,13 @@ public class PacketDecoder {
                 packetToReturn = new PacketForLobbyPlayersList();
                 packetToReturn.write(bytes);
                 return packetToReturn;
-            // Chat packet
+            // Player list in lobby for player leave
             case 3:
+                packetToReturn = new PacketForPlayerListLeave();
+                packetToReturn.write(bytes);
+                return packetToReturn;
+            // Chat packet
+            case 4:
                 packetToReturn = new PacketForLobbyChat();
                 packetToReturn.write(bytes);
                 return packetToReturn;

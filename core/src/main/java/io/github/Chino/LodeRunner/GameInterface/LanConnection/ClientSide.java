@@ -56,7 +56,7 @@ public class ClientSide{
 
                 while(socket.isConnected()){
                     try{
-                        readStream.read(buffer.bytes, 0, 1024);
+                        readStream.read(buffer.bytes);
                         
                         if(buffer.readInt() > 0){
                             buffer.resetCursor();
@@ -86,9 +86,12 @@ public class ClientSide{
                                         // Clearing the list for the next use
                                         packetItems.remove(0);
                                         break;
-
-                                    // Lobby chat packet
                                     case 3:
+                                        System.out.println("About to remove " + packetItems.get(0));
+                                        currentClientLobbyScreen.removeAPlayerFromTheList((String) packetItems.get(0));
+                                        packetItems.remove(0);
+                                    // Lobby chat packet
+                                    case 4:
 
                             }
                         }

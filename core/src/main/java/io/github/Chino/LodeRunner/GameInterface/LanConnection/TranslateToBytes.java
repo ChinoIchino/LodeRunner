@@ -16,6 +16,16 @@ public class TranslateToBytes{
 
         return buffer.getBytesList();
     } 
+    public static byte[] toPlayerLeaveListPacket(String toEncode){
+        ByteBuffer buffer = new ByteBuffer(1024);
+        buffer.writeInt(3);
+
+        int stringSize = toEncode.length();
+        buffer.writeInt(stringSize);
+        buffer.writeString(toEncode);
+
+        return buffer.bytes;
+    }
     public static byte[] toAllPlayerListPacket(ArrayList<String> players){
         ByteBuffer buffer = new ByteBuffer(1024);
         buffer.writeInt(1);
