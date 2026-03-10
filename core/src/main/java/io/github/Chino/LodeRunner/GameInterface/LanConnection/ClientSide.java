@@ -79,19 +79,34 @@ public class ClientSide{
                                         packetItems.clear();
                                         break;
 
-                                        // Lobby a new client joined
+                                    // Lobby a new client joined
                                     case 2:
                                         // Casting String because unpackPacket return a Object List
                                         currentClientLobbyScreen.addANewPlayerToList((String) packetItems.get(0));
                                         // Clearing the list for the next use
                                         packetItems.remove(0);
                                         break;
+                                    
+                                    // Lobby a client quit
                                     case 3:
-                                        System.out.println("About to remove " + packetItems.get(0));
                                         currentClientLobbyScreen.removeAPlayerFromTheList((String) packetItems.get(0));
                                         packetItems.remove(0);
-                                    // Lobby chat packet
+                                        break;
+                                    
+                                    // Last lobby chat messages
                                     case 4:
+                                        System.out.println("In listenForPackets: case 4 WASN'T IMPLEMENTED !!");
+                                        // for(int i = 0; i < packetItems.size(); i += 2) {
+                                        //     currentClientLobbyScreen.logMessageSend((String) packetItems.get(i),(String) packetItems.get(i + 1));
+                                        // }
+                                        // packetItems.clear();
+                                        break;
+
+                                    // Lobby chat packet
+                                    case 5:
+                                        currentClientLobbyScreen.logMessageSend((String) packetItems.get(0),(String) packetItems.get(1));
+                                        packetItems.clear();
+                                        break;
 
                             }
                         }

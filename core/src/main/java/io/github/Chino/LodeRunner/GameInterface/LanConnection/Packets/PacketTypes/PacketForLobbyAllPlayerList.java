@@ -10,11 +10,7 @@ public class PacketForLobbyAllPlayerList extends Packet{
 
     @Override
     public void read(ByteBuffer toEncode) {
-        toEncode.resetCursor();
-        toEncode.writeInt(this.getPacketId());
-
         throw new UnsupportedOperationException("Unimplemented method 'read'");
-
     }
 
     @Override

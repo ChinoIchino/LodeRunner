@@ -9,12 +9,14 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -39,19 +41,24 @@ public class LobbyScreen implements Screen{
     private int currentBackgroundXOffset = 0;
     private boolean isBackgroundMovingLeft = false;
 
-    private Stage uiStage;
-    private static Skin skin = new Skin(Gdx.files.internal("textbuttonskin/textbuttonSkin.json"));
+    private final Stage uiStage;
+    private final static Skin skin = new Skin(Gdx.files.internal("textbuttonskin/textbuttonSkin.json"));
 
     private Table tableOfContent;
-    private Table tableOfPlayersList;
+    
+    private Table tableLeftSide;
     private Table tablePlayersContent;
+    private Table tableChatContent;
+    private Table tableChatInput;
+    
     private Table tableRightSide;
 
     private Label ipLabel;
     private Label passwordLabel;
     private ScrollPane playerListScroll;
-    private ScrollPane logScrollPane;
+    private ScrollPane chatScrollPane;
     private TextButton goBackButton;
+    private TextField chatTextField;
 
     public LobbyScreen(GDXMain main) {
         this.main = main;
@@ -66,18 +73,36 @@ public class LobbyScreen implements Screen{
         this.tableOfContent.setFillParent(true);
         this.uiStage.addActor(this.tableOfContent);
 
-        // Left Side
-        this.tableOfPlayersList = new Table();
+        //Top Left Side
+        this.tableLeftSide = new Table();
         this.tablePlayersContent = new Table();
         this.tablePlayersContent.align(Align.top);
 
         Label playersLabel = new Label("Players:", skin);
-        this.tablePlayersContent.add(playersLabel).left().expandX().fillX().row();
+        this.tablePlayersContent.add(playersLabel).expandX().fillX().row();
 
         this.playerListScroll = new ScrollPane(this.tablePlayersContent, skin);
 
-        this.tableOfPlayersList.add(this.playerListScroll).align(Align.right).grow();
-        this.tableOfContent.add(this.tableOfPlayersList).width(Gdx.graphics.getWidth() * 0.40f).height(Gdx.graphics.getHeight() * 0.75f).pad(10);
+        this.tableLeftSide.add(this.playerListScroll).align(Align.right).grow().padBottom(20).row();
+        this.tableOfContent.add(this.tableLeftSide).top().width(Gdx.graphics.getWidth() * 0.40f).height(Gdx.graphics.getHeight() * 0.75f).pad(10);
+        
+        // Bottom Left Side
+        this.tableChatContent = new Table();
+        this.tableChatContent.top();
+
+        this.chatScrollPane = new ScrollPane(this.tableChatContent, skin);
+        this.chatScrollPane.setScrollingDisabled(true, false);
+        this.chatScrollPane.setScrollbarsVisible(false);
+        this.tableLeftSide.add(this.chatScrollPane).growX().height(Gdx.graphics.getHeight() * 0.35f).padBottom(1).row();
+
+        // Chat input table
+        this.tableChatInput = new Table();
+
+        this.chatTextField = new TextField("", skin);
+
+        tableChatInput.add(this.chatTextField).growX().padRight(5);
+
+        this.tableLeftSide.add(tableChatInput).growX().expandX().row();
 
         //Right Side
         this.ipLabel = new Label("", skin);
@@ -92,6 +117,19 @@ public class LobbyScreen implements Screen{
 
         this.tableOfContent.add(this.tableRightSide).width(Gdx.graphics.getWidth() * 0.40f).height(Gdx.graphics.getHeight() * 0.75f).pad(10);
         this.tableOfContent.setDebug(true); // TODO delete after testing
+
+        this.chatTextField.addListener(new InputListener(){
+            @Override
+            public boolean keyUp (InputEvent event, int keycode) {
+                // Enter key is 66
+                if(keycode == 66 && !chatTextField.getText().isEmpty()){
+                    sendMessageToChat(chatTextField.getText());
+                    chatTextField.setText("");
+                    return true;
+                }
+                return false;
+            }
+        });
 
         this.goBackButton.addListener(new ClickListener(){
             @Override
@@ -113,7 +151,6 @@ public class LobbyScreen implements Screen{
                 main.setScreen(main.getMultiplayerScreen());
             }
         });
-
     }
     private void initBackground(){
         this.batch = new SpriteBatch();
@@ -149,24 +186,48 @@ public class LobbyScreen implements Screen{
         this.tablePlayersContent.add(playersLabel).expandX().fillX().row();
     }
 
-    public void logMessageSend(String message){
-        Label messageLabel = new Label(message, skin);
-        
-        this.tableRightSide.add(messageLabel).expandX().fillX().center().row();
+    // This function is only called via the server
+    public void logMessageSend(String username, String message){
+        if(username.isEmpty() || message.isEmpty()){
+            return;
+        }
+
+        Label label = new Label(username + ": " + message, skin);
+        // Wrap so the label doesn't modify the scroll pane horizontal position
+        label.setWrap(true);
+        Gdx.app.postRunnable(() ->{
+            // Add the message via a label to the scroll pane of the chat
+            this.tableChatContent.add(label).left().expandX().fillX().row();
+
+            // Goes to the end of the chat after the label was added
+            this.tableChatContent.layout();
+            this.chatScrollPane.layout();
+            this.chatScrollPane.setScrollPercentY(this.chatScrollPane.getMaxY());
+        });
+    }
+    private void sendMessageToChat(String message){
+        try{
+            this.clientSide.writeStream.write(TranslateToBytes.toLobbyChatMessage(this.username, message));
+            this.clientSide.writeStream.flush();
+        }catch(IOException e){
+            System.out.println("ERROR: GameInterface/Interface/LobbyScreen.java: function sendMessageToChat catched IOException while sending a message to ClientHandler.java");
+        }
     }
 
     public void setMovingBackgroundInfo(int currentXOffset, boolean isMovingLeft){
         this.currentBackgroundXOffset = currentXOffset;
         this.isBackgroundMovingLeft = isMovingLeft;
     }
-    protected void setLobbyInformationForHost(Server server, String ip, String port, String username, String password){
+    protected void setLobbyInformationForHost(Server server, ClientSide hostClient, String ip, String port, String username, String password){
         this.hostedServer = server;
+        this.clientSide = hostClient;
         this.username = username;
         this.ipLabel.setText("Ip: " + ip);
         this.passwordLabel.setText("Password: " + password);
     }
-    protected void setLobbyInformationForClient(ClientSide clientSide,String ip, String port, String password){
+    protected void setLobbyInformationForClient(ClientSide clientSide, String username ,String ip, String port, String password){
         this.clientSide = clientSide;
+        this.username = username;
         this.ipLabel.setText("Ip: " + ip);
         this.passwordLabel.setText("Password: " + password);
     }

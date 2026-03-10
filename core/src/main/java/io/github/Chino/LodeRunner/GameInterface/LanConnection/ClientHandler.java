@@ -51,6 +51,7 @@ public class ClientHandler implements Runnable{
         while(this.socket.isConnected()){
             try {
                 this.readerStream.read(bytes);
+                System.out.println("ClientHandler received a packet about to send to the server.");
                 server.broadcastPacket(bytes);
             } catch (IOException e) {
                 // System.out.println("\nERROR ClientHandler.java: thread run");

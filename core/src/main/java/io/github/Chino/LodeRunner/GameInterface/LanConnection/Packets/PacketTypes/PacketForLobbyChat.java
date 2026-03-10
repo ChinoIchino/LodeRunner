@@ -46,7 +46,7 @@ public class PacketForLobbyChat extends Packet{
 
     @Override
     public int getPacketId() {
-        return 4;
+        return 5;
     }
 
     @Override

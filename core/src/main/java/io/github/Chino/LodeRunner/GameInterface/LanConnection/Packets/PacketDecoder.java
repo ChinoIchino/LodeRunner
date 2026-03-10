@@ -14,23 +14,28 @@ public class PacketDecoder {
         Packet packetToReturn;
 
         switch (typeOfPacket) {
-            // All player List in lobby packet
+            // Player list: All players in lobby
             case 1:
                 packetToReturn = new PacketForLobbyAllPlayerList();
                 packetToReturn.write(bytes);
                 return packetToReturn;
-            // Player list in lobby packet
+            // Player list: A player join
             case 2:
                 packetToReturn = new PacketForLobbyPlayersList();
                 packetToReturn.write(bytes);
                 return packetToReturn;
-            // Player list in lobby for player leave
+            // Player list: A player leave
             case 3:
                 packetToReturn = new PacketForPlayerListLeave();
                 packetToReturn.write(bytes);
                 return packetToReturn;
-            // Chat packet
+            // Chat packet: Multiple messages
             case 4:
+                packetToReturn = new PacketForLobbyChat();
+                packetToReturn.write(bytes);
+                return packetToReturn;
+            // Chat packet: Single message
+            case 5:
                 packetToReturn = new PacketForLobbyChat();
                 packetToReturn.write(bytes);
                 return packetToReturn;

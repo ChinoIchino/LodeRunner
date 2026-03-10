@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
 
 public class TranslateToBytes{
+
     // It compact the string into the "protocol" of a PacketForLobbyPlayersList
     public static byte[] toPlayerListPacket(String toEncode){
         ByteBuffer buffer = new ByteBuffer(1024);
@@ -41,6 +42,38 @@ public class TranslateToBytes{
             buffer.writeInt(stringSize);
             buffer.writeString(currentName);
         }
+
+        return buffer.bytes;
+    }
+
+    public static byte[] toLobbyChatMessages(ArrayList<String> usernameList, ArrayList<String> messageList){
+        ByteBuffer buffer = new ByteBuffer(1024);
+        buffer.writeInt(4);
+        buffer.writeInt(usernameList.size());
+
+        int sizeOfUsername;
+        int sizeOfMessage;
+        for (int i = 0; i < usernameList.size(); i++) {
+            sizeOfUsername = usernameList.get(i).length();
+            buffer.writeInt(sizeOfUsername);
+            buffer.writeString(usernameList.get(i));
+
+            sizeOfMessage = messageList.get(i).length();
+            buffer.writeInt(sizeOfMessage);
+            buffer.writeString(messageList.get(i));
+        }
+
+        return buffer.bytes;
+    }
+    public static byte[] toLobbyChatMessage(String username, String message){
+        ByteBuffer buffer = new ByteBuffer(1024);
+        buffer.writeInt(5);
+
+        buffer.writeInt(username.length());
+        buffer.writeString(username);
+
+        buffer.writeInt(message.length());
+        buffer.writeString(message);
 
         return buffer.bytes;
     }

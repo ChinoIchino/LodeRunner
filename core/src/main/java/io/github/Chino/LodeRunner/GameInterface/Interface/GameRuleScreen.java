@@ -121,6 +121,7 @@ public class GameRuleScreen implements Screen{
                         main.getLobbyScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
                         main.getLobbyScreen().setLobbyInformationForHost(
                             serverHosted,
+                            hostClient,
                             InetAddress.getLocalHost().getHostAddress(),
                             "5000",
                             usernameTextField.getText(),

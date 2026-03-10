@@ -145,11 +145,9 @@ public class JoinClientScreen implements Screen{
             return;
         }
 
-        //TODO after test put back
         try {
             Socket socket = new Socket(ipFromTextField, 5000);
-            // Giving ClientSide the main so he init 
-            //TODO
+
             ClientSide client = new ClientSide(socket, this.main, this.usernameTextField.getText());
             client.listenForPackets();
             
@@ -160,7 +158,7 @@ public class JoinClientScreen implements Screen{
             // Used so Gdx handle the rendering/UI, else it send a error.
             Gdx.app.postRunnable(() ->{
                 main.getLobbyScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
-                main.getLobbyScreen().setLobbyInformationForClient(client, ipFromTextField, "5000", passwordFromTextField);
+                main.getLobbyScreen().setLobbyInformationForClient(client, usernameTextField.getText(), ipFromTextField, "5000", passwordFromTextField);
                 main.setScreen(this.main.getLobbyScreen());
             });
         } catch (IOException e) {

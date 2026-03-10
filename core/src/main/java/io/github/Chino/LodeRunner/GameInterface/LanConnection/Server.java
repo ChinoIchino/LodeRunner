@@ -14,13 +14,15 @@ public class Server extends Thread{
     public ArrayList<ClientHandler> clientHandlersInServer = new ArrayList<>();
     public ArrayList<String> playerList = new ArrayList<>();
 
+    public ArrayList<String> lastMessagesOfChat = new ArrayList<>();
+    public ArrayList<String> lastNamesOfChat = new ArrayList<>();
+
     public Server(ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
     }
 
     @Override
     public void run(){
-        int maxAmmount = 0;
         try{
             while(!this.serverSocket.isClosed()){
                 // Wait here until a client connect
@@ -29,6 +31,7 @@ public class Server extends Thread{
 
                 ClientHandler clientHandler = new ClientHandler(socket, this);
                 sendToClientAllPlayerList(clientHandler);
+                sendToClientMessageLog(clientHandler);
 
                 clientHandlersInServer.add(clientHandler);
                 Thread threadForClientHandler = new Thread(clientHandler);
@@ -45,8 +48,8 @@ public class Server extends Thread{
         interceptPacket(bytes);
 
         for (ClientHandler client : clientHandlersInServer) {
-            System.out.println("Sending packet via broadcast to client");
             try {
+                System.out.println("Sending packet via broadcast to client");
                 // Send packet to each clients
                 client.writerStream.write(bytes);
                 client.writerStream.flush();
@@ -63,12 +66,28 @@ public class Server extends Thread{
     private void interceptPacket(byte[] bytes){
         this.buffer.clear();
         this.buffer.bytes = bytes;
+        
         if(buffer.readInt() == 3){
             int stringSize = this.buffer.readInt();
-
             this.playerList.remove(this.buffer.readString(stringSize).trim());
         }
-        
+
+        // If its a message packet
+        //TODO seem to not work, see later
+        if(buffer.readInt() == 5){
+            System.out.println("Server intercepted a message packet, about to log the message");
+            int sizeOfName = buffer.readInt();
+            this.lastNamesOfChat.add(buffer.readString(sizeOfName));
+
+            int sizeOfMessage = buffer.readInt();
+            this.lastMessagesOfChat.add(buffer.readString(sizeOfMessage));
+
+            // If there is more than 5 messages logged, remove the last one.
+            if(this.lastMessagesOfChat.size() >= 6){
+                this.lastMessagesOfChat.remove(0);
+                this.lastNamesOfChat.remove(0);
+            }
+        }
     }
 
     private void sendToClientAllPlayerList(ClientHandler client){
@@ -79,6 +98,16 @@ public class Server extends Thread{
             client.writerStream.flush();
         }catch (IOException e){
             System.out.println("\nERROR GameInterface/LanConnection/Server.java: function sendToClientAllPlayerList catched a IOException");
+        }
+    }
+    private void sendToClientMessageLog(ClientHandler client){
+        byte[] bytes = TranslateToBytes.toLobbyChatMessages(this.lastNamesOfChat, this.lastMessagesOfChat);
+
+        try {
+            client.writerStream.write(bytes);
+            client.writerStream.flush();
+        } catch (IOException e) {
+            System.out.println("\nERROR GameInterface/LanConnection/Server.java: function sendToClientMessageLog catched a IOException");
         }
     }
 
@@ -104,6 +133,9 @@ public class Server extends Thread{
             }
             clientHandlersInServer.clear();
             playerList.clear();
+
+            lastMessagesOfChat.clear();
+            lastNamesOfChat.clear();
 
             if(this.serverSocket != null){
                 this.serverSocket.close();
