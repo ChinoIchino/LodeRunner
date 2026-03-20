@@ -44,7 +44,7 @@ public class Server extends Thread{
     }
 
     // Send to each client. Received via ClientSide.java listenForPackets function
-    protected void broadcastPacket(byte[] bytes){
+    protected synchronized void broadcastPacket(byte[] bytes){
         interceptPacket(bytes);
 
         for (ClientHandler client : clientHandlersInServer) {
@@ -67,14 +67,16 @@ public class Server extends Thread{
         this.buffer.clear();
         this.buffer.bytes = bytes;
         
-        if(buffer.readInt() == 3){
+        int packetType = this.buffer.readInt();
+        
+        if(packetType == 3){
             int stringSize = this.buffer.readInt();
             this.playerList.remove(this.buffer.readString(stringSize).trim());
         }
 
         // If its a message packet
         //TODO seem to not work, see later
-        if(buffer.readInt() == 5){
+        if(packetType == 5){
             System.out.println("Server intercepted a message packet, about to log the message");
             int sizeOfName = buffer.readInt();
             this.lastNamesOfChat.add(buffer.readString(sizeOfName));
@@ -87,6 +89,11 @@ public class Server extends Thread{
                 this.lastMessagesOfChat.remove(0);
                 this.lastNamesOfChat.remove(0);
             }
+        }
+
+        // TODO delete after the test
+        if(packetType == 6){
+            System.out.println("\n\nSERVER INTERCEPTED a kick all packet\n\n");
         }
     }
 
@@ -112,14 +119,14 @@ public class Server extends Thread{
     }
 
     protected void sendUsernameToPlayerList(String nameToAdd){
-        System.out.println("Server: sendUsernameToPlayerList got a new name");
+        // System.out.println("Server: sendUsernameToPlayerList got a new name");
         playerList.add(nameToAdd);
 
-        System.out.println("Current list:");
-        for (String name : playerList) {
-            System.out.println(name);
-        }
-        System.out.println("END OF LIST");
+        // System.out.println("Current list:");
+        // for (String name : playerList) {
+        //     System.out.println(name);
+        // }
+        // System.out.println("END OF LIST");
     }
 
     private void removeFromClientHandlers(ClientHandler client){
@@ -127,6 +134,15 @@ public class Server extends Thread{
     }
 
     public void closeServerProperly(){
+        ByteBuffer buffer = new ByteBuffer(4);
+        buffer.writeInt(6);
+
+        // Broadcast that the host quit the lobby
+        // Pseudo packet used to inform the client that the host lobby quit
+        broadcastPacket(buffer.getBytesList());
+        
+        buffer.clear();
+        
         try {
             for (ClientHandler client : clientHandlersInServer) {
                 client.closeEverything(client.socket, client.writerStream, client.readerStream);
@@ -141,7 +157,7 @@ public class Server extends Thread{
                 this.serverSocket.close();
             }
         } catch (IOException e) {
-            System.out.println("\nERROR will closing server");
+            System.out.println("\nERROR GameInterface/LanConnection/Server.java: While closing server");
         }
     }
 }

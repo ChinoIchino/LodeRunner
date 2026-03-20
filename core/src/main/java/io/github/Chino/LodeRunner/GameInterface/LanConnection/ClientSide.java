@@ -52,13 +52,15 @@ public class ClientSide{
             @Override
             public void run(){
                 Packet decodedPacket;
+                int packetType;
                 List<Object> packetItems = new ArrayList<>();
 
                 while(socket.isConnected()){
                     try{
                         readStream.read(buffer.bytes);
-                        
-                        if(buffer.readInt() > 0){
+                        packetType = buffer.readInt();
+
+                        if(packetType > 0 && packetType != 6){
                             buffer.resetCursor();
                             System.out.println("In listenForPackets with the packet type = " + buffer.readInt());
                             buffer.resetCursor();
@@ -84,13 +86,13 @@ public class ClientSide{
                                         // Casting String because unpackPacket return a Object List
                                         currentClientLobbyScreen.addANewPlayerToList((String) packetItems.get(0));
                                         // Clearing the list for the next use
-                                        packetItems.remove(0);
+                                        packetItems.clear();
                                         break;
                                     
                                     // Lobby a client quit
                                     case 3:
                                         currentClientLobbyScreen.removeAPlayerFromTheList((String) packetItems.get(0));
-                                        packetItems.remove(0);
+                                        packetItems.clear();
                                         break;
                                     
                                     // Last lobby chat messages
@@ -109,6 +111,8 @@ public class ClientSide{
                                         break;
 
                             }
+                        }else if(packetType == 6){
+                            currentClientLobbyScreen.forceDispose();
                         }
                     }catch(IOException e){
                         System.out.println("ABOUT TO CLOSE CONNECTION!!!!!!!!!");

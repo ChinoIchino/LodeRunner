@@ -135,6 +135,7 @@ public class LobbyScreen implements Screen{
             @Override
             public void clicked(InputEvent e, float x, float y){
                 try {
+                    System.out.println("Go Back button pressed, about to send a player leave packet");
                     clientSide.writeStream.write(TranslateToBytes.toPlayerLeaveListPacket(clientSide.username));
                     clientSide.writeStream.flush();
                 } catch (IOException ioe) {}
@@ -296,6 +297,15 @@ public class LobbyScreen implements Screen{
         if(this.hostedServer != null){
             this.hostedServer.closeServerProperly();
         }
+    }
+    // Used only when the host of the lobby quit, so the user must be kicked from the interface
+    public void forceDispose(){
+        System.out.println("\nABOUT TO FORCE DISPOSE");
+        
+        Gdx.app.postRunnable(() ->{
+            dispose();
+            this.main.setScreen(this.main.getMultiplayerScreen());
+        });
     }
     
 }
