@@ -149,7 +149,7 @@ public class JoinClientScreen implements Screen{
             Socket socket = new Socket(ipFromTextField, 5000);
 
             ClientSide client = new ClientSide(socket, this.main, this.usernameTextField.getText());
-            client.listenForPackets();
+            client.start();
             
             System.out.println("about to write the translated username");
             client.writeStream.write(TranslateToBytes.toPlayerListPacket(this.usernameTextField.getText()));

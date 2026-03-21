@@ -112,9 +112,9 @@ public class GameRuleScreen implements Screen{
                         // Add also the host as a client
                         Socket socket = new Socket("localhost", 5000);
                         ClientSide hostClient = new ClientSide(socket, main, usernameTextField.getText());
-                        hostClient.listenForPackets();
+                        hostClient.start();
 
-                        System.out.println("about to write the translated username");
+                        // System.out.println("about to write the translated username");
                         hostClient.writeStream.write(TranslateToBytes.toPlayerListPacket(usernameTextField.getText()));
                         hostClient.writeStream.flush();
                         
@@ -125,7 +125,8 @@ public class GameRuleScreen implements Screen{
                             InetAddress.getLocalHost().getHostAddress(),
                             "5000",
                             usernameTextField.getText(),
-                            passwordTextField.getText()
+                            passwordTextField.getText(),
+                            (int) (gamemodeTypeSlider.getValue())
                         );        
                         
                         main.setScreen(main.getLobbyScreen());

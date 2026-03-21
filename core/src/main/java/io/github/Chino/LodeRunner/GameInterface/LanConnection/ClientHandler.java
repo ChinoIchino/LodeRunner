@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class ClientHandler implements Runnable{
+    private volatile boolean isRunning = true;
+
     private String username;
 
     private Server server;
@@ -48,7 +50,7 @@ public class ClientHandler implements Runnable{
             
         } catch (IOException e) {}
 
-        while(this.socket.isConnected()){
+        while(this.isRunning){
             try {
                 this.readerStream.read(bytes);
                 System.out.println("ClientHandler received a packet about to send to the server.");
@@ -56,21 +58,35 @@ public class ClientHandler implements Runnable{
             } catch (IOException e) {
                 // System.out.println("\nERROR ClientHandler.java: thread run");
                 closeEverything(this.socket, this.writerStream, this.readerStream);
+                break;
+            }
+        }
+
+        System.out.println("\n\nCLIENTHANDLER THREAD STOPPED");
+    }
+
+    protected void closeEverything(Socket socket, BufferedOutputStream writer, BufferedInputStream reader){
+        if(isRunning){
+            isRunning = false;
+    
+            try{
+                if(socket != null){
+                    socket.close();
+                }
+                if(writer != null){
+                    writer.close();
+                }
+                if(reader != null){
+                    reader.close();
+                }
+            }catch(IOException e){
+                System.out.println("\nERROR GameInterface/LanConnection/ClientHandler.java: catched IOException while closing");
             }
         }
     }
 
-    protected void closeEverything(Socket socket, BufferedOutputStream writer, BufferedInputStream reader){
-        try{
-            if(socket != null){
-                socket.close();
-            }
-            if(writer != null){
-                writer.close();
-            }
-            if(reader != null){
-                reader.close();
-            }
-        }catch(IOException e){}
+    @Override
+    public String toString(){
+        return "ClientHandler[Is Running = " + this.isRunning + " // Server connected to = " + this.server.toString() + " // Socket = " + this.socket.toString() + "]\n";
     }
 }

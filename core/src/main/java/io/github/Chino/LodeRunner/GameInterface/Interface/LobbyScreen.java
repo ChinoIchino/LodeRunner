@@ -41,7 +41,7 @@ public class LobbyScreen implements Screen{
     private int currentBackgroundXOffset = 0;
     private boolean isBackgroundMovingLeft = false;
 
-    private final Stage uiStage;
+    private Stage uiStage;
     private final static Skin skin = new Skin(Gdx.files.internal("textbuttonskin/textbuttonSkin.json"));
 
     private Table tableOfContent;
@@ -55,6 +55,7 @@ public class LobbyScreen implements Screen{
 
     private Label ipLabel;
     private Label passwordLabel;
+    private Label gameModeLabel;
     private ScrollPane playerListScroll;
     private ScrollPane chatScrollPane;
     private TextButton goBackButton;
@@ -65,10 +66,10 @@ public class LobbyScreen implements Screen{
 
         this.uiStage = new Stage(new ScreenViewport());
 
-        initButtons();
+        initInterface();
         initBackground();
     }
-    private void initButtons(){
+    private void initInterface(){
         this.tableOfContent = new Table();
         this.tableOfContent.setFillParent(true);
         this.uiStage.addActor(this.tableOfContent);
@@ -107,12 +108,14 @@ public class LobbyScreen implements Screen{
         //Right Side
         this.ipLabel = new Label("", skin);
         this.passwordLabel = new Label(this.serverPassword, skin);
+        this.gameModeLabel = new Label("", skin);
         this.goBackButton = new TextButton("Go Back", skin);
 
         this.tableRightSide = new Table();
 
         this.tableRightSide.add(ipLabel).center().row();
         this.tableRightSide.add(passwordLabel).center().row();
+        this.tableRightSide.add(gameModeLabel).center().row();
         this.tableRightSide.add(goBackButton).center().row();
 
         this.tableOfContent.add(this.tableRightSide).width(Gdx.graphics.getWidth() * 0.40f).height(Gdx.graphics.getHeight() * 0.75f).pad(10);
@@ -141,12 +144,18 @@ public class LobbyScreen implements Screen{
                 } catch (IOException ioe) {}
 
                 if(hostedServer != null){
+                    System.out.println("In goBackButton from LobbyScreen, server isn't null, about to close it");
                     hostedServer.closeServerProperly();
+                    // hostedServer = null;
                 }else{
+                    System.out.println("In goBackButton from LobbyScreen, client isn't null, about to close it");
                     clientSide.closeEverything();
+                    // clientSide = null;
                 }
 
                 resetPlayerList();
+
+                System.out.println("Server status " + hostedServer.toString() + " state = " + hostedServer.getState() + " // Client status " + clientSide.getState());
 
                 main.getMultiplayerScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
                 main.setScreen(main.getMultiplayerScreen());
@@ -219,12 +228,18 @@ public class LobbyScreen implements Screen{
         this.currentBackgroundXOffset = currentXOffset;
         this.isBackgroundMovingLeft = isMovingLeft;
     }
-    protected void setLobbyInformationForHost(Server server, ClientSide hostClient, String ip, String port, String username, String password){
+    protected void setLobbyInformationForHost(Server server, ClientSide hostClient, String ip, String port, String username, String password, int gameModeChoice){
         this.hostedServer = server;
         this.clientSide = hostClient;
         this.username = username;
         this.ipLabel.setText("Ip: " + ip);
         this.passwordLabel.setText("Password: " + password);
+        
+        if(gameModeChoice == 0){
+            this.gameModeLabel.setText("Mode: Versus");
+        }else{
+            this.gameModeLabel.setText("Mode: Coop");
+        }
     }
     protected void setLobbyInformationForClient(ClientSide clientSide, String username ,String ip, String port, String password){
         this.clientSide = clientSide;
@@ -248,10 +263,14 @@ public class LobbyScreen implements Screen{
 
     @Override
     public void show() {
-        // Change the input proc back to this menu
-        // this.uiStage = new Stage(new ScreenViewport());
+        // Recreate a sprite batch when a new lobby interface is displayed
+        this.batch = new SpriteBatch();
+        this.uiStage = new Stage(new ScreenViewport(), this.batch);
+
         Gdx.input.setInputProcessor(this.uiStage);
         this.uiStage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+        
+        initInterface();
     }
 
     @Override
@@ -296,6 +315,8 @@ public class LobbyScreen implements Screen{
 
         if(this.hostedServer != null){
             this.hostedServer.closeServerProperly();
+        }else if(this.clientSide != null){
+            this.clientSide.closeEverything();
         }
     }
     // Used only when the host of the lobby quit, so the user must be kicked from the interface

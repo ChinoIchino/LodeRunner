@@ -4,12 +4,15 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
 
 public class Server extends Thread{
     private ServerSocket serverSocket;
     private ByteBuffer buffer = new ByteBuffer(1024);
+
+    private volatile boolean isRunning = true;
 
     public ArrayList<ClientHandler> clientHandlersInServer = new ArrayList<>();
     public ArrayList<String> playerList = new ArrayList<>();
@@ -23,11 +26,12 @@ public class Server extends Thread{
 
     @Override
     public void run(){
-        try{
-            while(!this.serverSocket.isClosed()){
+        System.out.println("\nStarted a Server thread");
+        while(isRunning){
+            try{
                 // Wait here until a client connect
                 Socket socket = this.serverSocket.accept();
-                System.out.println("startServer: A new client connected!");
+                // System.out.println("startServer: A new client connected!");
 
                 ClientHandler clientHandler = new ClientHandler(socket, this);
                 sendToClientAllPlayerList(clientHandler);
@@ -36,11 +40,16 @@ public class Server extends Thread{
                 clientHandlersInServer.add(clientHandler);
                 Thread threadForClientHandler = new Thread(clientHandler);
                 threadForClientHandler.start();
+
+            }catch(IOException e){
+                System.out.println("\nERROR Server.java: catched IOException in startServer");
+                if(!isRunning){
+                    break;
+                }
             }
-        }catch(IOException e){
-            System.out.println("\nERROR Server.java: catched IOException in startServer");
-            closeServerProperly();
         }
+
+        System.out.println("\n\nSERVER THREAD STOPPED");
     }
 
     // Send to each client. Received via ClientSide.java listenForPackets function
@@ -49,10 +58,12 @@ public class Server extends Thread{
 
         for (ClientHandler client : clientHandlersInServer) {
             try {
-                System.out.println("Sending packet via broadcast to client");
-                // Send packet to each clients
-                client.writerStream.write(bytes);
-                client.writerStream.flush();
+                if(!client.socket.isClosed()){
+                    System.out.println("Sending packet via broadcast to client");
+                    // Send packet to each clients
+                    client.writerStream.write(bytes);
+                    client.writerStream.flush();
+                };
             } catch (IOException e) {
                 System.out.println("\nERROR ClientHandler.java : Catched in broadcastMessage. About to terminate connection with client.");
                 client.closeEverything(client.socket, client.writerStream, client.readerStream);
@@ -90,11 +101,6 @@ public class Server extends Thread{
                 this.lastNamesOfChat.remove(0);
             }
         }
-
-        // TODO delete after the test
-        if(packetType == 6){
-            System.out.println("\n\nSERVER INTERCEPTED a kick all packet\n\n");
-        }
     }
 
     private void sendToClientAllPlayerList(ClientHandler client){
@@ -119,45 +125,45 @@ public class Server extends Thread{
     }
 
     protected void sendUsernameToPlayerList(String nameToAdd){
-        // System.out.println("Server: sendUsernameToPlayerList got a new name");
         playerList.add(nameToAdd);
-
-        // System.out.println("Current list:");
-        // for (String name : playerList) {
-        //     System.out.println(name);
-        // }
-        // System.out.println("END OF LIST");
     }
 
     private void removeFromClientHandlers(ClientHandler client){
         clientHandlersInServer.remove(client); 
     }
 
-    public void closeServerProperly(){
+    public synchronized void closeServerProperly(){
+        try {
         ByteBuffer buffer = new ByteBuffer(4);
         buffer.writeInt(6);
 
-        // Broadcast that the host quit the lobby
-        // Pseudo packet used to inform the client that the host lobby quit
-        broadcastPacket(buffer.getBytesList());
-        
-        buffer.clear();
-        
-        try {
-            for (ClientHandler client : clientHandlersInServer) {
-                client.closeEverything(client.socket, client.writerStream, client.readerStream);
-            }
-            clientHandlersInServer.clear();
-            playerList.clear();
+        byte[] packet = Arrays.copyOf(buffer.getBytesList(), buffer.getBytesList().length);
+        broadcastPacket(packet);
 
-            lastMessagesOfChat.clear();
-            lastNamesOfChat.clear();
+        // buffer.clear();
 
-            if(this.serverSocket != null){
-                this.serverSocket.close();
-            }
+        this.isRunning = false;
+
+        if(this.serverSocket != null && !this.serverSocket.isClosed()){
+            this.serverSocket.close();
+        }
+
+        for (ClientHandler client : clientHandlersInServer) {
+            client.closeEverything(client.socket, client.writerStream, client.readerStream);
+        }
+
+        clientHandlersInServer.clear();
+        playerList.clear();
+        lastMessagesOfChat.clear();
+        lastNamesOfChat.clear();
+
         } catch (IOException e) {
             System.out.println("\nERROR GameInterface/LanConnection/Server.java: While closing server");
         }
+    }
+
+    @Override
+    public String toString(){
+        return "Server[Is Running = " + this.isRunning + "]";
     }
 }
