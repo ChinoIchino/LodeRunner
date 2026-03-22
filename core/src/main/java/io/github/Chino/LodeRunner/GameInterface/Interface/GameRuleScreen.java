@@ -23,6 +23,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import io.github.Chino.LodeRunner.GameInterface.GDXMain;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.ClientSide;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Server;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.TranslateToBytes;
 
@@ -114,8 +115,19 @@ public class GameRuleScreen implements Screen{
                         ClientSide hostClient = new ClientSide(socket, main, usernameTextField.getText());
                         hostClient.start();
 
-                        // System.out.println("about to write the translated username");
-                        hostClient.writeStream.write(TranslateToBytes.toPlayerListPacket(usernameTextField.getText()));
+                        // First send the username to ClientHandler attached to this client so he can save it as an attribut
+                        ByteBuffer buffer = new ByteBuffer(1024);
+                        buffer.writeInt(usernameTextField.getText().length());
+                        buffer.writeString(usernameTextField.getText());
+
+                        hostClient.writeStream.write(buffer.getBytesList());
+                        hostClient.writeStream.flush();
+
+                        buffer.clear();
+
+                        // Then send the gamemode to the server to save it as an attribut
+                        System.out.println("gamemode boolean isVersus = " + (gamemodeTypeSlider.getValue() == 0.0) + " for the value " + gamemodeTypeSlider.getValue());
+                        hostClient.writeStream.write(TranslateToBytes.toLobbyEssentials(gamemodeTypeSlider.getValue() == 0.0));
                         hostClient.writeStream.flush();
                         
                         main.getLobbyScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
@@ -125,8 +137,7 @@ public class GameRuleScreen implements Screen{
                             InetAddress.getLocalHost().getHostAddress(),
                             "5000",
                             usernameTextField.getText(),
-                            passwordTextField.getText(),
-                            (int) (gamemodeTypeSlider.getValue())
+                            passwordTextField.getText()
                         );        
                         
                         main.setScreen(main.getLobbyScreen());

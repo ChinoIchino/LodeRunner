@@ -17,8 +17,8 @@ public class Server extends Thread{
     public ArrayList<ClientHandler> clientHandlersInServer = new ArrayList<>();
     public ArrayList<String> playerList = new ArrayList<>();
 
-    public ArrayList<String> lastMessagesOfChat = new ArrayList<>();
-    public ArrayList<String> lastNamesOfChat = new ArrayList<>();
+    private boolean hostAlreadyJoined = false;
+    private boolean isVersus;
 
     public Server(ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
@@ -26,16 +26,16 @@ public class Server extends Thread{
 
     @Override
     public void run(){
-        System.out.println("\nStarted a Server thread");
         while(isRunning){
             try{
                 // Wait here until a client connect
                 Socket socket = this.serverSocket.accept();
-                // System.out.println("startServer: A new client connected!");
 
                 ClientHandler clientHandler = new ClientHandler(socket, this);
-                sendToClientAllPlayerList(clientHandler);
-                sendToClientMessageLog(clientHandler);
+                System.out.println("\nA new Connection has host already joined " + this.hostAlreadyJoined);
+                if(this.hostAlreadyJoined){
+                    sendToClientLobbyEssentials(clientHandler);
+                }
 
                 clientHandlersInServer.add(clientHandler);
                 Thread threadForClientHandler = new Thread(clientHandler);
@@ -48,8 +48,6 @@ public class Server extends Thread{
                 }
             }
         }
-
-        System.out.println("\n\nSERVER THREAD STOPPED");
     }
 
     // Send to each client. Received via ClientSide.java listenForPackets function
@@ -59,11 +57,10 @@ public class Server extends Thread{
         for (ClientHandler client : clientHandlersInServer) {
             try {
                 if(!client.socket.isClosed()){
-                    System.out.println("Sending packet via broadcast to client");
                     // Send packet to each clients
                     client.writerStream.write(bytes);
                     client.writerStream.flush();
-                };
+                }
             } catch (IOException e) {
                 System.out.println("\nERROR ClientHandler.java : Catched in broadcastMessage. About to terminate connection with client.");
                 client.closeEverything(client.socket, client.writerStream, client.readerStream);
@@ -79,48 +76,32 @@ public class Server extends Thread{
         this.buffer.bytes = bytes;
         
         int packetType = this.buffer.readInt();
-        
+        System.out.println("\nIntercept packet found the packet id " + packetType);
+
+        if(packetType == 1 && !this.hostAlreadyJoined){
+            System.out.println("\nIntercept packet host packet intercepted");
+
+            // Rewrite only once the game mode when the first client send the game mode information
+            this.isVersus = this.buffer.readInt() == 1;
+            this.hostAlreadyJoined = true;
+        }
         if(packetType == 3){
             int stringSize = this.buffer.readInt();
             this.playerList.remove(this.buffer.readString(stringSize).trim());
         }
-
-        // If its a message packet
-        //TODO seem to not work, see later
-        if(packetType == 5){
-            System.out.println("Server intercepted a message packet, about to log the message");
-            int sizeOfName = buffer.readInt();
-            this.lastNamesOfChat.add(buffer.readString(sizeOfName));
-
-            int sizeOfMessage = buffer.readInt();
-            this.lastMessagesOfChat.add(buffer.readString(sizeOfMessage));
-
-            // If there is more than 5 messages logged, remove the last one.
-            if(this.lastMessagesOfChat.size() >= 6){
-                this.lastMessagesOfChat.remove(0);
-                this.lastNamesOfChat.remove(0);
-            }
-        }
     }
 
-    private void sendToClientAllPlayerList(ClientHandler client){
-        byte[] bytes = TranslateToBytes.toAllPlayerListPacket(playerList);
+    private void sendToClientLobbyEssentials(ClientHandler client){
+        // Convert from ArrayList<String> into String[]
+        String[] list = playerList.toArray(new String[0]);
+        // TODO replace the false into this.gameMode
+        byte[] bytes = TranslateToBytes.toLobbyEssentials(this.isVersus , list);
 
         try{
             client.writerStream.write(bytes);
             client.writerStream.flush();
         }catch (IOException e){
             System.out.println("\nERROR GameInterface/LanConnection/Server.java: function sendToClientAllPlayerList catched a IOException");
-        }
-    }
-    private void sendToClientMessageLog(ClientHandler client){
-        byte[] bytes = TranslateToBytes.toLobbyChatMessages(this.lastNamesOfChat, this.lastMessagesOfChat);
-
-        try {
-            client.writerStream.write(bytes);
-            client.writerStream.flush();
-        } catch (IOException e) {
-            System.out.println("\nERROR GameInterface/LanConnection/Server.java: function sendToClientMessageLog catched a IOException");
         }
     }
 
@@ -135,7 +116,7 @@ public class Server extends Thread{
     public synchronized void closeServerProperly(){
         try {
         ByteBuffer buffer = new ByteBuffer(4);
-        buffer.writeInt(6);
+        buffer.writeInt(4);
 
         byte[] packet = Arrays.copyOf(buffer.getBytesList(), buffer.getBytesList().length);
         broadcastPacket(packet);
@@ -154,8 +135,6 @@ public class Server extends Thread{
 
         clientHandlersInServer.clear();
         playerList.clear();
-        lastMessagesOfChat.clear();
-        lastNamesOfChat.clear();
 
         } catch (IOException e) {
             System.out.println("\nERROR GameInterface/LanConnection/Server.java: While closing server");

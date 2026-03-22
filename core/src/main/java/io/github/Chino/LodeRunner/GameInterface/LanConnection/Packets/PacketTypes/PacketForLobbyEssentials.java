@@ -5,7 +5,11 @@ import java.util.List;
 
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
 
-public class PacketForLobbyAllPlayerList extends Packet{
+
+// Changed this packet from PacketForLobbyAllPlayerList into PacketForLobbyEssentials
+// Because it will contain also the game mode, so it contain all the essentials
+public class PacketForLobbyEssentials extends Packet{
+    private boolean isVersus;
     private ArrayList<String> allPlayers = new ArrayList<>();
 
     @Override
@@ -19,6 +23,12 @@ public class PacketForLobbyAllPlayerList extends Packet{
         toDecode.resetCursor();
         // Skip the id of the packet
         toDecode.readInt();
+
+        // Verify the game mode // Versus = 1 / Coop = 0
+        int gameMode = toDecode.readInt();
+        this.isVersus = gameMode == 1;
+        System.out.println("In write got isVersus = " + gameMode);
+
         // Get the size of the list
         int playerListSize = toDecode.readInt();
 
@@ -38,6 +48,8 @@ public class PacketForLobbyAllPlayerList extends Packet{
     public List<Object> unpackPacket() {
         List<Object> toReturn = new ArrayList<>();
 
+        toReturn.add(isVersus);
+
         for (String name : this.allPlayers) {
             toReturn.add(name);
         }
@@ -47,7 +59,7 @@ public class PacketForLobbyAllPlayerList extends Packet{
 
     @Override
     public String toString() {
-        String toReturn = "PacketForLobbyAllPlayerList:";
+        String toReturn = "PacketForLobbyEssentials:\n    IsVersus = " + this.isVersus + "\nPlayer list:";
 
         for (String name : this.allPlayers) {
             toReturn += "\n    -" + name;

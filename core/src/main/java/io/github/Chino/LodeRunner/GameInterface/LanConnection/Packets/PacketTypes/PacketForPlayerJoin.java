@@ -5,13 +5,13 @@ import java.util.List;
 
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
 
-public class PacketForLobbyPlayersList extends Packet {
+public class PacketForPlayerJoin extends Packet {
     private String nameOfPlayer;
 
-    public PacketForLobbyPlayersList() {
+    public PacketForPlayerJoin() {
         this(null);
     }
-    public PacketForLobbyPlayersList(String nameOfPlayer) {
+    public PacketForPlayerJoin(String nameOfPlayer) {
         this.nameOfPlayer = nameOfPlayer;
     }
 

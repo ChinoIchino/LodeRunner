@@ -27,10 +27,21 @@ public class TranslateToBytes{
 
         return buffer.bytes;
     }
-    public static byte[] toAllPlayerListPacket(ArrayList<String> players){
+    public static byte[] toLobbyEssentials(boolean isVersus, String... players){
         ByteBuffer buffer = new ByteBuffer(1024);
         buffer.writeInt(1);
-        buffer.writeInt(players.size());
+
+        // Write the game mode Based on the isVersus boolean
+        System.out.println("TranslateToBytes got the bool: " + isVersus);
+        if(isVersus){
+            buffer.writeInt(1);
+            System.out.println("Wrote 1 in packet");
+        }else{
+            buffer.writeInt(0);
+            System.out.println("Wrote 0 in packet");
+        }
+
+        buffer.writeInt(players.length);
 
         int stringSize;
         for (String currentName : players) {

@@ -23,6 +23,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import io.github.Chino.LodeRunner.GameInterface.GDXMain;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.ClientSide;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Server;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.TranslateToBytes;
 
@@ -59,6 +60,7 @@ public class LobbyScreen implements Screen{
     private ScrollPane playerListScroll;
     private ScrollPane chatScrollPane;
     private TextButton goBackButton;
+    private TextButton startButton;
     private TextField chatTextField;
 
     public LobbyScreen(GDXMain main) {
@@ -113,10 +115,10 @@ public class LobbyScreen implements Screen{
 
         this.tableRightSide = new Table();
 
-        this.tableRightSide.add(ipLabel).center().row();
-        this.tableRightSide.add(passwordLabel).center().row();
-        this.tableRightSide.add(gameModeLabel).center().row();
-        this.tableRightSide.add(goBackButton).center().row();
+        this.tableRightSide.add(this.ipLabel).center().padBottom(10).row();
+        this.tableRightSide.add(this.passwordLabel).center().padBottom(10).row();
+        this.tableRightSide.add(this.gameModeLabel).center().padBottom(10).row();
+        this.tableRightSide.add(this.goBackButton).center().padBottom(10).row();
 
         this.tableOfContent.add(this.tableRightSide).width(Gdx.graphics.getWidth() * 0.40f).height(Gdx.graphics.getHeight() * 0.75f).pad(10);
         this.tableOfContent.setDebug(true); // TODO delete after testing
@@ -138,24 +140,19 @@ public class LobbyScreen implements Screen{
             @Override
             public void clicked(InputEvent e, float x, float y){
                 try {
-                    System.out.println("Go Back button pressed, about to send a player leave packet");
                     clientSide.writeStream.write(TranslateToBytes.toPlayerLeaveListPacket(clientSide.username));
                     clientSide.writeStream.flush();
                 } catch (IOException ioe) {}
 
                 if(hostedServer != null){
-                    System.out.println("In goBackButton from LobbyScreen, server isn't null, about to close it");
                     hostedServer.closeServerProperly();
                     // hostedServer = null;
                 }else{
-                    System.out.println("In goBackButton from LobbyScreen, client isn't null, about to close it");
                     clientSide.closeEverything();
                     // clientSide = null;
                 }
 
                 resetPlayerList();
-
-                System.out.println("Server status " + hostedServer.toString() + " state = " + hostedServer.getState() + " // Client status " + clientSide.getState());
 
                 main.getMultiplayerScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
                 main.setScreen(main.getMultiplayerScreen());
@@ -170,7 +167,6 @@ public class LobbyScreen implements Screen{
 
     public void addANewPlayerToList(String username){
         Label nameLabel = new Label(username, skin);
-        System.out.println("In addANewPlayerToList");
         Gdx.app.postRunnable(() ->{
             this.tablePlayersContent.add(nameLabel).expandX().fillX().row();
         });
@@ -183,7 +179,6 @@ public class LobbyScreen implements Screen{
             if(actor instanceof Label){
                 currentLabel = (Label) actor;
                 if(currentLabel.getText().toString().equals(username.trim())){
-                    System.out.println("In lobbyScreen about to remove a username");
                     currentLabel.remove();
                     break;
                 }
@@ -228,24 +223,62 @@ public class LobbyScreen implements Screen{
         this.currentBackgroundXOffset = currentXOffset;
         this.isBackgroundMovingLeft = isMovingLeft;
     }
-    protected void setLobbyInformationForHost(Server server, ClientSide hostClient, String ip, String port, String username, String password, int gameModeChoice){
+    protected void setLobbyInformationForHost(Server server, ClientSide hostClient, String ip, String port, String username, String password){
         this.hostedServer = server;
         this.clientSide = hostClient;
         this.username = username;
-        this.ipLabel.setText("Ip: " + ip);
-        this.passwordLabel.setText("Password: " + password);
         
-        if(gameModeChoice == 0){
-            this.gameModeLabel.setText("Mode: Versus");
-        }else{
-            this.gameModeLabel.setText("Mode: Coop");
-        }
+        Gdx.app.postRunnable(() ->{
+            this.ipLabel.setText("Ip: " + ip);
+            
+            this.passwordLabel.setText("Password: " + password);
+        });
+
+        // Add a extra button for the host to start the game
+        Gdx.app.postRunnable(() -> {
+            this.startButton = new TextButton("Start", skin);
+    
+            this.tableRightSide.add(startButton).center().row();
+    
+            this.startButton.addListener(new ClickListener(){
+                @Override
+                public void clicked(InputEvent e, float x, float y){
+                    try {
+                        ByteBuffer buffer = new ByteBuffer(4);
+                        // Id to enter the game
+                        buffer.writeInt(6);
+                        
+                        //Sending a pseudo packet to every player that the game started 
+                        clientSide.writeStream.write(buffer.getBytesList());
+                        clientSide.writeStream.flush();
+                    } catch (IOException ioe) {
+                        System.out.println("ERROR GameInterface/Interface/LobbyScreen.java: Host catched IOException will starting a game");
+                    }
+
+                }
+            });
+        });
     }
     protected void setLobbyInformationForClient(ClientSide clientSide, String username ,String ip, String port, String password){
         this.clientSide = clientSide;
         this.username = username;
-        this.ipLabel.setText("Ip: " + ip);
-        this.passwordLabel.setText("Password: " + password);
+
+        Gdx.app.postRunnable(() ->{
+            this.ipLabel.setText("Ip: " + ip);
+            this.passwordLabel.setText("Password: " + password);
+        });
+    }
+
+    public void setGameMode(boolean isVersus){
+        if(isVersus){
+            Gdx.app.postRunnable(() ->{
+                this.gameModeLabel.setText("Mode: Versus");
+            });
+        }else{
+            Gdx.app.postRunnable(() ->{
+                this.gameModeLabel.setText("Mode: Coop");
+            });
+        }
     }
     private void moveBackground(){
         if(this.isBackgroundMovingLeft){
@@ -261,11 +294,17 @@ public class LobbyScreen implements Screen{
         }
     } 
 
+    public void sendToGameInterface(){
+        // TODO versus and coop gamescreens
+        // if()
+        // this.main.setScreen(this.main.getGame);
+    }
+
     @Override
     public void show() {
         // Recreate a sprite batch when a new lobby interface is displayed
         this.batch = new SpriteBatch();
-        this.uiStage = new Stage(new ScreenViewport(), this.batch);
+        this.uiStage = new Stage(new ScreenViewport());
 
         Gdx.input.setInputProcessor(this.uiStage);
         this.uiStage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
@@ -319,7 +358,7 @@ public class LobbyScreen implements Screen{
             this.clientSide.closeEverything();
         }
     }
-    // Used only when the host of the lobby quit, so the user must be kicked from the interface
+    // Used only when the host of the lobby quit, so the users must be kicked from the interface
     public void forceDispose(){
         System.out.println("\nABOUT TO FORCE DISPOSE");
         

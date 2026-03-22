@@ -66,7 +66,8 @@ public class ClientSide extends Thread{
                 buffer.resetCursor();
                 packetType = buffer.readInt();
 
-                if(packetType > 0 && packetType != 6){
+                if(packetType > 0){
+                    System.out.println("Client got the packetId = " + packetType);
                     buffer.resetCursor();
                     // System.out.println("In listenForPackets with the packet type = " + buffer.readInt());
                     buffer.resetCursor();
@@ -79,13 +80,22 @@ public class ClientSide extends Thread{
                     packetItems = decodedPacket.unpackPacket();
 
                     switch(decodedPacket.getPacketId()){
-                        // Lobby all player list
+                        // Lobby essentials (player list, and game mode)
                         case 1:
-                            for (Object item : packetItems) {
+                            // First element is the boolean isVersus
+                            final boolean gameModeIsVersus = (boolean) packetItems.get(0);
+                            System.out.println("Got the game mode boolean " + gameModeIsVersus);
+                            Gdx.app.postRunnable(() ->{
+                                currentClientLobbyScreen.setGameMode(gameModeIsVersus);
+                            });
+                            // Every items after the game mode are usernames in the lobby
+                            for (int i = 1; i < packetItems.size(); i++) {
+                                String currentPlayerToAdd = (String) packetItems.get(i);
                                 Gdx.app.postRunnable(() -> {
-                                    currentClientLobbyScreen.addANewPlayerToList((String) item);
+                                    currentClientLobbyScreen.addANewPlayerToList((String) currentPlayerToAdd);
                                 });
                             }
+
                             packetItems.clear();
                             break;
 
@@ -108,17 +118,15 @@ public class ClientSide extends Thread{
                             });
                             packetItems.clear();
                             break;
-                                    
-                        // Last lobby chat messages
+                        // Lobby Host quit, kick the client
                         case 4:
-                            // TODO Might delete this packet type
-                            // System.out.println("In listenForPackets: case 4 WASN'T IMPLEMENTED !!");
-                            // for(int i = 0; i < packetItems.size(); i += 2) {
-                            //     currentClientLobbyScreen.logMessageSend((String) packetItems.get(i),(String) packetItems.get(i + 1));
-                            // }
-                            // packetItems.clear();
+                            System.out.println("Got a packet id 4");
+                            buffer.clear();
+                            isRunning = false;
+                            Gdx.app.postRunnable(() -> {
+                                currentClientLobbyScreen.forceDispose();
+                            });
                             break;
-
                         // Lobby chat packet
                         case 5:
                             String username = (String) packetItems.get(0);
@@ -128,25 +136,18 @@ public class ClientSide extends Thread{
                             });
                             packetItems.clear();
                             break;
-
+                        // Lobby Host started the game
+                        case 6:
+                            this.currentClientLobbyScreen.sendToGameInterface();
+                            break;
                     }
-                }else if(packetType == 6){
-                    System.out.println("ABOUT TO CLOSE CONNECTION VIA A PACKET!!!!!!!!!");
-                    buffer.clear();
-                    isRunning = false;
-                    Gdx.app.postRunnable(() -> {
-                        currentClientLobbyScreen.forceDispose();
-                    });
                 }
             }catch(IOException e){
-                System.out.println("ABOUT TO CLOSE CONNECTION!!!!!!!!!");
                 isRunning = false;
                 closeEverything(socket, writeStream, readStream);
                 break;
             }
-        }  
-
-        System.out.println("\nCLIENTSIDE THREAD STOPPED");
+        }
     }
 
     protected void closeEverything(Socket socket, BufferedOutputStream writer, BufferedInputStream reader) {
