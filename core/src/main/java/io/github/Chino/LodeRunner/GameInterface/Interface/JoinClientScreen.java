@@ -152,7 +152,6 @@ public class JoinClientScreen implements Screen{
             ClientSide client = new ClientSide(socket, this.main, this.usernameTextField.getText());
             client.start();
             
-            System.out.println("about to write the translated username");
             client.writeStream.write(TranslateToBytes.toPlayerListPacket(this.usernameTextField.getText()));
             client.writeStream.flush();
             
@@ -246,8 +245,5 @@ public class JoinClientScreen implements Screen{
     public void dispose() {
         this.uiStage.dispose();
         this.batch.dispose();
-        
     }
-    
-    
 }

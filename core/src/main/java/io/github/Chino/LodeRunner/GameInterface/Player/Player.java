@@ -20,9 +20,9 @@ public class Player extends InputListener{
     public int speed = 4;
 
     // Player sprites
-    private Texture playerSpriteIdle;
-    private Texture playerSpriteMovingLeft;
-    private Texture playerSpriteMovingRight;
+    public final static Texture playerSpriteIdle = new Texture("data/textures/character/characterIdle.png");
+    public final static Texture playerSpriteMovingLeft = new Texture("data/textures/character/characterMovingLeft.png");
+    public final static Texture playerSpriteMovingRight = new Texture("data/textures/character/characterMovingRight.png");
 
     private Texture currentPlayerSprite;
 
@@ -31,8 +31,25 @@ public class Player extends InputListener{
 
     public boolean isOnALadder = false;
 
+    // For Multiplayer
+    private String username;
+    private int id;
+
     public Player() {
-        initPlayerTextures();
+        // initPlayerTextures();
+
+        this.currentPlayerSprite = this.playerSpriteIdle;
+
+        this.hitbox = new Rectangle(this.posX, this.posY, 25, 32);
+        this.isOnGroundHitbox = new Rectangle(this.posX, this.posY - 1, 25, 1);
+    
+        this.camera = new OrthographicCamera(480,320);
+    }
+    public Player(String username, int id){
+        this.username = username;
+        this.id = id;
+        
+        // initPlayerTextures();
 
         this.currentPlayerSprite = this.playerSpriteIdle;
 
@@ -42,11 +59,11 @@ public class Player extends InputListener{
         this.camera = new OrthographicCamera(480,320);
     }
 
-    private void initPlayerTextures(){
-        this.playerSpriteIdle = new Texture("data/textures/character/characterIdle.png");
-        this.playerSpriteMovingLeft = new Texture("data/textures/character/characterMovingLeft.png");
-        this.playerSpriteMovingRight = new Texture("data/textures/character/characterMovingRight.png");
-    }
+    // private void initPlayerTextures(){
+    //     this.playerSpriteIdle = new Texture("data/textures/character/characterIdle.png");
+    //     this.playerSpriteMovingLeft = new Texture("data/textures/character/characterMovingLeft.png");
+    //     this.playerSpriteMovingRight = new Texture("data/textures/character/characterMovingRight.png");
+    // }
 
     public void addToScore(int toAdd){
         this.score += toAdd;
@@ -138,7 +155,20 @@ public class Player extends InputListener{
         shapeRenderer.end();
     }
 
-    
+    // Mainly Multiplayer Functions
+    public void setUsername(String username){
+        this.username = username;
+    }
+    public void setId(int id){
+        this.id = id;
+    }
+
+    public String getUsername(){
+        return this.username;
+    }
+    public int getId(){
+        return this.id;
+    }
 
 
 }

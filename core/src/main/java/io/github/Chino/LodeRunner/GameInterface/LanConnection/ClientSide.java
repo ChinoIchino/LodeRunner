@@ -10,7 +10,6 @@ import java.util.List;
 import com.badlogic.gdx.Gdx;
 
 import io.github.Chino.LodeRunner.GameInterface.GDXMain;
-import io.github.Chino.LodeRunner.GameInterface.Interface.LobbyScreen;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketDecoder;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.Packet;
@@ -18,7 +17,9 @@ import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketType
 public class ClientSide extends Thread{
     private volatile boolean isRunning = true;
 
-    public LobbyScreen currentClientLobbyScreen;
+    private GDXMain main;
+    private boolean isVersus;
+    
     public String username;
 
     private Socket socket;
@@ -42,7 +43,8 @@ public class ClientSide extends Thread{
 
             this.buffer = new ByteBuffer(1024);
 
-            this.currentClientLobbyScreen = main.getLobbyScreen();
+            this.main = main;
+            // this.currentClientLobbyScreen = main.getLobbyScreen();
 
             this.username = username;
         }catch(IOException e){
@@ -67,7 +69,6 @@ public class ClientSide extends Thread{
                 packetType = buffer.readInt();
 
                 if(packetType > 0){
-                    System.out.println("Client got the packetId = " + packetType);
                     buffer.resetCursor();
                     // System.out.println("In listenForPackets with the packet type = " + buffer.readInt());
                     buffer.resetCursor();
@@ -84,15 +85,16 @@ public class ClientSide extends Thread{
                         case 1:
                             // First element is the boolean isVersus
                             final boolean gameModeIsVersus = (boolean) packetItems.get(0);
-                            System.out.println("Got the game mode boolean " + gameModeIsVersus);
                             Gdx.app.postRunnable(() ->{
-                                currentClientLobbyScreen.setGameMode(gameModeIsVersus);
+                                this.main.getLobbyScreen().setGameMode(gameModeIsVersus);
                             });
+                            
+                            this.main.getClientPlayer().setId(packetItems.size() - 1);
                             // Every items after the game mode are usernames in the lobby
                             for (int i = 1; i < packetItems.size(); i++) {
                                 String currentPlayerToAdd = (String) packetItems.get(i);
                                 Gdx.app.postRunnable(() -> {
-                                    currentClientLobbyScreen.addANewPlayerToList((String) currentPlayerToAdd);
+                                    this.main.getLobbyScreen().addANewPlayerToList((String) currentPlayerToAdd);
                                 });
                             }
 
@@ -104,7 +106,7 @@ public class ClientSide extends Thread{
                             // Casting String because unpackPacket return a Object List
                             String newPlayer = (String) packetItems.get(0);
                             Gdx.app.postRunnable(() -> {
-                                currentClientLobbyScreen.addANewPlayerToList(newPlayer);
+                                this.main.getLobbyScreen().addANewPlayerToList(newPlayer);
                             });
                             // Clearing the list for the next use
                             packetItems.clear();
@@ -114,17 +116,16 @@ public class ClientSide extends Thread{
                         case 3:
                             String playerQuitting = (String) packetItems.get(0);
                             Gdx.app.postRunnable(() -> {
-                                currentClientLobbyScreen.removeAPlayerFromTheList(playerQuitting);
+                                this.main.getLobbyScreen().removeAPlayerFromTheList(playerQuitting);
                             });
                             packetItems.clear();
                             break;
                         // Lobby Host quit, kick the client
                         case 4:
-                            System.out.println("Got a packet id 4");
                             buffer.clear();
                             isRunning = false;
                             Gdx.app.postRunnable(() -> {
-                                currentClientLobbyScreen.forceDispose();
+                                this.main.getLobbyScreen().forceDispose();
                             });
                             break;
                         // Lobby chat packet
@@ -132,14 +133,33 @@ public class ClientSide extends Thread{
                             String username = (String) packetItems.get(0);
                             String message = (String) packetItems.get(1);
                             Gdx.app.postRunnable(() -> {
-                                currentClientLobbyScreen.logMessageSend(username, message);
+                                this.main.getLobbyScreen().logMessageSend(username, message);
                             });
                             packetItems.clear();
                             break;
                         // Lobby Host started the game
                         case 6:
-                            this.currentClientLobbyScreen.sendToGameInterface();
+                            if(this.main.getLobbyScreen().isVersus()){
+                                this.isVersus = true;
+                                //TODO override the variable this.currentClientGameScreen with the versus screen
+                            }else{
+                                this.isVersus = false;
+                            }
+                            this.main.getLobbyScreen().sendToGameInterface();
                             break;
+                        // Player has moved in the game
+                        case 7:
+                            if(isVersus){
+
+                            }else{
+                                this.main.getGameCoopScreen().handlePlayersDisplay(packetItems);
+                            }
+                            break;
+                        // Player update score label
+                        case 8:
+                            System.out.println("\nERROR SCORE PACKET NOT IMPLEMENTED YET. DONT USE HANDLECOLLECTIBLE TO AVOID THIS ERROR");
+                            break;
+                        
                     }
                 }
             }catch(IOException e){

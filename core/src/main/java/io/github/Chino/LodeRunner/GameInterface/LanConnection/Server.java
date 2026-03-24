@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
+import io.github.Chino.LodeRunner.GameInterface.Player.Player;
 
 public class Server extends Thread{
     private ServerSocket serverSocket;
@@ -15,10 +16,12 @@ public class Server extends Thread{
     private volatile boolean isRunning = true;
 
     public ArrayList<ClientHandler> clientHandlersInServer = new ArrayList<>();
-    public ArrayList<String> playerList = new ArrayList<>();
+    public ArrayList<Player> playerList = new ArrayList<>();
 
     private boolean hostAlreadyJoined = false;
     private boolean isVersus;
+
+    private int score = 0;
 
     public Server(ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
@@ -32,7 +35,6 @@ public class Server extends Thread{
                 Socket socket = this.serverSocket.accept();
 
                 ClientHandler clientHandler = new ClientHandler(socket, this);
-                System.out.println("\nA new Connection has host already joined " + this.hostAlreadyJoined);
                 if(this.hostAlreadyJoined){
                     sendToClientLobbyEssentials(clientHandler);
                 }
@@ -70,31 +72,49 @@ public class Server extends Thread{
     }
 
     // Used before broadcasting, can be used as a packet verificator
-    // For now it only remove the player from the player list if the packet have the id 3
     private void interceptPacket(byte[] bytes){
         this.buffer.clear();
         this.buffer.bytes = bytes;
         
         int packetType = this.buffer.readInt();
-        System.out.println("\nIntercept packet found the packet id " + packetType);
 
+        // Type 1: Init the server informations when the host join
         if(packetType == 1 && !this.hostAlreadyJoined){
-            System.out.println("\nIntercept packet host packet intercepted");
-
             // Rewrite only once the game mode when the first client send the game mode information
             this.isVersus = this.buffer.readInt() == 1;
             this.hostAlreadyJoined = true;
         }
+
+        // Type 3: A player quit the lobby
         if(packetType == 3){
             int stringSize = this.buffer.readInt();
-            this.playerList.remove(this.buffer.readString(stringSize).trim());
+            String usernameToFind = this.buffer.readString(stringSize).trim();
+
+            for(Player player: playerList){
+                if(player.getUsername().equals(usernameToFind)){
+                    this.playerList.remove(player);
+                    break;
+                }
+            }
+        }
+        
+        // Type 8: A player has interacted with a collectible
+        if(packetType == 8){
+            int toAdd = buffer.readInt();
+
+            buffer.resetCursor();
+            buffer.readInt();
+
+            // Rewrite the score in the packet
+            buffer.writeInt(this.score + toAdd);
+
+            this.score += toAdd;
         }
     }
 
     private void sendToClientLobbyEssentials(ClientHandler client){
         // Convert from ArrayList<String> into String[]
-        String[] list = playerList.toArray(new String[0]);
-        // TODO replace the false into this.gameMode
+        String[] list = getPlayerUsernamesList();
         byte[] bytes = TranslateToBytes.toLobbyEssentials(this.isVersus , list);
 
         try{
@@ -104,9 +124,19 @@ public class Server extends Thread{
             System.out.println("\nERROR GameInterface/LanConnection/Server.java: function sendToClientAllPlayerList catched a IOException");
         }
     }
+    private String[] getPlayerUsernamesList(){
+        String[] toReturn = new String[this.playerList.size()];
+        
+        for (int i = 0; i < this.playerList.size(); i++) {
+            toReturn[i] = this.playerList.get(i).getUsername(); 
+        }
 
-    protected void sendUsernameToPlayerList(String nameToAdd){
-        playerList.add(nameToAdd);
+        return toReturn;
+    }
+
+    protected void sendUsernameToPlayerList(String username){
+        // TODO change id to this.playerList.size()
+        playerList.add(new Player(username, -1));
     }
 
     private void removeFromClientHandlers(ClientHandler client){

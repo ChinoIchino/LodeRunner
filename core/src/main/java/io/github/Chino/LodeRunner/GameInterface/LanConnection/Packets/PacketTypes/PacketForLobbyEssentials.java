@@ -27,8 +27,6 @@ public class PacketForLobbyEssentials extends Packet{
         // Verify the game mode // Versus = 1 / Coop = 0
         int gameMode = toDecode.readInt();
         this.isVersus = gameMode == 1;
-        System.out.println("In write got isVersus = " + gameMode);
-
         // Get the size of the list
         int playerListSize = toDecode.readInt();
 

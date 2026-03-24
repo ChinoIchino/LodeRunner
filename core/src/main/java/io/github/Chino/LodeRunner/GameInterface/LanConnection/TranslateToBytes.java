@@ -3,6 +3,7 @@ package io.github.Chino.LodeRunner.GameInterface.LanConnection;
 import java.util.ArrayList;
 
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
+import io.github.Chino.LodeRunner.GameInterface.Player.Player;
 
 public class TranslateToBytes{
 
@@ -32,13 +33,10 @@ public class TranslateToBytes{
         buffer.writeInt(1);
 
         // Write the game mode Based on the isVersus boolean
-        System.out.println("TranslateToBytes got the bool: " + isVersus);
         if(isVersus){
             buffer.writeInt(1);
-            System.out.println("Wrote 1 in packet");
         }else{
             buffer.writeInt(0);
-            System.out.println("Wrote 0 in packet");
         }
 
         buffer.writeInt(players.length);
@@ -87,6 +85,29 @@ public class TranslateToBytes{
         buffer.writeString(message);
 
         return buffer.bytes;
+    }
+    // textureId: 0 = idle / 1 = moving left / 2 = moving right
+    public static byte[] toPlayerMovement(Player player, int textureId){
+        ByteBuffer buffer = new ByteBuffer(1024);
+
+        buffer.writeInt(7);
+
+        buffer.writeInt(player.getId());
+
+        buffer.writeInt(textureId);
+
+        buffer.writeInt(player.getPosX());
+        buffer.writeInt(player.getPosY());
+
+        return buffer.getBytesList();
+    }
+    public static byte[] toPlayerScoreAdd(int toAdd){
+        ByteBuffer buffer = new ByteBuffer(1024);
+
+        buffer.writeInt(8);
+        buffer.writeInt(toAdd);
+
+        return buffer.getBytesList();
     }
 }
 

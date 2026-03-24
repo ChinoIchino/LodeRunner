@@ -36,6 +36,8 @@ public class LobbyScreen implements Screen{
     private String username;
     private String serverPassword;
 
+    private int ammountOfPlayers;
+
     private SpriteBatch batch;
 
     private Texture backgroundTexture;
@@ -169,6 +171,7 @@ public class LobbyScreen implements Screen{
         Label nameLabel = new Label(username, skin);
         Gdx.app.postRunnable(() ->{
             this.tablePlayersContent.add(nameLabel).expandX().fillX().row();
+            this.ammountOfPlayers++;
         });
     }
     public void removeAPlayerFromTheList(String username){
@@ -180,6 +183,7 @@ public class LobbyScreen implements Screen{
                 currentLabel = (Label) actor;
                 if(currentLabel.getText().toString().equals(username.trim())){
                     currentLabel.remove();
+                    this.ammountOfPlayers--;
                     break;
                 }
             }
@@ -187,6 +191,8 @@ public class LobbyScreen implements Screen{
     }
     private void resetPlayerList(){
         this.tablePlayersContent.clear();
+        this.ammountOfPlayers = 0;
+
         Label playersLabel = new Label("Players:", skin);
         this.tablePlayersContent.add(playersLabel).expandX().fillX().row();
     }
@@ -295,9 +301,21 @@ public class LobbyScreen implements Screen{
     } 
 
     public void sendToGameInterface(){
-        // TODO versus and coop gamescreens
-        // if()
-        // this.main.setScreen(this.main.getGame);
+        if(this.gameModeLabel.getText().substring(6).equals("Coop")){
+            System.out.println("About to send the client to the game screen");
+            this.main.getGameCoopScreen().setClient(this.clientSide);
+            Gdx.app.postRunnable(() ->{
+                System.out.println("Got the ammount of players = " + this.ammountOfPlayers);
+                this.main.getGameCoopScreen().initAmmountOfPlayers(this.ammountOfPlayers);
+
+                this.main.setScreen(this.main.getGameCoopScreen());
+            });
+        }else{
+            //TODO send to versus game
+        }
+    }
+    public boolean isVersus(){
+        return this.gameModeLabel.getText().substring(6).equals("Versus");
     }
 
     @Override

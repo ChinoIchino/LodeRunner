@@ -126,9 +126,12 @@ public class GameRuleScreen implements Screen{
                         buffer.clear();
 
                         // Then send the gamemode to the server to save it as an attribut
-                        System.out.println("gamemode boolean isVersus = " + (gamemodeTypeSlider.getValue() == 0.0) + " for the value " + gamemodeTypeSlider.getValue());
                         hostClient.writeStream.write(TranslateToBytes.toLobbyEssentials(gamemodeTypeSlider.getValue() == 0.0));
                         hostClient.writeStream.flush();
+
+                        // Set in the player object the username and the id (the id is 0 because its the first player that joined)
+                        main.getClientPlayer().setUsername(usernameTextField.getText());
+                        main.getClientPlayer().setId(0);
                         
                         main.getLobbyScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
                         main.getLobbyScreen().setLobbyInformationForHost(

@@ -6,6 +6,7 @@ import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketType
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForLobbyEssentials;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForPlayerJoin;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForPlayerListLeave;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForPlayerMovement;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PseudoPacket;
 
 public class PacketDecoder {
@@ -18,8 +19,6 @@ public class PacketDecoder {
             // Player list: All players in lobby
             case 1:
                 bytes.readInt();
-                System.out.println("Got the isVersus in packetDecoder: " + bytes.readInt());
-                
                 packetToReturn = new PacketForLobbyEssentials();
                 packetToReturn.write(bytes);
                 return packetToReturn;
@@ -45,8 +44,16 @@ public class PacketDecoder {
                 return packetToReturn;
             // Pseudo packet: Host started the game
             case 6:
-                packetToReturn = new PseudoPacket(6);
+                return new PseudoPacket(6);
+            // Game packet: A player has moved
+            case 7:
+                packetToReturn = new PacketForPlayerMovement();
+                packetToReturn.write(bytes);
                 return packetToReturn;
+            // Game packet: Score need to change
+            case 8:
+                //TODO change it to the designated packet 
+                return new PseudoPacket(8); 
             default:
                 throw new AssertionError();
         }
