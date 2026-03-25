@@ -170,7 +170,7 @@ public class GameScreen implements Screen{
         }
     }
     private void handlePlayerCollection(){
-        Collectible possibleCollectible = this.worldManager.playerOverlapWithCollectible(this.player);
+        Collectible possibleCollectible = (Collectible) this.worldManager.playerOverlapWithCollectible(this.player).get(0);
         if(possibleCollectible != null){
             this.player.addToScore(possibleCollectible.getScore());
             updateScoreLabel(this.player);

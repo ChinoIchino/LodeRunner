@@ -7,6 +7,17 @@ import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandle
 
 public class PacketForAddScore extends Packet{
     private int valueToAdd;
+    private int yIndex;
+    private int xIndex;
+
+    public PacketForAddScore(int valueToAdd, int yIndex, int xIndex) {
+        this.valueToAdd = valueToAdd;
+        this.yIndex = yIndex;
+        this.xIndex = xIndex;
+    }
+    public PacketForAddScore() {
+        this(0, -1, -1);
+    }
 
 
     @Override
@@ -16,6 +27,9 @@ public class PacketForAddScore extends Packet{
         inPacket.writeInt(this.getPacketId());
 
         inPacket.writeInt(this.valueToAdd);
+
+        inPacket.writeInt(this.yIndex);
+        inPacket.writeInt(this.xIndex);
     }
 
     @Override
@@ -25,6 +39,9 @@ public class PacketForAddScore extends Packet{
         outPacket.readInt();
 
         this.valueToAdd = outPacket.readInt();
+
+        this.yIndex = outPacket.readInt();
+        this.xIndex = outPacket.readInt();
     }
 
     @Override
@@ -37,6 +54,8 @@ public class PacketForAddScore extends Packet{
         List<Object> list = new ArrayList<>();
 
         list.add(this.valueToAdd);
+        list.add(this.yIndex);
+        list.add(this.xIndex);
 
         return list;
     }

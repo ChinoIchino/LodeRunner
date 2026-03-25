@@ -2,6 +2,7 @@ package io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets;
 
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.Packet;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForAddScore;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForLobbyChat;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForLobbyEssentials;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForPlayerJoin;
@@ -52,9 +53,14 @@ public class PacketDecoder {
                 return packetToReturn;
             // Game packet: Score need to change
             case 8:
-                //TODO change it to the designated packet 
-                return new PseudoPacket(8); 
+                packetToReturn = new PacketForAddScore();
+                packetToReturn.write(bytes);
+                return packetToReturn;
             default:
+                System.out.println(
+                    "\nError: GameInterface/LanConnection/Packets/PacketDecoder.java : Got the packet with the id "
+                    + typeOfPacket + ". This packet type doesn't exist in the switch case."
+                );
                 throw new AssertionError();
         }
     }

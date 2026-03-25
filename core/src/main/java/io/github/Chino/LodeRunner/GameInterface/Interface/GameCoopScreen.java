@@ -20,7 +20,6 @@ import io.github.Chino.LodeRunner.GameInterface.GDXMain;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.ClientSide;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.TranslateToBytes;
 import io.github.Chino.LodeRunner.GameInterface.Player.Player;
-import io.github.Chino.LodeRunner.GameInterface.World.Collectible;
 import io.github.Chino.LodeRunner.GameInterface.World.WorldCreator;
 import io.github.Chino.LodeRunner.GameInterface.World.WorldManager;
 
@@ -94,10 +93,11 @@ public class GameCoopScreen implements Screen{
             handlePlayerGravity();
             handlePlayerInput();
             
-            // handlePlayerCollection();
+            handlePlayerCollection();
         } catch (IOException e) {
         }
 
+        // Draw all the other players
         this.batch.begin();
         for (int i = 0; i < this.positionsOfPlayers.length; i += 4) {
             if(this.player.getId() != this.positionsOfPlayers[i]){
@@ -210,11 +210,11 @@ public class GameCoopScreen implements Screen{
             player.syncAll();
         }
     }
-    // TODO not implemented yet :(
     private void handlePlayerCollection() throws IOException{
-        Collectible possibleCollectible = this.worldManager.playerOverlapWithCollectible(this.player);
-        if(possibleCollectible != null){
-            this.client.writeStream.write(TranslateToBytes.toPlayerScoreAdd(possibleCollectible.getScore()));
+        // Return collectible, y index position on world and x index position on world
+        List<Object> possibleCollectibleList = this.worldManager.playerOverlapWithCollectible(this.player);
+        if(possibleCollectibleList != null){
+            this.client.writeStream.write(TranslateToBytes.toPlayerScoreAdd(possibleCollectibleList));
             this.client.writeStream.flush();
             // this.player.addToScore(possibleCollectible.getScore());
             // System.out.println("Score was modified into: " + player.getScore());
@@ -231,7 +231,10 @@ public class GameCoopScreen implements Screen{
         // System.out.println("ID: " + packet.get(0) + " // Position: " + packet.get(2) + " x " + packet.get(3));    
     }
 
-    public void updateScoreLabel(int newScore){
+    public void updateScoreLabel(int newScore, int yIndexOfItem, int xIndexOfItem){
+        this.worldManager.setBlockAt(xIndexOfItem, yIndexOfItem, null);
+
+        System.out.println("About to update score to: " + newScore);
         this.scoreLabel.setText("Score: " + newScore);
     }
 

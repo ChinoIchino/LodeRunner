@@ -1,6 +1,8 @@
 package io.github.Chino.LodeRunner.GameInterface.World;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
@@ -99,7 +101,7 @@ public class WorldManager {
             level++;
         }
 
-        System.out.println("Got the level " + level + " // and the yPos =" + yPosition);
+        // System.out.println("Got the level " + level + " // and the yPos =" + yPosition);
         for(int x = 0; x < (int) (this.worldResolution.x); x++){
             if(this.blockMatrix[level][x] != null){
                 if(player.getHitbox().overlaps(this.blockMatrix[level][x].getHitbox()) && this.blockMatrix[level][x].isSolid()){
@@ -122,7 +124,7 @@ public class WorldManager {
         return false;
     }
 
-    public Collectible playerOverlapWithCollectible(Player player){
+    public List<Object> playerOverlapWithCollectible(Player player){
         int[] possibleLevels = new int[3];
         
         int currentY = (int) this.worldResolution.y * -16;
@@ -139,8 +141,14 @@ public class WorldManager {
             for (int x = 0; x < (int) this.worldResolution.x; x++) {
                 if(this.blockMatrix[y][x] != null && this.blockMatrix[y][x] instanceof Collectible){
                     if(this.blockMatrix[y][x].getHitbox().overlaps(player.getHitbox())){
+                        List<Object> toReturn = new ArrayList<>();
                         // Casted Collectible because if the statement is correctly it must be a Collectible
-                        Collectible toReturn = (Collectible) this.blockMatrix[y][x];
+                        // Collectible toReturn = (Collectible) this.blockMatrix[y][x];
+
+                        toReturn.add((Collectible) this.blockMatrix[y][x]);
+                        toReturn.add(y);
+                        toReturn.add(x);
+                        
                         this.blockMatrix[y][x] = null;
                         return toReturn;
                     }

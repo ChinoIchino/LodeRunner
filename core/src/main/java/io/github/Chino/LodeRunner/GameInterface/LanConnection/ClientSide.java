@@ -70,8 +70,6 @@ public class ClientSide extends Thread{
 
                 if(packetType > 0){
                     buffer.resetCursor();
-                    // System.out.println("In listenForPackets with the packet type = " + buffer.readInt());
-                    buffer.resetCursor();
 
                     decodedPacket = packetDecoder.decodeStream(buffer);
                     buffer.clear();
@@ -139,25 +137,28 @@ public class ClientSide extends Thread{
                             break;
                         // Lobby Host started the game
                         case 6:
-                            if(this.main.getLobbyScreen().isVersus()){
-                                this.isVersus = true;
-                                //TODO override the variable this.currentClientGameScreen with the versus screen
-                            }else{
-                                this.isVersus = false;
-                            }
+                            this.isVersus = this.main.getLobbyScreen().isVersus();
                             this.main.getLobbyScreen().sendToGameInterface();
                             break;
                         // Player has moved in the game
                         case 7:
                             if(isVersus){
-
+                                //TODO send information to versus screen
                             }else{
                                 this.main.getGameCoopScreen().handlePlayersDisplay(packetItems);
                             }
                             break;
                         // Player update score label
                         case 8:
-                            System.out.println("\nERROR SCORE PACKET NOT IMPLEMENTED YET. DONT USE HANDLECOLLECTIBLE TO AVOID THIS ERROR");
+                            int newScore = (int) packetItems.get(0);
+                            int yIndex = (int) packetItems.get(1);
+                            int xIndex = (int) packetItems.get(2);
+
+                            Gdx.app.postRunnable(() -> {
+                                this.main.getGameCoopScreen().updateScoreLabel(newScore, yIndex, xIndex);
+                            });
+                            break;
+                        default:
                             break;
                         
                     }

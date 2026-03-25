@@ -103,7 +103,7 @@ public class Server extends Thread{
             int toAdd = buffer.readInt();
 
             buffer.resetCursor();
-            buffer.readInt();
+            buffer.writeInt(8);
 
             // Rewrite the score in the packet
             buffer.writeInt(this.score + toAdd);

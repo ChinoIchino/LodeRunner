@@ -1,9 +1,11 @@
 package io.github.Chino.LodeRunner.GameInterface.LanConnection;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
 import io.github.Chino.LodeRunner.GameInterface.Player.Player;
+import io.github.Chino.LodeRunner.GameInterface.World.Collectible;
 
 public class TranslateToBytes{
 
@@ -101,11 +103,16 @@ public class TranslateToBytes{
 
         return buffer.getBytesList();
     }
-    public static byte[] toPlayerScoreAdd(int toAdd){
+    public static byte[] toPlayerScoreAdd(List<Object> collectibleInformations){
         ByteBuffer buffer = new ByteBuffer(1024);
 
         buffer.writeInt(8);
-        buffer.writeInt(toAdd);
+        
+        Collectible collectible = (Collectible) collectibleInformations.get(0);
+        buffer.writeInt(collectible.getScore());
+
+        buffer.writeInt((int) collectibleInformations.get(1));
+        buffer.writeInt((int) collectibleInformations.get(2));
 
         return buffer.getBytesList();
     }
