@@ -10,12 +10,12 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
@@ -43,11 +43,11 @@ public class GameCoopScreen implements Screen{
 
     private final int SCREEN_WIDTH = 854;//480;
     private final int SCREEN_HEIGH = 480;//320;
-
-    private final static Skin skin = new Skin(Gdx.files.internal("textbuttonskin/textbuttonSkin.json"));
     
     private ClientSide client;
     private SpriteBatch batch;
+    // Used to draw font via the batch
+    private BitmapFont font = new BitmapFont();
 
     private Stage uiStage;
     private Player player;
@@ -100,11 +100,14 @@ public class GameCoopScreen implements Screen{
         try {
             // Send to server the movement based on the input and gravity in the current frame
             handlePlayerGravity();
-            handlePlayerInput();
+            
+            int animationId = handlePlayerInput();
+
+            this.client.writeStream.write(TranslateToBytes.toPlayerMovement(player, animationId));
+            this.client.writeStream.flush();
             
             handlePlayerCollection();
-        } catch (IOException e) {
-        }
+        } catch (IOException e) {}
 
         // Draw all the other players
         this.batch.begin();
@@ -112,21 +115,30 @@ public class GameCoopScreen implements Screen{
         for (int currentKey: this.playersInformations.keySet()) {
             currentInformations = this.playersInformations.get(currentKey);
             if(this.player.getId() != currentKey){
-                switch((int) currentInformations[2]){
+                switch((int) currentInformations[1]){
                     case 0:
-                        this.batch.draw(Player.playerSpriteIdle, (int) currentInformations[3], (int) currentInformations[4]);
+                        this.batch.draw(Player.playerSpriteIdle, (int) currentInformations[2], (int) currentInformations[3]);
                         break;
                     case 1:
-                        this.batch.draw(Player.playerSpriteMovingLeft, (int) currentInformations[3], (int) currentInformations[4]);
+                        this.batch.draw(Player.playerSpriteMovingLeft, (int) currentInformations[2], (int) currentInformations[3]);
                         break;
                     case 2:
-                        this.batch.draw(Player.playerSpriteMovingRight, (int) currentInformations[3], (int) currentInformations[4]);
+                        this.batch.draw(Player.playerSpriteMovingRight, (int) currentInformations[2], (int) currentInformations[3]);
                         break;
                     default:
                         break;
                 }
             }
-            syncLabelUsername(currentInformations);
+            // Draw the name above the current player
+            String currentUsername = (String) currentInformations[0];
+            GlyphLayout layout = new GlyphLayout(font, currentUsername);
+            
+            this.font.draw(
+                this.batch, 
+                currentUsername,
+                ((int) currentInformations[2] + 15) - layout.width / 2, 
+                (int) currentInformations[3] + 50
+            );
         }
         this.batch.end();
 
@@ -144,11 +156,8 @@ public class GameCoopScreen implements Screen{
 
     }
 
-    private void handlePlayerInput() throws IOException{
-        if(Gdx.input.isKeyPressed(Input.Keys.E)){
-            this.worldManager.breakBlockAtPos(this.player.getPosX(),this.player.getPosY());
-        }
-
+    private int handlePlayerInput(){
+        int currentAnimationId = 0;
         if (Gdx.input.isKeyPressed(Input.Keys.A)){
             player.spriteChangeToMovingLeft();
             player.physicalBodyMoveX(-this.player.speed);
@@ -160,12 +169,8 @@ public class GameCoopScreen implements Screen{
                 player.physicalBodyMoveX(this.player.speed);
                 
                 player.syncAll();
-
             }
-
-            this.client.writeStream.write(TranslateToBytes.toPlayerMovement(this.player, 1));
-            this.client.writeStream.flush();
-            return;
+            currentAnimationId = 1;
         }
         if (Gdx.input.isKeyPressed(Input.Keys.D)){
             player.spriteChangeToMovingRight();
@@ -178,12 +183,8 @@ public class GameCoopScreen implements Screen{
                 player.physicalBodyMoveX(-this.player.speed);
                 
                 player.syncAll();
-
             }
-
-            this.client.writeStream.write(TranslateToBytes.toPlayerMovement(this.player, 2));
-            this.client.writeStream.flush();
-            return;
+            currentAnimationId = 2;
         }
         if (Gdx.input.isKeyPressed(Input.Keys.W)){
             Rectangle collidingLadder = this.worldManager.playerOverlapWithALadder(this.player);
@@ -198,18 +199,20 @@ public class GameCoopScreen implements Screen{
                 //Move the player up
                 player.physicalBodyMoveY(4);
                 
-                //Sync the sprite and every other attributs to the position of the hitbox
                 player.syncAll();
+
+                currentAnimationId = 0;
             }else{
                 player.isOnALadder = false;
             }
-
         }else{
             player.isOnALadder = false;
         }
-        
-        this.client.writeStream.write(TranslateToBytes.toPlayerMovement(this.player, 0));
-        this.client.writeStream.flush();
+
+        if(Gdx.input.isKeyPressed(Input.Keys.E)){
+            this.worldManager.breakBlockAtPos(this.player.getPosX(),this.player.getPosY());
+        }
+        return currentAnimationId;
     }
     private void handlePlayerGravity(){
         if(!this.worldManager.playerIsOnGround(this.player) && !player.isOnALadder){
@@ -237,11 +240,11 @@ public class GameCoopScreen implements Screen{
         int playerId = (int) packet.get(0);
         
         // Adding the animation id from the packet
-        this.playersInformations.get(playerId)[2] = (int) packet.get(1);
+        this.playersInformations.get(playerId)[1] = (int) packet.get(1);
         // Adding the x position from the packet
-        this.playersInformations.get(playerId)[3] = (int) packet.get(2);
+        this.playersInformations.get(playerId)[2] = (int) packet.get(2);
         // Adding the y position from the packet
-        this.playersInformations.get(playerId)[4] = (int) packet.get(3);
+        this.playersInformations.get(playerId)[3] = (int) packet.get(3);
          
         // System.out.println("ID: " + packet.get(0) + " // Position: " + packet.get(2) + " x " + packet.get(3));    
     }
@@ -250,11 +253,6 @@ public class GameCoopScreen implements Screen{
         this.worldManager.setBlockAt(xIndexOfItem, yIndexOfItem, null);
 
         this.scoreLabel.setText("Score: " + newScore);
-    }
-    private void syncLabelUsername(Object[] informations){
-        Gdx.app.postRunnable(() ->{
-            ((Label) informations[1]).setPosition((float) ((int) informations[3]) - 20, (float) ((int) informations[4]));
-        });
     }
 
     @Override
@@ -303,32 +301,17 @@ public class GameCoopScreen implements Screen{
                 if(this.player.getUsername().equals(currentUsername)){
                     this.player.setId(currentId);
                 }
-                Object[] initInformation = new Object[5];
+                Object[] initInformation = new Object[4];
 
-                // List contains: Username, Label with his name, animation id, x position, y position 
+                // List contains: Username, animation id, x position, y position 
                 initInformation[0] = currentUsername;
-
-                // Need to make a final String so it can be used inside Gdx.app.postRunnable
-                final String username = currentUsername;
-                Gdx.app.postRunnable(() ->{
-                    initInformation[1] = new Label(
-                        username, 
-                        new Label.LabelStyle(new BitmapFont(), Color.WHITE)
-                    );
-                    ((Label)initInformation[1]).setSize(30, 70);
-                    // this.uiStage.addActor((Label) initInformation[1]);
-
-                });
-
+                initInformation[1] = 0;
                 initInformation[2] = 0;
-                initInformation[3] = currentId * 30;
-                initInformation[4] = -70;
+                initInformation[3] = 0;
 
                 this.playersInformations.put(currentId++, initInformation);
             }
         }
-        
-        System.out.println("Got the hashMap: " + this.playersInformations);
     }
     
     @Override
@@ -338,6 +321,11 @@ public class GameCoopScreen implements Screen{
     
     @Override
     public void dispose(){
+        this.batch.dispose();
+        this.uiStage.dispose();
+        
+        this.font.dispose();
+
         this.main.getLobbyScreen().forceDispose();
     }
     
