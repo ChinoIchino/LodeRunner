@@ -47,11 +47,6 @@ public class WorldManager {
         this.batch.end();
     }
 
-    /**
-     * @param :
-     *  currentYPos: To track the ammount of the world that was already built
-     *  ammountOfSlots: Get the ammount of blocks in a single line
-     */
     private void drawLine(int currentYIndex, int currentYPosition){
         int currentXPosition = (int) (this.worldResolution.x) * 32 / 2 * -1;
         for (int i = 0; i < (int) (this.worldResolution.x); i++) {
@@ -64,8 +59,10 @@ public class WorldManager {
     }
     
     public boolean playerDoesntOverlapWorld(Player player){
-        for (int i = 0; i < (int) (this.worldResolution.y); i++) {
-            for(int j = 0; j < (int) (this.worldResolution.x); j++){
+        ArrayList<ArrayList<Integer>> possibleLevels = getPossibleLevels(player);
+
+        for (Integer i: possibleLevels.get(0)) {
+            for(Integer j: possibleLevels.get(1)){
                 if(
                     (this.blockMatrix[i][j] != null)
                     && this.blockMatrix[i][j].isSolid() 
@@ -78,10 +75,15 @@ public class WorldManager {
         }
         return true;
     }
-    public Rectangle playerOverlapWithALadder(Rectangle hitboxOfPlayer){
-        for (int i = 0; i < (int) (this.worldResolution.y); i++) {
-            for(int j = 0; j < (int) (this.worldResolution.x); j++){
-                if((this.blockMatrix[i][j] != null) && (hitboxOfPlayer.overlaps(this.blockMatrix[i][j].getHitbox()))){
+    public Rectangle playerOverlapWithALadder(Player player){
+        ArrayList<ArrayList<Integer>> possibleLevels = getPossibleLevels(player);
+
+        for (Integer i: possibleLevels.get(0)) {
+            for(Integer j: possibleLevels.get(1)){
+                if((this.blockMatrix[i][j] != null) 
+                    && (player.getHitbox().overlaps(this.blockMatrix[i][j].getHitbox())
+                    && this.blockMatrix[i][j].isClimbable()
+                )){
                     // System.out.println("Player is colliding with a ladder");
                     return this.blockMatrix[i][j].getHitbox();
                 }
@@ -91,21 +93,14 @@ public class WorldManager {
     }
 
     public boolean playerOverlapWithFloor(Player player){
-        int level = 0;
-        int yPosition = (int) (this.worldResolution.y) * -10;
-        for (int j = (int) this.worldResolution.y; j >= 0; j++) {
-            if(player.getPosY() < yPosition){
-                break;
-            }
-            yPosition += 32;
-            level++;
-        }
+        ArrayList<ArrayList<Integer>> possibleLevels = getPossibleLevels(player);
 
-        // System.out.println("Got the level " + level + " // and the yPos =" + yPosition);
-        for(int x = 0; x < (int) (this.worldResolution.x); x++){
-            if(this.blockMatrix[level][x] != null){
-                if(player.getHitbox().overlaps(this.blockMatrix[level][x].getHitbox()) && this.blockMatrix[level][x].isSolid()){
-                    return true;
+        for(Integer y: possibleLevels.get(0)){
+            for(Integer x: possibleLevels.get(1)){
+                if(this.blockMatrix[y][x] != null){
+                    if(player.getHitbox().overlaps(this.blockMatrix[y][x].getHitbox()) && this.blockMatrix[y][x].isSolid()){
+                        return true;
+                    }
                 }
             }
         }
@@ -113,8 +108,10 @@ public class WorldManager {
     }
 
     public boolean playerIsOnGround(Player player){
-        for (int i = 0; i < (int) (this.worldResolution.y); i++) {
-            for(int j = 0; j < (int) (this.worldResolution.x); j++){
+        ArrayList<ArrayList<Integer>> possibleLevels = getPossibleLevels(player);
+
+        for (Integer i: possibleLevels.get(0)) {
+            for(Integer j: possibleLevels.get(1)){
                 if((this.blockMatrix[i][j] != null) && (player.getIsOnGroundHitbox().overlaps(this.blockMatrix[i][j].getHitbox()))){
                     // System.out.println("Player is colliding with a floor");
                     return true;
@@ -125,26 +122,16 @@ public class WorldManager {
     }
 
     public List<Object> playerOverlapWithCollectible(Player player){
-        int[] possibleLevels = new int[3];
-        
-        int currentY = (int) this.worldResolution.y * -16;
-        for (int i = 0; i < (int) this.worldResolution.y; i++) {
-            if(currentY <= player.getPosY() && (currentY + 32) >= player.getPosY()){
-                possibleLevels[1] = i;
-                break;
-            }
-        }
-        possibleLevels[0] = possibleLevels[1] - 1;
-        possibleLevels[2] = possibleLevels[1] + 1;
+        ArrayList<ArrayList<Integer>> possibleLevels = getPossibleLevels(player);
 
-        for (int y = 0; y < 3; y++) {
-            for (int x = 0; x < (int) this.worldResolution.x; x++) {
+        for (Integer y: possibleLevels.get(0)) {
+            for (Integer x: possibleLevels.get(1)) {
                 if(this.blockMatrix[y][x] != null && this.blockMatrix[y][x] instanceof Collectible){
                     if(this.blockMatrix[y][x].getHitbox().overlaps(player.getHitbox())){
+                        // System.out.println("Colliding with a collectible");
+
                         List<Object> toReturn = new ArrayList<>();
                         // Casted Collectible because if the statement is correctly it must be a Collectible
-                        // Collectible toReturn = (Collectible) this.blockMatrix[y][x];
-
                         toReturn.add((Collectible) this.blockMatrix[y][x]);
                         toReturn.add(y);
                         toReturn.add(x);
@@ -156,6 +143,51 @@ public class WorldManager {
             }
         }
         return null;
+    }
+
+    private ArrayList<ArrayList<Integer>> getPossibleLevels(Player player){
+        ArrayList<ArrayList<Integer>> possibleLevels = new ArrayList<>();
+        ArrayList<Integer> yPossibleLevels = new ArrayList<>();
+        
+        int currentY = (int) this.worldResolution.y * -16;
+        for (int i = 0; i < (int) this.worldResolution.y; i++) {
+            if(currentY <= player.getPosY() && (currentY + 32) >= player.getPosY()){
+                yPossibleLevels.add(i);
+                break;
+            }
+            currentY += 32;
+        }
+
+        if(yPossibleLevels.get(0) != 0){
+            yPossibleLevels.add(yPossibleLevels.get(0) - 1);
+        }
+        if(this.worldResolution.y - 1 != yPossibleLevels.get(0)){
+            yPossibleLevels.add(yPossibleLevels.get(0) + 1);
+        }
+
+        possibleLevels.add(yPossibleLevels);
+
+        ArrayList<Integer> xPossibleLevels = new ArrayList<>();
+
+        int currentX = (int) this.worldResolution.x * -16;
+        for(int i = 0; i < (int) this.worldResolution.x; i++){
+            if(currentX <= player.getPosX() && (currentX + 32) >= player.getPosX()){
+                xPossibleLevels.add(i);
+                break;
+            }
+            currentX += 32;
+        }
+
+        if(xPossibleLevels.get(0) != 0){
+            xPossibleLevels.add(xPossibleLevels.get(0) - 1);
+        }
+        if(this.worldResolution.x - 1 != xPossibleLevels.get(0)){
+            xPossibleLevels.add(xPossibleLevels.get(0) + 1);
+        }
+
+        possibleLevels.add(xPossibleLevels);
+
+        return possibleLevels;
     }
 
     public void breakBlockAtPos(int x, int y){
@@ -187,6 +219,18 @@ public class WorldManager {
                 }
             }
             System.out.println("\n");
+        }
+    }
+
+    // Debugger for the function getPossibleLevels
+    public void printDebugForPossibleLevels(ArrayList<ArrayList<Integer>> possibleLevels){
+        System.out.print("Got the levels: \nY: " + possibleLevels.get(0).get(0) + " / " + possibleLevels.get(0).get(1));
+        if(possibleLevels.get(0).size() == 3){
+            System.out.print(" / " + possibleLevels.get(0).get(2)); 
+        }
+        System.out.print("\nX: " + possibleLevels.get(1).get(0) + " / " + possibleLevels.get(1).get(1));
+        if(possibleLevels.get(1).size() == 3){
+            System.out.println(" / " + possibleLevels.get(1).get(2));
         }
     }
 

@@ -102,17 +102,18 @@ public class WorldCreator{
                     this.blockMatrix[yIndexToInit][currentXIndex] = new Block(
                         this.blockTexture,
                         new Rectangle(currentXPos, currentYPos, 32, 32),
-                        true
+                        true,
+                        false
                     );
                     break;
                 case "l":
                     this.blockMatrix[yIndexToInit][currentXIndex] = new Block(
                         this.ladderTexture,
                         new Rectangle(currentXPos, currentYPos, 32, 32),
-                        false
+                        false,
+                        true
                     );
                     break;
-
                 case "g":
                     this.blockMatrix[yIndexToInit][currentXIndex] = new Collectible(
                         this.greenGemTexture,
@@ -158,19 +159,15 @@ public class WorldCreator{
             return worldResolution;
         } catch (IOException e) {
             System.err.println("\nERROR GameInterface/World/WorldCreator.java: Function getResolutionOfWorld catched a IOException");
-            e.printStackTrace();
         }
         return null;
     }
 
-
-    @SuppressWarnings("CallToPrintStackTrace")
     private BufferedReader getWorldTxt(){
         try {
             return new BufferedReader(new FileReader(Gdx.files.internal(this.nameOfTxtFile + ".txt").file()));
         } catch (FileNotFoundException e) {
             System.err.println("\nERROR GameInterface/worldCreator.java: Function getWorldTxt catched FileNotFoundException");
-            e.printStackTrace();
         } 
         return null;
     }

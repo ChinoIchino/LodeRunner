@@ -51,7 +51,7 @@ public class BreakBlockThreadManager{
             worldManager.setBlockAt(indexXOfBlock, indexYOfBlock, null);
             // System.out.println("block has disapear");
             Thread.sleep(2500);
-            worldManager.setBlockAt(indexXOfBlock, indexYOfBlock, new Block(this.quarterBlock, new Rectangle(), true));
+            worldManager.setBlockAt(indexXOfBlock, indexYOfBlock, new Block(this.quarterBlock, new Rectangle(), true, false));
             // System.out.println("1/4");
             Thread.sleep(400);
             worldManager.setBlockTextureAt(indexXOfBlock, indexYOfBlock, this.halfBlock);
@@ -63,7 +63,7 @@ public class BreakBlockThreadManager{
             indexXHitbox = (indexXOfBlock-1)*32 - 16*32;
             indexYHitbox = (indexYOfBlock-1)*32 - 4*32;
             // System.out.println("hx : " + indexXHitbox +"    hy : "+indexYHitbox);
-            worldManager.setBlockAt(indexXOfBlock, indexYOfBlock, new Block(fullBlock, new Rectangle(indexXHitbox, indexYHitbox, 32, 32), true));
+            worldManager.setBlockAt(indexXOfBlock, indexYOfBlock, new Block(fullBlock, new Rectangle(indexXHitbox, indexYHitbox, 32, 32), true, false));
             // System.out.println("block re create");
         }catch(InterruptedException e){
             System.out.println("\nError GameInterface/World/BreakBlockThreadManager.java: catched InterruptedException while running thread to break a block");

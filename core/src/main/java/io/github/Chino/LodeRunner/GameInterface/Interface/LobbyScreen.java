@@ -36,8 +36,6 @@ public class LobbyScreen implements Screen{
     private String username;
     private String serverPassword;
 
-    private int ammountOfPlayers;
-
     private SpriteBatch batch;
 
     private Texture backgroundTexture;
@@ -171,7 +169,6 @@ public class LobbyScreen implements Screen{
         Label nameLabel = new Label(username, skin);
         Gdx.app.postRunnable(() ->{
             this.tablePlayersContent.add(nameLabel).expandX().fillX().row();
-            this.ammountOfPlayers++;
         });
     }
     public void removeAPlayerFromTheList(String username){
@@ -183,7 +180,6 @@ public class LobbyScreen implements Screen{
                 currentLabel = (Label) actor;
                 if(currentLabel.getText().toString().equals(username.trim())){
                     currentLabel.remove();
-                    this.ammountOfPlayers--;
                     break;
                 }
             }
@@ -191,7 +187,6 @@ public class LobbyScreen implements Screen{
     }
     private void resetPlayerList(){
         this.tablePlayersContent.clear();
-        this.ammountOfPlayers = 0;
 
         Label playersLabel = new Label("Players:", skin);
         this.tablePlayersContent.add(playersLabel).expandX().fillX().row();
@@ -268,6 +263,7 @@ public class LobbyScreen implements Screen{
     protected void setLobbyInformationForClient(ClientSide clientSide, String username ,String ip, String port, String password){
         this.clientSide = clientSide;
         this.username = username;
+        this.main.getClientPlayer().setUsername(username);
 
         Gdx.app.postRunnable(() ->{
             this.ipLabel.setText("Ip: " + ip);
@@ -302,12 +298,9 @@ public class LobbyScreen implements Screen{
 
     public void sendToGameInterface(){
         if(this.gameModeLabel.getText().substring(6).equals("Coop")){
-            System.out.println("About to send the client to the game screen");
             this.main.getGameCoopScreen().setClient(this.clientSide);
             Gdx.app.postRunnable(() ->{
-                System.out.println("Got the ammount of players = " + this.ammountOfPlayers);
-                this.main.getGameCoopScreen().initAmmountOfPlayers(this.ammountOfPlayers);
-
+                this.main.getGameCoopScreen().initAmmountOfPlayers(this.tablePlayersContent);
                 this.main.setScreen(this.main.getGameCoopScreen());
             });
         }else{
@@ -375,6 +368,8 @@ public class LobbyScreen implements Screen{
         }else if(this.clientSide != null){
             this.clientSide.closeEverything();
         }
+
+        this.resetPlayerList();
     }
     // Used only when the host of the lobby quit, so the users must be kicked from the interface
     public void forceDispose(){

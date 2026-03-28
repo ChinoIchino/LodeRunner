@@ -1,6 +1,7 @@
 package io.github.Chino.LodeRunner.GameInterface.Interface;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 import com.badlogic.gdx.Gdx;
@@ -11,8 +12,11 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 
@@ -39,13 +43,18 @@ public class GameCoopScreen implements Screen{
 
     private final int SCREEN_WIDTH = 854;//480;
     private final int SCREEN_HEIGH = 480;//320;
+
+    private final static Skin skin = new Skin(Gdx.files.internal("textbuttonskin/textbuttonSkin.json"));
     
     private ClientSide client;
     private SpriteBatch batch;
 
     private Stage uiStage;
     private Player player;
-    private int[] positionsOfPlayers;
+
+    /** Contains: <PlayerId, Object[Username, LabelOfUsername, AnimationId, xPosition, yPosition]> */
+    private HashMap<Integer, Object[]> playersInformations = new HashMap<>();
+    // private int[] positionsOfPlayers;
     private Label scoreLabel;
 
     public GameCoopScreen(GDXMain main) {
@@ -99,22 +108,25 @@ public class GameCoopScreen implements Screen{
 
         // Draw all the other players
         this.batch.begin();
-        for (int i = 0; i < this.positionsOfPlayers.length; i += 4) {
-            if(this.player.getId() != this.positionsOfPlayers[i]){
-                switch(this.positionsOfPlayers[i + 1]){
+        Object[] currentInformations;
+        for (int currentKey: this.playersInformations.keySet()) {
+            currentInformations = this.playersInformations.get(currentKey);
+            if(this.player.getId() != currentKey){
+                switch((int) currentInformations[2]){
                     case 0:
-                        this.batch.draw(Player.playerSpriteIdle, this.positionsOfPlayers[i + 2], this.positionsOfPlayers[i + 3]);
+                        this.batch.draw(Player.playerSpriteIdle, (int) currentInformations[3], (int) currentInformations[4]);
                         break;
                     case 1:
-                        this.batch.draw(Player.playerSpriteMovingLeft, this.positionsOfPlayers[i + 2], this.positionsOfPlayers[i + 3]);
+                        this.batch.draw(Player.playerSpriteMovingLeft, (int) currentInformations[3], (int) currentInformations[4]);
                         break;
                     case 2:
-                        this.batch.draw(Player.playerSpriteMovingRight, this.positionsOfPlayers[i + 2], this.positionsOfPlayers[i + 3]);
+                        this.batch.draw(Player.playerSpriteMovingRight, (int) currentInformations[3], (int) currentInformations[4]);
                         break;
                     default:
                         break;
                 }
             }
+            syncLabelUsername(currentInformations);
         }
         this.batch.end();
 
@@ -174,7 +186,7 @@ public class GameCoopScreen implements Screen{
             return;
         }
         if (Gdx.input.isKeyPressed(Input.Keys.W)){
-            Rectangle collidingLadder = this.worldManager.playerOverlapWithALadder(this.player.getHitbox());
+            Rectangle collidingLadder = this.worldManager.playerOverlapWithALadder(this.player);
             
             if(collidingLadder != null){
                 // Snap player to ladder
@@ -220,13 +232,16 @@ public class GameCoopScreen implements Screen{
             // System.out.println("Score was modified into: " + player.getScore());
         }
     }
-    // Used to get packets of all players movements // TODO do not work, find a way to fix
+    // Used to get packets of all players movements
     public synchronized void handlePlayersDisplay(List<Object> packet){
-        int playerPositionInList = (int) packet.get(0) * 4;
+        int playerId = (int) packet.get(0);
         
-        this.positionsOfPlayers[playerPositionInList + 1] = (int) packet.get(1);
-        this.positionsOfPlayers[playerPositionInList + 2] = (int) packet.get(2);
-        this.positionsOfPlayers[playerPositionInList + 3] = (int) packet.get(3);
+        // Adding the animation id from the packet
+        this.playersInformations.get(playerId)[2] = (int) packet.get(1);
+        // Adding the x position from the packet
+        this.playersInformations.get(playerId)[3] = (int) packet.get(2);
+        // Adding the y position from the packet
+        this.playersInformations.get(playerId)[4] = (int) packet.get(3);
          
         // System.out.println("ID: " + packet.get(0) + " // Position: " + packet.get(2) + " x " + packet.get(3));    
     }
@@ -234,8 +249,12 @@ public class GameCoopScreen implements Screen{
     public void updateScoreLabel(int newScore, int yIndexOfItem, int xIndexOfItem){
         this.worldManager.setBlockAt(xIndexOfItem, yIndexOfItem, null);
 
-        System.out.println("About to update score to: " + newScore);
         this.scoreLabel.setText("Score: " + newScore);
+    }
+    private void syncLabelUsername(Object[] informations){
+        Gdx.app.postRunnable(() ->{
+            ((Label) informations[1]).setPosition((float) ((int) informations[3]) - 20, (float) ((int) informations[4]));
+        });
     }
 
     @Override
@@ -273,17 +292,43 @@ public class GameCoopScreen implements Screen{
 
         this.uiStage.addActor(label);
     }
-    protected void initAmmountOfPlayers(int ammountOfPlayers){
-        // Each player have the variables: Id, animationId, positionX, positionY
-        this.positionsOfPlayers = new int[ammountOfPlayers * 4];
+    protected void initAmmountOfPlayers(Table tableOfPlayerList){
+        int currentId = 0;
+        String currentUsername;
+        for(Actor actor: tableOfPlayerList.getChildren()){
+            // Just in case verify if the actor is a label
+            if(actor instanceof Label && !((Label)actor).getText().toString().equals("Players:")){
+                currentUsername = ((Label)actor).getText().toString();
 
-        int count = 0;
-        for (int i = 0; i < ammountOfPlayers * 4; i += 4) {
-            this.positionsOfPlayers[i] = count++;
-            this.positionsOfPlayers[i + 1] = 0; // 0 = idleAnimation
-            this.positionsOfPlayers[i + 2] = count * 20;
-            this.positionsOfPlayers[i + 3] = -70;
+                if(this.player.getUsername().equals(currentUsername)){
+                    this.player.setId(currentId);
+                }
+                Object[] initInformation = new Object[5];
+
+                // List contains: Username, Label with his name, animation id, x position, y position 
+                initInformation[0] = currentUsername;
+
+                // Need to make a final String so it can be used inside Gdx.app.postRunnable
+                final String username = currentUsername;
+                Gdx.app.postRunnable(() ->{
+                    initInformation[1] = new Label(
+                        username, 
+                        new Label.LabelStyle(new BitmapFont(), Color.WHITE)
+                    );
+                    ((Label)initInformation[1]).setSize(30, 70);
+                    // this.uiStage.addActor((Label) initInformation[1]);
+
+                });
+
+                initInformation[2] = 0;
+                initInformation[3] = currentId * 30;
+                initInformation[4] = -70;
+
+                this.playersInformations.put(currentId++, initInformation);
+            }
         }
+        
+        System.out.println("Got the hashMap: " + this.playersInformations);
     }
     
     @Override

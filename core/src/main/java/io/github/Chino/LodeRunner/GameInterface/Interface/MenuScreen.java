@@ -54,7 +54,7 @@ public class MenuScreen implements Screen {
     }
 
     private void initButtons(){
-        Skin skin = new Skin(Gdx.files.internal("textButtonskin/textbuttonSkin.json"));
+        Skin skin = new Skin(Gdx.files.internal("textbuttonskin/textbuttonSkin.json"));
 
         Gdx.input.setInputProcessor(this.uiStage);
 

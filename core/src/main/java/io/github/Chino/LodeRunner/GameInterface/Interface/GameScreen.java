@@ -1,6 +1,7 @@
 package io.github.Chino.LodeRunner.GameInterface.Interface;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -65,7 +66,6 @@ public class GameScreen implements Screen{
     }
 
     @Override
-    @SuppressWarnings("CallToPrintStackTrace")
     public void render(float delta){
         //Delete previous frame
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -75,7 +75,6 @@ public class GameScreen implements Screen{
             this.worldManager.drawWorld();
         }catch(IOException e){
             System.err.println("\nERROR GameInterface/GameScreen.java: Function render catched IOException while rendering the world");
-            e.printStackTrace();
         }
 
         // TODO Find a better way to manage the sprite of the player
@@ -133,7 +132,7 @@ public class GameScreen implements Screen{
             }
         }
         if (Gdx.input.isKeyPressed(Input.Keys.W)){
-            Rectangle collidingLadder = this.worldManager.playerOverlapWithALadder(this.player.getHitbox());
+            Rectangle collidingLadder = this.worldManager.playerOverlapWithALadder(this.player);
             
             if(collidingLadder != null){
                 // Snap player to ladder
@@ -162,7 +161,7 @@ public class GameScreen implements Screen{
             this.player.physicalBodyMoveY(-8);
 
             if(this.worldManager.playerOverlapWithFloor(player)){
-                System.out.println("REPLACING THE PLAYER");
+                // System.out.println("REPLACING THE PLAYER");
                 this.player.physicalBodyMoveY(4);
             }
 
@@ -170,9 +169,9 @@ public class GameScreen implements Screen{
         }
     }
     private void handlePlayerCollection(){
-        Collectible possibleCollectible = (Collectible) this.worldManager.playerOverlapWithCollectible(this.player).get(0);
+        List<Object> possibleCollectible = this.worldManager.playerOverlapWithCollectible(this.player);
         if(possibleCollectible != null){
-            this.player.addToScore(possibleCollectible.getScore());
+            this.player.addToScore(((Collectible)possibleCollectible.get(0)).getScore());
             updateScoreLabel(this.player);
             // System.out.println("Score was modified into: " + player.getScore());
         }
