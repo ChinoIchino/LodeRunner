@@ -58,7 +58,13 @@ public class GameScreen implements Screen{
         this.worldCreator = new WorldCreator(this.batch, this.WORLD_FILE);
 
         try {
+            // Take the player as a attribut so it play him immediately at the bottom
+            this.player.isInLoading = true;
+
             this.worldManager = this.worldCreator.initWorld();
+            player.moveToCoordinate(0, this.worldManager.getBottomYPosition() + 32);
+
+            this.player.isInLoading = false;
         } catch (IOException e) {
             System.out.println("\nERROR GameInterface/GameScreen.java: Constructor catched IOException will initializing the world");
         }
@@ -79,11 +85,13 @@ public class GameScreen implements Screen{
 
         // TODO Find a better way to manage the sprite of the player
         this.player.spriteChangeToIdle();
-                
-        // Handle player movement
-        handlePlayerInput();
-        handlePlayerGravity();
-        handlePlayerCollection();
+        
+        if(!player.isInLoading){
+            // Handle player movement
+            handlePlayerInput();
+            handlePlayerGravity();
+            handlePlayerCollection();
+        }
 
         // Render player after the movement
         this.player.camera.update();
@@ -145,6 +153,20 @@ public class GameScreen implements Screen{
                 player.physicalBodyMoveY(4);
                 
                 player.syncAll();
+
+                if(this.worldManager.playerOverlapWithNextLevel(player)){
+                    // TODO init and send player to next level
+                    System.out.println("Player about to send to next level");
+                    try{
+                        // Block the collisions verifications while the next map load
+                        this.player.isInLoading = true;
+                        this.worldManager = this.worldCreator.initWorld();
+                        this.player.moveToCoordinate(0, this.worldManager.getBottomYPosition() + 32);
+                        this.player.isInLoading = false;
+                    }catch(IOException e){
+                        System.out.println("\nERROR GameInterface/Interface/GameScreen.java: catched IOException will loading the next level");
+                    }
+                }
             }else{
                 player.isOnALadder = false;
             }
@@ -173,6 +195,10 @@ public class GameScreen implements Screen{
         if(possibleCollectible != null){
             this.player.addToScore(((Collectible)possibleCollectible.get(0)).getScore());
             updateScoreLabel(this.player);
+
+            if(!this.worldManager.isThereCollectibles()){
+                this.worldManager.openExitToNextLevel();
+            }
             // System.out.println("Score was modified into: " + player.getScore());
         }
     }

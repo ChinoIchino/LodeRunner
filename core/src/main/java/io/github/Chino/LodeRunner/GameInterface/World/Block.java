@@ -35,4 +35,8 @@ public class Block{
         this.texture = texture;
     }
 
+    @Override
+    public String toString(){
+        return "Block:\n   -Texture: " + this.texture.toString() + "\n   -Hitbox: " + this.hitbox.toString() + "\n   -isSolid: " + this.isSolid + "\n   -isClimbable: " + this.isClimbable;
+    }
 }

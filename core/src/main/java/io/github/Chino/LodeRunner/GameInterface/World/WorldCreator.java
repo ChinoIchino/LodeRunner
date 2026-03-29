@@ -15,6 +15,8 @@ public class WorldCreator{
     private final String nameOfTxtFile;
 
     private BufferedReader readerOfFile;
+    // Used to init the next level, it skips all the lines to the next level
+    private int lineOffset = 0;
 
     private final SpriteBatch batch;
 
@@ -22,9 +24,12 @@ public class WorldCreator{
 
     private Block[][] blockMatrix;
 
+    private int ammountOfCollectible = 0;
+
     // Textures used
     private Texture blockTexture;
-    private Texture ladderTexture;
+    // Changed to public static, to use in WorldManager.java/openExitToNextLevel()
+    public static Texture ladderTexture;
     
     private Texture greenGemTexture;
     private Texture blueGemTexture;
@@ -41,7 +46,7 @@ public class WorldCreator{
     /** Initiate the textures used in the world creation */
     private void initTextures(){
         this.blockTexture = new Texture("data/textures/blocks/dirt.png");
-        this.ladderTexture = new Texture("data/textures/blocks/ladder.png");
+        WorldCreator.ladderTexture = new Texture("data/textures/blocks/ladder.png");
 
         this.greenGemTexture = new Texture("data/textures/collectibles/greenGem.png");
         this.blueGemTexture = new Texture("data/textures/collectibles/blueGem.png");
@@ -54,36 +59,37 @@ public class WorldCreator{
 
     public WorldManager initWorld() throws IOException{
         this.worldResolution = getResolutionOfWorld();
-
+        
         initMatrixFromWorldResolution();
-
+        
         int worldWidth = (int) (this.worldResolution.x * 32);
         int worldHeight = (int) (this.worldResolution.y * 32);
-
+        
         // Skip to line 3 of the WorldFile.txt
         this.readerOfFile.readLine();
-
+        
         String line = readerOfFile.readLine();
-    
+        
         int currentYPosIndex = worldHeight / 32 - 1;
         // int currentYPos = worldHeight / 2 * -1 + 20;
         int currentYPos = worldHeight / 2 - 32;
-        // System.out.println("Got the line:");
-        for (int i = 0; i < (int) this.worldResolution.y - 1; i++) {
-            // System.out.println(line);
+        System.out.println("Got the lines:");
+        for (int i = 0; i < (int) this.worldResolution.y; i++) {
+            System.out.println(line);
             initLine(currentYPosIndex, currentYPos, worldWidth, line);
-
+            
             // Goes to the next line index
             currentYPosIndex--;
             // Goes to the next pixel position
-            // currentYPos += 20;
             currentYPos -= 32;
             // Get the next line
             line = readerOfFile.readLine();
         }
-        return new WorldManager(this.worldResolution, this.blockMatrix, this.batch);
+        
+        this.lineOffset += this.worldResolution.y + 3;
+        return new WorldManager(this.worldResolution, this.blockMatrix, this.batch, this.ammountOfCollectible);
     }
-
+    
     private void initLine(int yIndexToInit, int currentYPos, int worldWidth, String currentLine){
         String sliceString;
 
@@ -120,6 +126,7 @@ public class WorldCreator{
                         new Rectangle(currentXPos, currentYPos, 25, 25),
                         100
                     );
+                    this.ammountOfCollectible++;
                     break;
                 case "r":
                     this.blockMatrix[yIndexToInit][currentXIndex] = new Collectible(
@@ -127,6 +134,7 @@ public class WorldCreator{
                         new Rectangle(currentXPos, currentYPos, 25, 25),
                         200
                     );
+                    this.ammountOfCollectible++;
                     break;
                 case "b":
                     this.blockMatrix[yIndexToInit][currentXIndex] = new Collectible(
@@ -134,6 +142,7 @@ public class WorldCreator{
                         new Rectangle(currentXPos, currentYPos, 25, 25),
                         500
                     );
+                    this.ammountOfCollectible++;
                     break;
                 default:
                     throw new AssertionError();
@@ -149,6 +158,10 @@ public class WorldCreator{
         
         this.readerOfFile = getWorldTxt();
         try {
+            // Goes by the offset ammount
+            for (int i = 0; i < this.lineOffset; i++) {
+                this.readerOfFile.readLine();
+            }
 
             String line = this.readerOfFile.readLine();
             worldResolution.x = Float.parseFloat(line.substring(2,4));

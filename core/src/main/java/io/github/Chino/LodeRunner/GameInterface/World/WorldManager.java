@@ -21,13 +21,17 @@ public class WorldManager {
     private final Block[][] blockMatrix;
 
     private final BreakBlockThreadManager breakBlockManager = new BreakBlockThreadManager(this);
+
+    private int ammountOfCollectible;
     
-    public WorldManager(Vector2 worldResolution, Block[][] blockMatrix, SpriteBatch batch) {
+    public WorldManager(Vector2 worldResolution, Block[][] blockMatrix, SpriteBatch batch, int ammountOfCollectible) {
         this.worldResolution = worldResolution;
         
         this.blockMatrix = blockMatrix;
 
         this.batch = batch;
+
+        this.ammountOfCollectible = ammountOfCollectible;
     }
     
     
@@ -91,6 +95,11 @@ public class WorldManager {
         }
         return null;
     }
+    // When the player touch the top part of the map it means the player accessed the next level
+    public boolean playerOverlapWithNextLevel(Player player){
+        // Added the -20 so the player dont need to go all the way up the ladder
+        return player.getPosY() >= (this.worldResolution.y * 16 - 20);
+    }
 
     public boolean playerOverlapWithFloor(Player player){
         ArrayList<ArrayList<Integer>> possibleLevels = getPossibleLevels(player);
@@ -129,6 +138,7 @@ public class WorldManager {
                 if(this.blockMatrix[y][x] != null && this.blockMatrix[y][x] instanceof Collectible){
                     if(this.blockMatrix[y][x].getHitbox().overlaps(player.getHitbox())){
                         // System.out.println("Colliding with a collectible");
+                        this.ammountOfCollectible--;
 
                         List<Object> toReturn = new ArrayList<>();
                         // Casted Collectible because if the statement is correctly it must be a Collectible
@@ -190,6 +200,53 @@ public class WorldManager {
         return possibleLevels;
     }
 
+    //Take the bottom left block and return his y position
+    public int getBottomYPosition(){
+        return (int) (this.blockMatrix[0][0].getHitbox().y);
+    }
+
+    public void openExitToNextLevel(){
+        Object[] ladderInformations = getNearestTopLadderInformations();
+
+        // Start changing blocks above the found ladder
+        int currentYHitboxOffset = (int) ((Block) ladderInformations[0]).getHitbox().y + 32;
+        int xHitboxPosition = (int) ((Block) ladderInformations[0]).getHitbox().x;
+        for (int y = (int) ladderInformations[1] + 1; y < this.worldResolution.y; y++) {
+            // Get the block that will be replaced
+            System.out.println("About to replace the block at indexes: " + y + " x " + ladderInformations[2]);
+            // Use the replaced block to set the same hitbox for the ladder
+            this.setBlockAt(
+                (int) ladderInformations[2],
+                y,
+                new Block(WorldCreator.ladderTexture,
+                new Rectangle(xHitboxPosition, currentYHitboxOffset, 32, 32),
+                false,
+                true
+            ));
+
+            currentYHitboxOffset += 32;
+        }
+    }
+
+    // Search for the first ladder from the top of the world
+    // Return a Object[Block ladderFound, int yIndexOfLadder, int xIndexOfLadder]
+    private Object[] getNearestTopLadderInformations(){
+        Object[] ladderInformations = new Object[3];
+        
+        for(int y = (int) this.worldResolution.y - 1; y >= 0; y--){
+            for(int x = 0; x < this.worldResolution.x; x++){
+                if(this.blockMatrix[y][x] != null && this.blockMatrix[y][x].isClimbable()){
+                    System.out.println("Found " + this.blockMatrix[y][x].toString());
+                    ladderInformations[0] = this.blockMatrix[y][x];
+                    ladderInformations[1] = y;
+                    ladderInformations[2] = x;
+                    return ladderInformations;
+                }
+            }
+        }
+        return null;
+    }
+
     public void breakBlockAtPos(int x, int y){
         int blockXIndex = ((int) x / 32) + 17;
         int blockYIndex = (((int) y / 32)-1)+5;
@@ -208,6 +265,10 @@ public class WorldManager {
     }
     public void setBlockAt(int x, int y, Block block){
         this.blockMatrix[y][x] = block;
+    }
+
+    public boolean isThereCollectibles(){
+        return this.ammountOfCollectible > 0;
     }
 
     /** Used in debugging of hitboxes */

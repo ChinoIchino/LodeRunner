@@ -135,7 +135,6 @@ public class Server extends Thread{
     }
 
     protected void sendUsernameToPlayerList(String username){
-        // TODO change id to this.playerList.size()
         playerList.add(new Player(username, -1));
     }
 

@@ -11,11 +11,13 @@ import com.badlogic.gdx.scenes.scene2d.InputListener;
 public class Player extends InputListener{
     public OrthographicCamera camera;
 
+    public boolean isInLoading = false;
+
     private int score = 0;
 
     // Sprite position on the screen
-    private int posX = 20;
-    private int posY = -16; // -70 for the player to be on the ground
+    private int posX = 0;
+    private int posY = 0; // -70 for the player to be on the ground
 
     public int speed = 4;
 
@@ -38,7 +40,7 @@ public class Player extends InputListener{
     public Player() {
         // initPlayerTextures();
 
-        this.currentPlayerSprite = this.playerSpriteIdle;
+        this.currentPlayerSprite = Player.playerSpriteIdle;
 
         this.hitbox = new Rectangle(this.posX, this.posY, 25, 32);
         this.isOnGroundHitbox = new Rectangle(this.posX, this.posY - 1, 25, 1);
@@ -51,7 +53,7 @@ public class Player extends InputListener{
         
         // initPlayerTextures();
 
-        this.currentPlayerSprite = this.playerSpriteIdle;
+        this.currentPlayerSprite = Player.playerSpriteIdle;
 
         this.hitbox = new Rectangle(this.posX, this.posY, 25, 32);
         this.isOnGroundHitbox = new Rectangle(this.posX, this.posY - 1, 25, 1);
@@ -70,13 +72,13 @@ public class Player extends InputListener{
     }
 
     public void spriteChangeToMovingLeft(){
-        this.currentPlayerSprite = this.playerSpriteMovingLeft;
+        this.currentPlayerSprite = Player.playerSpriteMovingLeft;
     }
     public void spriteChangeToMovingRight(){
-        this.currentPlayerSprite = this.playerSpriteMovingRight;
+        this.currentPlayerSprite = Player.playerSpriteMovingRight;
     }
     public void spriteChangeToIdle(){
-        this.currentPlayerSprite = this.playerSpriteIdle;
+        this.currentPlayerSprite = Player.playerSpriteIdle;
     }
 
     public int getPosX(){
@@ -118,6 +120,16 @@ public class Player extends InputListener{
     public void physicalBodyMoveY(int yMovement){
         this.hitbox.y += yMovement;
         this.isOnGroundHitbox.y += yMovement;
+    }
+
+    public void moveToCoordinate(int xCoord, int yCoord){
+        this.hitbox.x = xCoord;
+        this.hitbox.y = yCoord;
+
+        this.isOnGroundHitbox.x = xCoord;
+        this.isOnGroundHitbox.y = yCoord - 1;
+
+        syncAll();
     }
 
     public void snapToLadder(Rectangle ladderHitbox){
