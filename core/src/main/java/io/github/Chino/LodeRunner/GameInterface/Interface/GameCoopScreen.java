@@ -22,6 +22,7 @@ import com.badlogic.gdx.utils.viewport.StretchViewport;
 
 import io.github.Chino.LodeRunner.GameInterface.GDXMain;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.ClientSide;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.TranslateToBytes;
 import io.github.Chino.LodeRunner.GameInterface.Player.Player;
 import io.github.Chino.LodeRunner.GameInterface.World.WorldCreator;
@@ -66,15 +67,20 @@ public class GameCoopScreen implements Screen{
         this.player = this.main.getClientPlayer();
         
         this.stretchViewport = new StretchViewport(this.SCREEN_WIDTH, this.SCREEN_HEIGH);
-
+        
         this.worldCreator = new WorldCreator(this.batch, this.WORLD_FILE);
-
+        
         try {
             this.worldManager = this.worldCreator.initWorld();
+            this.player.moveToCoordinate(0, this.worldManager.getBottomYPosition() + 32);
         } catch (IOException e) {
             System.out.println("\nERROR GameInterface/GameScreen.java: Constructor catched IOException will initializing the world");
         }
 
+    }
+
+    public WorldManager getWorldManager(){
+        return this.worldManager;
     }
 
     public void setClient(ClientSide client){
@@ -97,17 +103,19 @@ public class GameCoopScreen implements Screen{
         this.player.spriteChangeToIdle();
                 
         // Handle player movement
-        try {
-            // Send to server the movement based on the input and gravity in the current frame
-            handlePlayerGravity();
-            
-            int animationId = handlePlayerInput();
-
-            this.client.writeStream.write(TranslateToBytes.toPlayerMovement(player, animationId));
-            this.client.writeStream.flush();
-            
-            handlePlayerCollection();
-        } catch (IOException e) {}
+        if(!player.isInLoading){
+            try {
+                // Send to server the movement based on the input and gravity in the current frame
+                handlePlayerGravity();
+                
+                int animationId = handlePlayerInput();
+    
+                this.client.writeStream.write(TranslateToBytes.toPlayerMovement(player, animationId));
+                this.client.writeStream.flush();
+                
+                handlePlayerCollection();
+            } catch (IOException e) {}
+        }
 
         // Draw all the other players
         this.batch.begin();
@@ -156,7 +164,7 @@ public class GameCoopScreen implements Screen{
 
     }
 
-    private int handlePlayerInput(){
+    private int handlePlayerInput() throws IOException{
         int currentAnimationId = 0;
         if (Gdx.input.isKeyPressed(Input.Keys.A)){
             player.spriteChangeToMovingLeft();
@@ -202,6 +210,17 @@ public class GameCoopScreen implements Screen{
                 player.syncAll();
 
                 currentAnimationId = 0;
+
+                if(this.worldManager.playerOverlapWithNextLevel(this.player)){
+                    // TODO init and send player to next level
+                    System.out.println("Player about to send to next level");
+
+                    ByteBuffer buffer = new ByteBuffer(1024);
+                    buffer.writeInt(10);
+
+                    this.client.writeStream.write(buffer.getBytesList());
+                    this.client.writeStream.flush();
+                }
             }else{
                 player.isOnALadder = false;
             }
@@ -231,8 +250,14 @@ public class GameCoopScreen implements Screen{
         if(possibleCollectibleList != null){
             this.client.writeStream.write(TranslateToBytes.toPlayerScoreAdd(possibleCollectibleList));
             this.client.writeStream.flush();
-            // this.player.addToScore(possibleCollectible.getScore());
-            // System.out.println("Score was modified into: " + player.getScore());
+
+            if(!this.worldManager.isThereCollectibles()){
+                ByteBuffer buffer = new ByteBuffer(1024);
+                buffer.writeInt(9);
+                
+                this.client.writeStream.write(buffer.getBytesList());
+                this.client.writeStream.flush();
+            }
         }
     }
     // Used to get packets of all players movements
@@ -247,6 +272,20 @@ public class GameCoopScreen implements Screen{
         this.playersInformations.get(playerId)[3] = (int) packet.get(3);
          
         // System.out.println("ID: " + packet.get(0) + " // Position: " + packet.get(2) + " x " + packet.get(3));    
+    }
+
+    public void sendToNextLevel(){
+        try {
+            System.out.println("NextLevel function called!");
+            this.player.isInLoading = true;
+            
+            this.worldManager = this.worldCreator.initWorld();
+            this.player.moveToCoordinate(0, this.worldManager.getBottomYPosition() + 32);
+            
+            this.player.isInLoading = false;
+        } catch (IOException e) {
+            System.out.println("\nERROR GameInterface/Interface/GameCoopScreen.java: catched IOException will loading to next level");
+        }
     }
 
     public void updateScoreLabel(int newScore, int yIndexOfItem, int xIndexOfItem){
@@ -291,6 +330,8 @@ public class GameCoopScreen implements Screen{
         this.uiStage.addActor(label);
     }
     protected void initAmmountOfPlayers(Table tableOfPlayerList){
+        int bottomYPosition = this.worldManager.getBottomYPosition() + 32;
+
         int currentId = 0;
         String currentUsername;
         for(Actor actor: tableOfPlayerList.getChildren()){
@@ -307,7 +348,7 @@ public class GameCoopScreen implements Screen{
                 initInformation[0] = currentUsername;
                 initInformation[1] = 0;
                 initInformation[2] = 0;
-                initInformation[3] = 0;
+                initInformation[3] = bottomYPosition;
 
                 this.playersInformations.put(currentId++, initInformation);
             }

@@ -160,8 +160,10 @@ public class GameScreen implements Screen{
                     try{
                         // Block the collisions verifications while the next map load
                         this.player.isInLoading = true;
+
                         this.worldManager = this.worldCreator.initWorld();
                         this.player.moveToCoordinate(0, this.worldManager.getBottomYPosition() + 32);
+                        
                         this.player.isInLoading = false;
                     }catch(IOException e){
                         System.out.println("\nERROR GameInterface/Interface/GameScreen.java: catched IOException will loading the next level");

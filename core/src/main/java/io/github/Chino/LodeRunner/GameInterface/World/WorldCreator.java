@@ -24,7 +24,7 @@ public class WorldCreator{
 
     private Block[][] blockMatrix;
 
-    private int ammountOfCollectible = 0;
+    private int ammountOfCollectible;
 
     // Textures used
     private Texture blockTexture;
@@ -58,6 +58,8 @@ public class WorldCreator{
     }
 
     public WorldManager initWorld() throws IOException{
+        this.ammountOfCollectible = 0;
+
         this.worldResolution = getResolutionOfWorld();
         
         initMatrixFromWorldResolution();
@@ -73,9 +75,9 @@ public class WorldCreator{
         int currentYPosIndex = worldHeight / 32 - 1;
         // int currentYPos = worldHeight / 2 * -1 + 20;
         int currentYPos = worldHeight / 2 - 32;
-        System.out.println("Got the lines:");
+        // System.out.println("Got the lines:");
         for (int i = 0; i < (int) this.worldResolution.y; i++) {
-            System.out.println(line);
+            // System.out.println(line);
             initLine(currentYPosIndex, currentYPos, worldWidth, line);
             
             // Goes to the next line index
@@ -114,7 +116,7 @@ public class WorldCreator{
                     break;
                 case "l":
                     this.blockMatrix[yIndexToInit][currentXIndex] = new Block(
-                        this.ladderTexture,
+                        WorldCreator.ladderTexture,
                         new Rectangle(currentXPos, currentYPos, 32, 32),
                         false,
                         true

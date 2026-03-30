@@ -56,6 +56,14 @@ public class PacketDecoder {
                 packetToReturn = new PacketForAddScore();
                 packetToReturn.write(bytes);
                 return packetToReturn;
+            // Game packet: Next level entrance open
+            case 9:
+                return new PseudoPacket(9);
+            // Game packet: Send to next level
+            case 10:
+                return new PseudoPacket(10);
+                
+
             default:
                 System.out.println(
                     "\nError: GameInterface/LanConnection/Packets/PacketDecoder.java : Got the packet with the id "

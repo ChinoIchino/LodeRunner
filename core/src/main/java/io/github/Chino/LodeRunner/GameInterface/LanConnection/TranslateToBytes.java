@@ -8,7 +8,6 @@ import io.github.Chino.LodeRunner.GameInterface.Player.Player;
 import io.github.Chino.LodeRunner.GameInterface.World.Collectible;
 
 public class TranslateToBytes{
-
     // It compact the string into the "protocol" of a PacketForLobbyPlayersList
     public static byte[] toPlayerListPacket(String toEncode){
         ByteBuffer buffer = new ByteBuffer(1024);

@@ -98,6 +98,7 @@ public class WorldManager {
     // When the player touch the top part of the map it means the player accessed the next level
     public boolean playerOverlapWithNextLevel(Player player){
         // Added the -20 so the player dont need to go all the way up the ladder
+        // System.out.println(player.getPosY() + " >= " + (this.worldResolution.y * 16 - 20));
         return player.getPosY() >= (this.worldResolution.y * 16 - 20);
     }
 
@@ -137,7 +138,7 @@ public class WorldManager {
             for (Integer x: possibleLevels.get(1)) {
                 if(this.blockMatrix[y][x] != null && this.blockMatrix[y][x] instanceof Collectible){
                     if(this.blockMatrix[y][x].getHitbox().overlaps(player.getHitbox())){
-                        // System.out.println("Colliding with a collectible");
+                        System.out.println("ammountOfCollectible = " + this.ammountOfCollectible);
                         this.ammountOfCollectible--;
 
                         List<Object> toReturn = new ArrayList<>();

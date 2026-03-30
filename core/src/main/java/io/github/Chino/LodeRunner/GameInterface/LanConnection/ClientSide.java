@@ -158,6 +158,17 @@ public class ClientSide extends Thread{
                                 this.main.getGameCoopScreen().updateScoreLabel(newScore, yIndex, xIndex);
                             });
                             break;
+                        case 9:
+                            Gdx.app.postRunnable(() -> {
+                                this.main.getGameCoopScreen().getWorldManager().openExitToNextLevel();
+                            });
+                            break;
+                        case 10:
+                            System.out.println("ClientSide: packet type 10 got called");
+                            Gdx.app.postRunnable(() -> {
+                                this.main.getGameCoopScreen().sendToNextLevel();
+                            });
+                            break;
                         default:
                             break;
                         

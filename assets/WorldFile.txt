@@ -31,10 +31,19 @@ c,e,e,e,e,e,c
 c,e,e,e,e,e,c
 c,e,e,e,e,e,c
 c,e,e,e,e,e,c
-c,e,e,e,e,g,c
-c,e,e,e,e,g,c
-c,e,e,e,e,g,c
+c,e,e,e,l,e,c
+c,e,e,e,l,e,c
+c,e,g,e,l,g,c
 c,c,c,c,c,c,c
+
+X=10/Y=06
+Here put the world to generate:
+c,c,c,c,c,c,c,c,c,c
+c,e,e,e,e,e,e,e,e,c
+c,e,e,e,l,e,e,e,e,c
+c,e,e,e,l,e,e,e,e,c
+c,e,e,e,l,e,e,b,g,c
+c,c,c,c,c,c,c,c,c,c
 
 
 DISCLAMER: 
