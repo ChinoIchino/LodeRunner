@@ -171,16 +171,14 @@ public class WorldManager {
     }
 
     public void breakBlockAtPos(int x, int y){
-        int blockXIndex = ((int) x / 32) + 17;
-        int blockYIndex = (((int) y / 32)-1)+5;
-        if((int) x / 32 - x%32 >= 16){
-            blockXIndex++;
-        }else{
-            blockXIndex--;
-        }
-        System.out.println("x : " +blockXIndex + "   y : " + blockYIndex);
-        if(this.blockMatrix[blockYIndex][blockXIndex] != null && this.blockMatrix[blockYIndex][blockXIndex] instanceof Block && this.blockMatrix[blockYIndex][blockXIndex].isSolid()){
-            this.breakBlockManager.breakBlock(blockXIndex, blockYIndex);
+        // System.out.println("x : " + blockMatrix[0].length + "y : "+ this.blockMatrix.length);
+        int blockXIndex = ((int) x / 32)+this.blockMatrix[0].length/2;
+        int blockYIndex = (((int) y / 32)+this.blockMatrix.length/2)-1;
+        if(blockXIndex >=0 && blockYIndex >= 0){
+            System.out.println("x : " +blockXIndex + "   y : " + blockYIndex);
+            if(this.blockMatrix[blockYIndex][blockXIndex] != null && this.blockMatrix[blockYIndex][blockXIndex] instanceof Block && this.blockMatrix[blockYIndex][blockXIndex].isSolid()){
+                this.breakBlockManager.breakBlock(blockXIndex, blockYIndex);
+            }else System.out.println("Breaking that is impossible");
         }else System.out.println("Breaking that is impossible");
     }
     public void setBlockTextureAt(int x,int y,Texture texture){
@@ -188,6 +186,9 @@ public class WorldManager {
     }
     public void setBlockAt(int x, int y, Block block){
         this.blockMatrix[y][x] = block;
+    }
+    public Block[][] getBlockMatrix() {
+        return blockMatrix;
     }
 
     /** Used in debugging of hitboxes */

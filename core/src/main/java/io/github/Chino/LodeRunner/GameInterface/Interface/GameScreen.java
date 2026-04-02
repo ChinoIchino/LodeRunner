@@ -44,6 +44,7 @@ public class GameScreen implements Screen{
     
     private Player player;
     private SpriteBatch batch;
+    private boolean orientation = true;
 
     private Stage uiStage;
     private Label scoreLabel;
@@ -134,6 +135,7 @@ public class GameScreen implements Screen{
         if (Gdx.input.isKeyPressed(Input.Keys.A)){
             player.spriteChangeToMovingLeft();
             player.physicalBodyMoveX(-this.player.speed);
+            this.orientation = false;
             
             player.syncAll();
 
@@ -147,6 +149,7 @@ public class GameScreen implements Screen{
         if (Gdx.input.isKeyPressed(Input.Keys.D)){
             player.spriteChangeToMovingRight();
             player.physicalBodyMoveX(this.player.speed);
+            this.orientation = true;
             
             player.syncAll();
             
@@ -176,9 +179,22 @@ public class GameScreen implements Screen{
             player.isOnALadder = false;
         }
 
-        //TODO Connect function to BreakBlockThreadManager
         if(Gdx.input.isKeyPressed(Input.Keys.E)){
-            this.worldManager.breakBlockAtPos(this.player.getPosX(),this.player.getPosY());
+            if(player.getPosX() >0){
+                if(this.orientation){
+                    if((this.player.getPosX() /32)-32 >= 0) this.worldManager.breakBlockAtPos(this.player.getPosX()+32,this.player.getPosY());
+                    else this.worldManager.breakBlockAtPos(this.player.getPosX()+48,this.player.getPosY());
+                }else{if((this.player.getPosX() /32)-32 >= 0) this.worldManager.breakBlockAtPos(this.player.getPosX()-32,this.player.getPosY());
+                else this.worldManager.breakBlockAtPos(this.player.getPosX()-16,this.player.getPosY());
+                }
+            }else{
+                if(this.orientation){
+                    if((this.player.getPosX() /32)-32 >= 0) this.worldManager.breakBlockAtPos(this.player.getPosX(),this.player.getPosY());
+                    else this.worldManager.breakBlockAtPos(this.player.getPosX()+16,this.player.getPosY());
+                }else{if((this.player.getPosX() /32)-32 >= 0) this.worldManager.breakBlockAtPos(this.player.getPosX()-32,this.player.getPosY());
+                else this.worldManager.breakBlockAtPos(this.player.getPosX()-48,this.player.getPosY());
+                }
+            }
         }
     }
     private void handleEntityGravity(Entity entity){
