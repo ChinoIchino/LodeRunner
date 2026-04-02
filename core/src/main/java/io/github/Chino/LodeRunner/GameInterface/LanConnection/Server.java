@@ -11,6 +11,7 @@ import io.github.Chino.LodeRunner.GameInterface.Player.Player;
 
 public class Server extends Thread{
     private ServerSocket serverSocket;
+
     private ByteBuffer buffer = new ByteBuffer(1024);
 
     private volatile boolean isRunning = true;
@@ -20,6 +21,10 @@ public class Server extends Thread{
 
     private boolean hostAlreadyJoined = false;
     private boolean isVersus;
+
+    // Variables for the maps to not be local
+    private int currentLevel = 1;
+    private ArrayList<char[][]> maps = new ArrayList<>();
 
     private int score = 0;
 
@@ -54,7 +59,11 @@ public class Server extends Thread{
 
     // Send to each client. Received via ClientSide.java listenForPackets function
     protected synchronized void broadcastPacket(byte[] bytes){
-        interceptPacket(bytes);
+        // if interceptPacket return false, it dont send the current packet
+        if(!interceptPacket(bytes)){
+            System.out.println("A packet was denied for broadcast");
+            return;
+        }
 
         for (ClientHandler client : clientHandlersInServer) {
             try {
@@ -71,12 +80,19 @@ public class Server extends Thread{
         }
     }
 
-    // Used before broadcasting, can be used as a packet verificator
-    private void interceptPacket(byte[] bytes){
+    // Verify the packet that was send by the users
+    // If the packet is only only for the server or have invalid informations return false
+    private boolean interceptPacket(byte[] bytes){
         this.buffer.clear();
         this.buffer.bytes = bytes;
         
         int packetType = this.buffer.readInt();
+
+        // Type 11: Init all the levels via the host worldFile.txt
+        if(packetType == 11 && !this.hostAlreadyJoined){
+            this.loadMapsOnServer(this.buffer);
+            return false;
+        }
 
         // Type 1: Init the server informations when the host join
         if(packetType == 1 && !this.hostAlreadyJoined){
@@ -110,12 +126,19 @@ public class Server extends Thread{
 
             this.score += toAdd;
         }
+
+        // Type 10: The next level need to be loaded
+        if(packetType == 10){
+            this.loadNextMapInBuffer(buffer);
+        }
+
+        return true;
     }
 
     private void sendToClientLobbyEssentials(ClientHandler client){
         // Convert from ArrayList<String> into String[]
         String[] list = getPlayerUsernamesList();
-        byte[] bytes = TranslateToBytes.toLobbyEssentials(this.isVersus , list);
+        byte[] bytes = TranslateToBytes.toLobbyEssentials(this.isVersus, this.maps.get(0), list);
 
         try{
             client.writerStream.write(bytes);
@@ -140,6 +163,47 @@ public class Server extends Thread{
 
     private void removeFromClientHandlers(ClientHandler client){
         clientHandlersInServer.remove(client); 
+    }
+
+    private void loadMapsOnServer(ByteBuffer buffer){
+        // Just in case start from the beginning of the buffer
+        buffer.resetCursor();
+
+        // Skip the id of the packet
+        buffer.readInt();
+
+        int ammountOfLevels = buffer.readInt();
+
+        for(int i = 0; i < ammountOfLevels; i++) {
+            char[][] currentMap = new char[buffer.readInt()][buffer.readInt()];
+            
+            for(int y = 0; y < currentMap.length; y++) {
+                for(int x = 0; x < currentMap[y].length; x++) {
+                    currentMap[y][x] = buffer.readChar();
+                }
+            }    
+
+            this.maps.add(currentMap);
+        }
+
+        System.out.println("The server saved all the maps from the host side!");
+        // this.debugPrintLoadedMaps();
+    }
+    private void loadNextMapInBuffer(ByteBuffer buffer){
+        char[][] nextLevelMap = this.maps.get(this.currentLevel++);
+        
+        buffer.resetCursor();
+
+        buffer.writeInt(10);
+        
+        buffer.writeInt(nextLevelMap.length);
+        buffer.writeInt(nextLevelMap[0].length);
+
+        for (int y = 0; y < nextLevelMap.length; y++) {
+            for (int x = 0; x < nextLevelMap[y].length; x++) {
+                buffer.writeChar(nextLevelMap[y][x]);
+            }
+        }
     }
 
     public synchronized void closeServerProperly(){
@@ -167,6 +231,20 @@ public class Server extends Thread{
 
         } catch (IOException e) {
             System.out.println("\nERROR GameInterface/LanConnection/Server.java: While closing server");
+        }
+    }
+
+    private void debugPrintLoadedMaps(){
+        int count = 1;
+        for (char[][] map : this.maps) {
+            System.out.println("Map number " + count + " :");
+            for (int y = 0; y < map.length; y++) {
+                for (int x = 0; x < map[y].length; x++) {
+                    System.out.print(map[y][x] + ", ");
+                }
+                System.out.println();
+            }
+            System.out.println("End Map number " + count++);
         }
     }
 

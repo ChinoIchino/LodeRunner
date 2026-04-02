@@ -17,7 +17,7 @@ public class WorldManager {
     private final SpriteBatch batch;
 
     public Vector2 worldResolution;
-
+    
     private final Block[][] blockMatrix;
 
     private final BreakBlockThreadManager breakBlockManager = new BreakBlockThreadManager(this);
@@ -138,7 +138,6 @@ public class WorldManager {
             for (Integer x: possibleLevels.get(1)) {
                 if(this.blockMatrix[y][x] != null && this.blockMatrix[y][x] instanceof Collectible){
                     if(this.blockMatrix[y][x].getHitbox().overlaps(player.getHitbox())){
-                        System.out.println("ammountOfCollectible = " + this.ammountOfCollectible);
                         this.ammountOfCollectible--;
 
                         List<Object> toReturn = new ArrayList<>();
@@ -213,8 +212,7 @@ public class WorldManager {
         int currentYHitboxOffset = (int) ((Block) ladderInformations[0]).getHitbox().y + 32;
         int xHitboxPosition = (int) ((Block) ladderInformations[0]).getHitbox().x;
         for (int y = (int) ladderInformations[1] + 1; y < this.worldResolution.y; y++) {
-            // Get the block that will be replaced
-            System.out.println("About to replace the block at indexes: " + y + " x " + ladderInformations[2]);
+            // System.out.println("About to replace the block at indexes: " + y + " x " + ladderInformations[2]);
             // Use the replaced block to set the same hitbox for the ladder
             this.setBlockAt(
                 (int) ladderInformations[2],
@@ -237,7 +235,8 @@ public class WorldManager {
         for(int y = (int) this.worldResolution.y - 1; y >= 0; y--){
             for(int x = 0; x < this.worldResolution.x; x++){
                 if(this.blockMatrix[y][x] != null && this.blockMatrix[y][x].isClimbable()){
-                    System.out.println("Found " + this.blockMatrix[y][x].toString());
+                    // System.out.println("Found " + this.blockMatrix[y][x].toString() + "\nAt the pos: y = " + y + " // x = " + x);
+                    
                     ladderInformations[0] = this.blockMatrix[y][x];
                     ladderInformations[1] = y;
                     ladderInformations[2] = x;

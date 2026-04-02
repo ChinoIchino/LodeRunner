@@ -151,7 +151,7 @@ public class JoinClientScreen implements Screen{
 
             ClientSide client = new ClientSide(socket, this.main, this.usernameTextField.getText());
             client.start();
-            
+
             client.writeStream.write(TranslateToBytes.toPlayerListPacket(this.usernameTextField.getText()));
             client.writeStream.flush();
             

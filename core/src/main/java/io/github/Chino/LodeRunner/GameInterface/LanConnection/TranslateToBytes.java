@@ -29,7 +29,8 @@ public class TranslateToBytes{
 
         return buffer.bytes;
     }
-    public static byte[] toLobbyEssentials(boolean isVersus, String... players){
+    // Added the firstMap so the level creation isn't local anymore
+    public static byte[] toLobbyEssentials(boolean isVersus, char[][] firstMap, String... players){
         ByteBuffer buffer = new ByteBuffer(1024);
         buffer.writeInt(1);
 
@@ -39,21 +40,63 @@ public class TranslateToBytes{
         }else{
             buffer.writeInt(0);
         }
+        
+        // Add the current player list
+        if(players != null){
+            buffer.writeInt(players.length);
+    
+            int stringSize;
+            for (String currentName : players) {
+                // Need to trim currentName as precaution
+                currentName = currentName.trim();
+    
+                stringSize = currentName.length();
+                
+                buffer.writeInt(stringSize);
+                buffer.writeString(currentName);
+            }
+        }else{
+            buffer.writeInt(0);
+        }
 
-        buffer.writeInt(players.length);
-
-        int stringSize;
-        for (String currentName : players) {
-            // Need to trim currentName as precaution
-            currentName = currentName.trim();
-
-            stringSize = currentName.length();
-            
-            buffer.writeInt(stringSize);
-            buffer.writeString(currentName);
+        if(firstMap != null){
+            buffer.writeInt(firstMap.length);
+            buffer.writeInt(firstMap[0].length);
+    
+            for (int y = 0; y < firstMap.length; y++) {
+                for (int x = 0; x < firstMap[y].length; x++) {
+                    buffer.writeChar(firstMap[y][x]);
+                }
+            }
+        }else{
+            buffer.writeInt(0);
         }
 
         return buffer.bytes;
+    }
+    public static byte[] toMapsPacket(ArrayList<char[][]> maps){
+        ByteBuffer buffer = new ByteBuffer(1024);
+        
+        // Write the packet id
+        buffer.writeInt(11);
+
+        // Write the ammount of levels in the packet
+        buffer.writeInt(maps.size());
+
+        for (char[][] currentMap: maps) {
+            // Write the current map y and x resolution
+            buffer.writeInt(currentMap.length);
+            buffer.writeInt(currentMap[0].length);
+
+
+            // Write the letter matrix for the current map
+            for (int y = 0; y < currentMap.length; y++) {
+                for (int x = 0; x < currentMap[y].length; x++) {
+                    buffer.writeChar(currentMap[y][x]);
+                }
+            }
+        }
+        return buffer.getBytesList();
     }
 
     public static byte[] toLobbyChatMessages(ArrayList<String> usernameList, ArrayList<String> messageList){

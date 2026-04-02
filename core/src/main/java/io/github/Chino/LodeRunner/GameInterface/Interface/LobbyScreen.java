@@ -271,7 +271,7 @@ public class LobbyScreen implements Screen{
         });
     }
 
-    public void setGameMode(boolean isVersus){
+    public void setGameModeAndFirstMap(boolean isVersus, char[][] firstMap){
         if(isVersus){
             Gdx.app.postRunnable(() ->{
                 this.gameModeLabel.setText("Mode: Versus");
@@ -279,6 +279,7 @@ public class LobbyScreen implements Screen{
         }else{
             Gdx.app.postRunnable(() ->{
                 this.gameModeLabel.setText("Mode: Coop");
+                this.main.getGameCoopScreen().sendToNextLevel(firstMap);
             });
         }
     }

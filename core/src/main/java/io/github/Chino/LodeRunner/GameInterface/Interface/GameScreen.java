@@ -55,7 +55,7 @@ public class GameScreen implements Screen{
         
         this.stretchViewport = new StretchViewport(this.SCREEN_WIDTH, this.SCREEN_HEIGH);
 
-        this.worldCreator = new WorldCreator(this.batch, this.WORLD_FILE);
+        this.worldCreator = new WorldCreator(this.batch);
 
         try {
             // Take the player as a attribut so it play him immediately at the bottom
@@ -155,8 +155,6 @@ public class GameScreen implements Screen{
                 player.syncAll();
 
                 if(this.worldManager.playerOverlapWithNextLevel(player)){
-                    // TODO init and send player to next level
-                    System.out.println("Player about to send to next level");
                     try{
                         // Block the collisions verifications while the next map load
                         this.player.isInLoading = true;
@@ -216,7 +214,7 @@ public class GameScreen implements Screen{
 
     @Override
     public void resume(){
-        Gdx.graphics.setForegroundFPS(15);
+        Gdx.graphics.setForegroundFPS(20);
     }
 
     @Override
@@ -227,7 +225,7 @@ public class GameScreen implements Screen{
     
     @Override
     public void show(){
-        Gdx.graphics.setForegroundFPS(15);
+        Gdx.graphics.setForegroundFPS(20);
         Gdx.input.setInputProcessor(this.uiStage);
 
         // Create a stage to draw based on the screen

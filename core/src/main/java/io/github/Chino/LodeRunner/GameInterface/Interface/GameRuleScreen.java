@@ -23,9 +23,9 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import io.github.Chino.LodeRunner.GameInterface.GDXMain;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.ClientSide;
-import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Server;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.TranslateToBytes;
+import io.github.Chino.LodeRunner.GameInterface.World.WorldCreator;
 
 public class GameRuleScreen implements Screen{
     private final GDXMain main;
@@ -115,18 +115,14 @@ public class GameRuleScreen implements Screen{
                         ClientSide hostClient = new ClientSide(socket, main, usernameTextField.getText());
                         hostClient.start();
 
-                        // First send the username to ClientHandler attached to this client so he can save it as an attribut
-                        ByteBuffer buffer = new ByteBuffer(1024);
-                        buffer.writeInt(usernameTextField.getText().length());
-                        buffer.writeString(usernameTextField.getText());
-
-                        hostClient.writeStream.write(buffer.getBytesList());
+                        hostClient.writeStream.write(TranslateToBytes.toPlayerListPacket(usernameTextField.getText()));
                         hostClient.writeStream.flush();
 
-                        buffer.clear();
-
                         // Then send the gamemode to the server to save it as an attribut
-                        hostClient.writeStream.write(TranslateToBytes.toLobbyEssentials(gamemodeTypeSlider.getValue() == 0.0));
+                        hostClient.writeStream.write(TranslateToBytes.toMapsPacket(WorldCreator.getAllMaps()));
+                        hostClient.writeStream.flush();
+
+                        hostClient.writeStream.write(TranslateToBytes.toLobbyEssentials(gamemodeTypeSlider.getValue() == 0.0, null));
                         hostClient.writeStream.flush();
 
                         // Set in the player object the username and the id (the id is 0 because its the first player that joined)

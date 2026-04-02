@@ -5,6 +5,7 @@ import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketType
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForAddScore;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForLobbyChat;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForLobbyEssentials;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForNextLevel;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForPlayerJoin;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForPlayerListLeave;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForPlayerMovement;
@@ -59,9 +60,11 @@ public class PacketDecoder {
             // Game packet: Next level entrance open
             case 9:
                 return new PseudoPacket(9);
-            // Game packet: Send to next level
+            // Game packet: Send to next level, and load map
             case 10:
-                return new PseudoPacket(10);
+                packetToReturn = new PacketForNextLevel();
+                packetToReturn.write(bytes);
+                return packetToReturn;
                 
 
             default:

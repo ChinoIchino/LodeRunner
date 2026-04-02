@@ -69,9 +69,9 @@ public class PacketForPlayerMovement extends Packet{
         return list;
     }
     
-    @Override //TODO change the toString to include animationId
+    @Override
     public String toString(){
-        return "PacketForPlayerMovement:\n   -Player Id : " + this.playerId 
+        return "PacketForPlayerMovement:\n   -Player Id : " + this.playerId + "\n   -AnimationId : " + this.animationId
             + "\n   -Position: " + this.positionX + "x // " + this.positionY + "y";
     }
 }

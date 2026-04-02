@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.management.InvalidAttributeValueException;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
@@ -35,9 +37,6 @@ public class GameCoopScreen implements Screen{
      *  and create the level based on it */
     private WorldCreator worldCreator;
     private WorldManager worldManager;
-    
-    /** The txt that contain the canvas of the world to draw */
-    private final String WORLD_FILE = "WorldFile"; 
 
     //** Resize the window size based on the resolution */
     private StretchViewport stretchViewport;
@@ -68,7 +67,7 @@ public class GameCoopScreen implements Screen{
         
         this.stretchViewport = new StretchViewport(this.SCREEN_WIDTH, this.SCREEN_HEIGH);
         
-        this.worldCreator = new WorldCreator(this.batch, this.WORLD_FILE);
+        this.worldCreator = new WorldCreator(this.batch);
         
         try {
             this.worldManager = this.worldCreator.initWorld();
@@ -212,9 +211,6 @@ public class GameCoopScreen implements Screen{
                 currentAnimationId = 0;
 
                 if(this.worldManager.playerOverlapWithNextLevel(this.player)){
-                    // TODO init and send player to next level
-                    System.out.println("Player about to send to next level");
-
                     ByteBuffer buffer = new ByteBuffer(1024);
                     buffer.writeInt(10);
 
@@ -274,16 +270,19 @@ public class GameCoopScreen implements Screen{
         // System.out.println("ID: " + packet.get(0) + " // Position: " + packet.get(2) + " x " + packet.get(3));    
     }
 
-    public void sendToNextLevel(){
+    public void sendToNextLevel(char[][] map){
+        if(map.length == 0){
+            return;
+        }
+
         try {
-            System.out.println("NextLevel function called!");
             this.player.isInLoading = true;
             
-            this.worldManager = this.worldCreator.initWorld();
+            this.worldManager = this.worldCreator.initWorldFromPacket(map);
             this.player.moveToCoordinate(0, this.worldManager.getBottomYPosition() + 32);
             
             this.player.isInLoading = false;
-        } catch (IOException e) {
+        } catch (InvalidAttributeValueException e) {
             System.out.println("\nERROR GameInterface/Interface/GameCoopScreen.java: catched IOException will loading to next level");
         }
     }

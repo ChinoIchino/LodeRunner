@@ -1,3 +1,4 @@
+Levels:03
 X=34/Y=20
 Here put the world to generate:
 c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c
@@ -18,8 +19,17 @@ c,e,e,l,c,e,e,e,e,e,c,e,e,c,l,e,c,c,c,e,l,c,e,e,e,e,l,c,e,e,c,l,e,c
 c,e,e,l,c,e,e,e,e,e,c,e,e,c,l,e,c,c,c,e,l,c,e,e,e,e,l,c,e,e,c,l,e,c
 c,e,e,l,c,e,e,e,e,e,c,e,e,c,l,e,c,c,c,e,l,c,e,e,e,e,l,c,e,e,c,l,e,c
 c,e,e,l,e,e,e,e,e,e,e,e,e,e,l,e,e,e,e,e,l,e,e,e,e,e,e,e,e,e,e,l,e,c
-c,e,e,l,e,e,e,e,e,e,e,e,e,e,l,e,e,e,g,g,l,e,e,e,e,e,e,e,e,e,e,l,e,c
-c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c
+c,e,e,l,e,e,e,e,e,e,e,e,e,e,l,e,e,e,g,g,l,e,e,e,e,e,e,e,e,e,e,e,e,c  // c,b,b,l,b,b,b,b,b,b,b,b,b,b,l,b,b,b,b,b,l,b,b,b,b,b,b,b,b,b,b,b,b,c
+c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c  // c,e,e,l,e,e,e,e,e,e,e,e,e,e,l,e,e,e,e,e,l,e,e,e,e,e,e,e,e,e,e,e,e,c
+
+X=10/Y=06
+Here put the world to generate:
+c,c,c,c,c,c,c,c,c,c
+c,e,e,e,e,e,e,e,e,c
+c,e,e,e,l,e,e,e,e,c
+c,e,e,e,l,e,e,e,e,c
+c,e,e,e,l,e,e,b,g,c
+c,c,c,c,c,c,c,c,c,c
 
 X=07/Y=12
 Here put the world to generate:
@@ -44,6 +54,7 @@ c,e,e,e,l,e,e,e,e,c
 c,e,e,e,l,e,e,e,e,c
 c,e,e,e,l,e,e,b,g,c
 c,c,c,c,c,c,c,c,c,c
+
 
 
 DISCLAMER: 

@@ -2,6 +2,9 @@ package io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandl
 
 import java.nio.charset.StandardCharsets;
 
+// TODO add a auto alloc, so if the buffer get a exceding ammount of bytes his size is changed
+// Maybe a autoAlloc function that with a value and a boolean so the buffer get his size changed if the size was defined 
+
 public class ByteBuffer {
     // Public for easier access via the in/out streams
     public byte[] bytes;
@@ -82,6 +85,26 @@ public class ByteBuffer {
         this.currentUsedSize += sizeOfString;
 
     }
+    public char readChar(){
+        if((this.cursor + 1) > this.bytes.length){
+            System.out.println(
+                "\nERROR GameInterface/LanConnection/Packets/ByteHandler/ByteBuffer.java: ByteBuffer cursor is going out of bounds while reading String"
+            );
+            return 0;
+        }
+        return (char) this.bytes[this.cursor++];
+    }
+    public void writeChar(char toAdd){
+        if((this.currentUsedSize + 1) > this.bytes.length){
+            System.out.println(
+                "\nERROR GameInterface/LanConnection/Packets/ByteHandler/ByteBuffer.java: ByteBuffer cursor is going out of bounds while reading String"
+            );
+            return;
+        }
+
+        this.bytes[this.currentUsedSize++] = (byte) toAdd;
+    }
+
 
     public void clear(){
         this.bytes = new byte[1024];

@@ -44,7 +44,6 @@ public class ClientSide extends Thread{
             this.buffer = new ByteBuffer(1024);
 
             this.main = main;
-            // this.currentClientLobbyScreen = main.getLobbyScreen();
 
             this.username = username;
         }catch(IOException e){
@@ -83,14 +82,17 @@ public class ClientSide extends Thread{
                         case 1:
                             // First element is the boolean isVersus
                             final boolean gameModeIsVersus = (boolean) packetItems.get(0);
+                            // Second element is the map
+                            final char[][] firstMap = (char[][]) packetItems.get(1);
+
                             Gdx.app.postRunnable(() ->{
-                                this.main.getLobbyScreen().setGameMode(gameModeIsVersus);
+                                this.main.getLobbyScreen().setGameModeAndFirstMap(gameModeIsVersus, firstMap);
                             });
-                            
-                            this.main.getClientPlayer().setId(packetItems.size() - 1);
-                            // Every items after the game mode are usernames in the lobby
-                            for (int i = 1; i < packetItems.size(); i++) {
-                                String currentPlayerToAdd = (String) packetItems.get(i);
+
+                            // Every last elements in the list are players from the player list
+                            for (int i = 0; i < packetItems.size() - 2; i++) {
+                                final String currentPlayerToAdd = (String) packetItems.get(i + 2);
+                                System.out.println("Got the name: " + currentPlayerToAdd);
                                 Gdx.app.postRunnable(() -> {
                                     this.main.getLobbyScreen().addANewPlayerToList((String) currentPlayerToAdd);
                                 });
@@ -98,7 +100,7 @@ public class ClientSide extends Thread{
 
                             packetItems.clear();
                             break;
-
+                        
                         // Lobby a new client joined
                         case 2:
                             // Casting String because unpackPacket return a Object List
@@ -164,9 +166,9 @@ public class ClientSide extends Thread{
                             });
                             break;
                         case 10:
-                            System.out.println("ClientSide: packet type 10 got called");
+                            final char[][] map = (char[][]) packetItems.get(0);
                             Gdx.app.postRunnable(() -> {
-                                this.main.getGameCoopScreen().sendToNextLevel();
+                                this.main.getGameCoopScreen().sendToNextLevel(map);
                             });
                             break;
                         default:
