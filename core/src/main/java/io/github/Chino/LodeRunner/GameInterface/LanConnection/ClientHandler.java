@@ -1,75 +1,89 @@
 package io.github.Chino.LodeRunner.GameInterface.LanConnection;
 
-import java.io.BufferedReader;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.ArrayList;
-
-import com.badlogic.gdx.Gdx;
-
-import io.github.Chino.LodeRunner.GameInterface.GDXMain;
 
 public class ClientHandler implements Runnable{
-    public GDXMain main;
-    public static ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
-    
-    private Socket socket;
-    
-    private BufferedReader inStream;
-    private PrintWriter outStream;
+    private volatile boolean isRunning = true;
 
-    private String clientUsername;
+    private String username;
 
-    public ClientHandler(GDXMain main, Socket clientSocket) {
+    private Server server;
+
+    protected Socket socket;
+
+    // Protected so the Server class can access it
+    protected BufferedInputStream readerStream;
+    protected BufferedOutputStream writerStream;
+
+    public ClientHandler(Socket socket, Server server){
+        try{
+            //Connection between server and client
+            this.socket = socket;
+
+            this.writerStream = new BufferedOutputStream(this.socket.getOutputStream());
+            this.readerStream = new BufferedInputStream(this.socket.getInputStream());
+
+            this.server = server;
+        }catch(IOException e){
+            closeEverything(this.socket, this.writerStream, this.readerStream);
+        }
+
+    }
+
+    // When we write into the writeBuffer of CliendSide it end here
+    @Override
+    public void run() {
+        byte[] bytes = new byte[1024];
+        int packetType;
+
+        //Before we get in the loop we wait for the username
         try {
-            this.socket = clientSocket;
+            int sizeOfItem = this.readerStream.read(bytes);
+            this.username = new String(bytes, 0, sizeOfItem).trim();
+            
+            server.sendUsernameToPlayerList(this.username);
+            
+            this.server.broadcastPacket(TranslateToBytes.toPlayerListPacket(this.username));
+            
+        } catch (IOException e) {}
+
+        while(this.isRunning){
+            try {
+                this.readerStream.read(bytes);
+                server.broadcastPacket(bytes);
+            } catch (IOException e) {
+                // System.out.println("\nERROR ClientHandler.java: thread run");
+                closeEverything(this.socket, this.writerStream, this.readerStream);
+                break;
+            }
+        }
+    }
+
+    protected void closeEverything(Socket socket, BufferedOutputStream writer, BufferedInputStream reader){
+        if(isRunning){
+            isRunning = false;
     
-            this.outStream = new PrintWriter(this.socket.getOutputStream(), true);
-            this.inStream = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
-
-            this.main = main;
-
-            broadcastToLobbyLog("A New Client Has Joined");
-            clientHandlers.add(this);
-        } catch (Exception e) {
-            this.closeClientHandler();
+            try{
+                if(socket != null){
+                    socket.close();
+                }
+                if(writer != null){
+                    writer.close();
+                }
+                if(reader != null){
+                    reader.close();
+                }
+            }catch(IOException e){
+                System.out.println("\nERROR GameInterface/LanConnection/ClientHandler.java: catched IOException while closing");
+            }
         }
     }
 
     @Override
-    public void run(){
-        while (true) { 
-            try{
-                String message = inStream.readLine();
-                // logMessage(message);
-            }catch(IOException e){
-                System.err.println("\nERROR GameInterface/LanConnection/ClientHandler.java: Function run cathed a IOException while sending a message");
-            }
-        }
-    }
-
-    public void sendMessageToLog(String message){
-        Gdx.app.postRunnable(() -> this.main.getLobbyScreen().logMessageSend(message));
-    }
-
-    public void broadcastToLobbyLog(String message){
-        for (ClientHandler currClient : clientHandlers) {
-            currClient.outStream.append(message);
-        }
-    }
-
-    private void closeClientHandler(){
-        try {
-            clientHandlers.remove(this);
-            this.inStream.close();
-            this.outStream.close();
-            if(this.socket != null){
-                this.socket.close();
-            }
-        } catch (IOException e) {}
-        
+    public String toString(){
+        return "ClientHandler[Is Running = " + this.isRunning + " // Server connected to = " + this.server.toString() + " // Socket = " + this.socket.toString() + "]\n";
     }
 }
-

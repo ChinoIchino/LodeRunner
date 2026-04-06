@@ -11,18 +11,20 @@ import com.badlogic.gdx.scenes.scene2d.InputListener;
 public class Player extends InputListener{
     public OrthographicCamera camera;
 
+    public boolean isInLoading = false;
+
     private int score = 0;
 
     // Sprite position on the screen
-    private int posX = 20;
-    private int posY = -16; // -70 for the player to be on the ground
+    private int posX = 0;
+    private int posY = 0; // -70 for the player to be on the ground
 
     public int speed = 4;
 
     // Player sprites
-    private Texture playerSpriteIdle;
-    private Texture playerSpriteMovingLeft;
-    private Texture playerSpriteMovingRight;
+    public final static Texture playerSpriteIdle = new Texture("data/textures/character/characterIdle.png");
+    public final static Texture playerSpriteMovingLeft = new Texture("data/textures/character/characterMovingLeft.png");
+    public final static Texture playerSpriteMovingRight = new Texture("data/textures/character/characterMovingRight.png");
 
     private Texture currentPlayerSprite;
 
@@ -31,10 +33,27 @@ public class Player extends InputListener{
 
     public boolean isOnALadder = false;
 
-    public Player() {
-        initPlayerTextures();
+    // For Multiplayer
+    private String username;
+    private int id;
 
-        this.currentPlayerSprite = this.playerSpriteIdle;
+    public Player() {
+        // initPlayerTextures();
+
+        this.currentPlayerSprite = Player.playerSpriteIdle;
+
+        this.hitbox = new Rectangle(this.posX, this.posY, 25, 32);
+        this.isOnGroundHitbox = new Rectangle(this.posX, this.posY - 1, 25, 1);
+    
+        this.camera = new OrthographicCamera(480,320);
+    }
+    public Player(String username, int id){
+        this.username = username;
+        this.id = id;
+        
+        // initPlayerTextures();
+
+        this.currentPlayerSprite = Player.playerSpriteIdle;
 
         this.hitbox = new Rectangle(this.posX, this.posY, 25, 32);
         this.isOnGroundHitbox = new Rectangle(this.posX, this.posY - 1, 25, 1);
@@ -42,24 +61,24 @@ public class Player extends InputListener{
         this.camera = new OrthographicCamera(480,320);
     }
 
-    private void initPlayerTextures(){
-        this.playerSpriteIdle = new Texture("data/textures/character/characterIdle.png");
-        this.playerSpriteMovingLeft = new Texture("data/textures/character/characterMovingLeft.png");
-        this.playerSpriteMovingRight = new Texture("data/textures/character/characterMovingRight.png");
-    }
+    // private void initPlayerTextures(){
+    //     this.playerSpriteIdle = new Texture("data/textures/character/characterIdle.png");
+    //     this.playerSpriteMovingLeft = new Texture("data/textures/character/characterMovingLeft.png");
+    //     this.playerSpriteMovingRight = new Texture("data/textures/character/characterMovingRight.png");
+    // }
 
     public void addToScore(int toAdd){
         this.score += toAdd;
     }
 
     public void spriteChangeToMovingLeft(){
-        this.currentPlayerSprite = this.playerSpriteMovingLeft;
+        this.currentPlayerSprite = Player.playerSpriteMovingLeft;
     }
     public void spriteChangeToMovingRight(){
-        this.currentPlayerSprite = this.playerSpriteMovingRight;
+        this.currentPlayerSprite = Player.playerSpriteMovingRight;
     }
     public void spriteChangeToIdle(){
-        this.currentPlayerSprite = this.playerSpriteIdle;
+        this.currentPlayerSprite = Player.playerSpriteIdle;
     }
 
     public int getPosX(){
@@ -103,6 +122,16 @@ public class Player extends InputListener{
         this.isOnGroundHitbox.y += yMovement;
     }
 
+    public void moveToCoordinate(int xCoord, int yCoord){
+        this.hitbox.x = xCoord;
+        this.hitbox.y = yCoord;
+
+        this.isOnGroundHitbox.x = xCoord;
+        this.isOnGroundHitbox.y = yCoord - 1;
+
+        syncAll();
+    }
+
     public void snapToLadder(Rectangle ladderHitbox){
         this.hitbox.x = (int) ladderHitbox.x;
         this.isOnGroundHitbox.x = this.hitbox.x;
@@ -138,7 +167,20 @@ public class Player extends InputListener{
         shapeRenderer.end();
     }
 
-    
+    // Mainly Multiplayer Functions
+    public void setUsername(String username){
+        this.username = username;
+    }
+    public void setId(int id){
+        this.id = id;
+    }
+
+    public String getUsername(){
+        return this.username;
+    }
+    public int getId(){
+        return this.id;
+    }
 
 
 }

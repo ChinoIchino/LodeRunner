@@ -2,11 +2,9 @@ package io.github.Chino.LodeRunner.GameInterface.Interface;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -55,9 +53,8 @@ public class MenuScreen implements Screen {
         Gdx.input.setInputProcessor(this.uiStage);
     }
 
-    //TODO finish init
     private void initButtons(){
-        Skin skin = new Skin(Gdx.files.internal("textButtonskin/textbuttonSkin.json"));
+        Skin skin = new Skin(Gdx.files.internal("textbuttonskin/textbuttonSkin.json"));
 
         Gdx.input.setInputProcessor(this.uiStage);
 
@@ -141,16 +138,6 @@ public class MenuScreen implements Screen {
         this.isBackgroundMovingLeft = isMovingLeft;
     } 
 
-
-    //TODO Not working :(
-    private void displayTableHitbox(){
-        ShapeRenderer sp = new ShapeRenderer();
-        
-        sp.begin(ShapeRenderer.ShapeType.Line);
-        sp.setColor(Color.RED);
-        sp.rect(this.tableForButtons.getOriginX(),this.tableForButtons.getOriginY(),this.tableForButtons.getWidth(),this.tableForButtons.getHeight());
-        sp.end();
-    }
 
     @Override
     public void resize(int width, int height) {

@@ -1,6 +1,7 @@
 package io.github.Chino.LodeRunner.GameInterface.Interface;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -54,10 +55,16 @@ public class GameScreen implements Screen{
         
         this.stretchViewport = new StretchViewport(this.SCREEN_WIDTH, this.SCREEN_HEIGH);
 
-        this.worldCreator = new WorldCreator(this.batch, this.WORLD_FILE);
+        this.worldCreator = new WorldCreator(this.batch);
 
         try {
+            // Take the player as a attribut so it play him immediately at the bottom
+            this.player.isInLoading = true;
+
             this.worldManager = this.worldCreator.initWorld();
+            player.moveToCoordinate(0, this.worldManager.getBottomYPosition() + 32);
+
+            this.player.isInLoading = false;
         } catch (IOException e) {
             System.out.println("\nERROR GameInterface/GameScreen.java: Constructor catched IOException will initializing the world");
         }
@@ -65,7 +72,6 @@ public class GameScreen implements Screen{
     }
 
     @Override
-    @SuppressWarnings("CallToPrintStackTrace")
     public void render(float delta){
         //Delete previous frame
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -75,16 +81,17 @@ public class GameScreen implements Screen{
             this.worldManager.drawWorld();
         }catch(IOException e){
             System.err.println("\nERROR GameInterface/GameScreen.java: Function render catched IOException while rendering the world");
-            e.printStackTrace();
         }
 
         // TODO Find a better way to manage the sprite of the player
         this.player.spriteChangeToIdle();
-                
-        // Handle player movement
-        handlePlayerInput();
-        handlePlayerGravity();
-        handlePlayerCollection();
+        
+        if(!player.isInLoading){
+            // Handle player movement
+            handlePlayerInput();
+            handlePlayerGravity();
+            handlePlayerCollection();
+        }
 
         // Render player after the movement
         this.player.camera.update();
@@ -133,7 +140,7 @@ public class GameScreen implements Screen{
             }
         }
         if (Gdx.input.isKeyPressed(Input.Keys.W)){
-            Rectangle collidingLadder = this.worldManager.playerOverlapWithALadder(this.player.getHitbox());
+            Rectangle collidingLadder = this.worldManager.playerOverlapWithALadder(this.player);
             
             if(collidingLadder != null){
                 // Snap player to ladder
@@ -146,12 +153,27 @@ public class GameScreen implements Screen{
                 player.physicalBodyMoveY(4);
                 
                 player.syncAll();
+
+                if(this.worldManager.playerOverlapWithNextLevel(player)){
+                    try{
+                        // Block the collisions verifications while the next map load
+                        this.player.isInLoading = true;
+
+                        this.worldManager = this.worldCreator.initWorld();
+                        this.player.moveToCoordinate(0, this.worldManager.getBottomYPosition() + 32);
+                        
+                        this.player.isInLoading = false;
+                    }catch(IOException e){
+                        System.out.println("\nERROR GameInterface/Interface/GameScreen.java: catched IOException will loading the next level");
+                    }
+                }
+            }else{
+                player.isOnALadder = false;
             }
         }else{
             player.isOnALadder = false;
         }
 
-        //TODO Connect function to BreakBlockThreadManager
         if(Gdx.input.isKeyPressed(Input.Keys.E)){
             this.worldManager.breakBlockAtPos(this.player.getPosX(),this.player.getPosY());
         }
@@ -161,18 +183,22 @@ public class GameScreen implements Screen{
             this.player.physicalBodyMoveY(-8);
 
             if(this.worldManager.playerOverlapWithFloor(player)){
-                System.out.println("REPLACING THE PLAYER");
-                this.player.physicalBodyMoveY(8);
+                // System.out.println("REPLACING THE PLAYER");
+                this.player.physicalBodyMoveY(4);
             }
 
             player.syncAll();
         }
     }
     private void handlePlayerCollection(){
-        Collectible possibleCollectible = this.worldManager.playerOverlapWithCollectible(this.player);
+        List<Object> possibleCollectible = this.worldManager.playerOverlapWithCollectible(this.player);
         if(possibleCollectible != null){
-            this.player.addToScore(possibleCollectible.getScore());
+            this.player.addToScore(((Collectible)possibleCollectible.get(0)).getScore());
             updateScoreLabel(this.player);
+
+            if(!this.worldManager.isThereCollectibles()){
+                this.worldManager.openExitToNextLevel();
+            }
             // System.out.println("Score was modified into: " + player.getScore());
         }
     }
@@ -188,7 +214,7 @@ public class GameScreen implements Screen{
 
     @Override
     public void resume(){
-        Gdx.graphics.setForegroundFPS(15);
+        Gdx.graphics.setForegroundFPS(20);
     }
 
     @Override
@@ -199,7 +225,7 @@ public class GameScreen implements Screen{
     
     @Override
     public void show(){
-        Gdx.graphics.setForegroundFPS(15);
+        Gdx.graphics.setForegroundFPS(20);
         Gdx.input.setInputProcessor(this.uiStage);
 
         // Create a stage to draw based on the screen
