@@ -6,6 +6,7 @@ import io.github.Chino.LodeRunner.GameInterface.Interface.GameCoopScreen;
 import io.github.Chino.LodeRunner.GameInterface.Interface.GameRuleScreen;
 import io.github.Chino.LodeRunner.GameInterface.Interface.GameScreen;
 import io.github.Chino.LodeRunner.GameInterface.Interface.JoinClientScreen;
+import io.github.Chino.LodeRunner.GameInterface.Interface.LeaderboardScreen;
 import io.github.Chino.LodeRunner.GameInterface.Interface.LobbyScreen;
 import io.github.Chino.LodeRunner.GameInterface.Interface.MenuScreen;
 import io.github.Chino.LodeRunner.GameInterface.Interface.MultiplayerScreen;
@@ -15,6 +16,7 @@ public class GDXMain extends Game {
     private GameScreen gameScreen;
     private GameCoopScreen gameCoopScreen;
     private MenuScreen menuScreen;
+    private LeaderboardScreen leaderboardScreen;
     private MultiplayerScreen multiplayerScreen;
     private GameRuleScreen gameruleScreen;
     private JoinClientScreen joinClientScreen;
@@ -35,6 +37,7 @@ public class GDXMain extends Game {
         this.gameScreen = new GameScreen(this);
         this.gameCoopScreen = new GameCoopScreen(this);
         this.menuScreen = new MenuScreen(this);
+        this.leaderboardScreen = new LeaderboardScreen(this);
         this.multiplayerScreen = new MultiplayerScreen(this);
         this.gameruleScreen = new GameRuleScreen(this);
         this.joinClientScreen = new JoinClientScreen(this);
@@ -49,6 +52,9 @@ public class GDXMain extends Game {
     }
     public MenuScreen getMenuScreen() {
         return menuScreen;
+    }
+    public LeaderboardScreen getLeaderboardScreen(){
+        return this.leaderboardScreen;
     }
     public MultiplayerScreen getMultiplayerScreen() {
         return multiplayerScreen;

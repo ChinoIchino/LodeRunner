@@ -92,7 +92,8 @@ public class MenuScreen implements Screen {
         this.leaderboardButton.addListener(new ClickListener(){
             @Override
             public void clicked(InputEvent e, float x, float y){
-
+                main.getLeaderboardScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
+                main.setScreen(main.getLeaderboardScreen());
             }
         });
 
