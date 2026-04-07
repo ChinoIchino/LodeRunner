@@ -49,6 +49,18 @@ public class LeaderboardScreen implements Screen {
         this.leaderboardHandler = new LeaderboardCreator().createLeaderboardHandler();
         // by default show the solo leaderboard
         setupSoloLeaderboard();
+
+        //TODO Delete all line under this one in the constructor, this is all for testing purpose
+        // this.leaderboardHandler.addPlayerToSoloLeaderboardDatabase("PlayerAdded", 1200);
+        // this.leaderboardHandler.addPlayerToSoloLeaderboardDatabase("PlayerAddedn2", 400);
+        // this.leaderboardHandler.addPlayerToSoloLeaderboardDatabase("PlayerAddedn3", 100);
+
+        ArrayList<String> names = new ArrayList<>();
+        names.add("Gp4N1");
+        names.add("Gp4n2");
+        names.add("Gp4n3");
+
+        this.leaderboardHandler.addPlayersToCoopLeaderboardDatabase(names, 3000);
     }
 
     private void initBackground(){
@@ -126,6 +138,10 @@ public class LeaderboardScreen implements Screen {
     public void show() {
         Gdx.graphics.setForegroundFPS(60);
         Gdx.input.setInputProcessor(this.uiStage);
+
+        // Refresh the leaderboards when the player access to the interface
+        this.setupCoopLeaderboard();
+        this.setupSoloLeaderboard();
     }
 
     @Override

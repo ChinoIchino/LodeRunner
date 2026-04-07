@@ -1,6 +1,7 @@
 package io.github.Chino.LodeRunner.GameInterface.Leaderboard;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -33,11 +34,15 @@ public class LeaderboardHandler {
             Statement generalStat = this.connection.createStatement();
             ResultSet allTableInformations = generalStat.executeQuery("SELECT nameOfPlayer, scoreOfPlayer FROM " + DATABASE_NAME + ".leaderboard_solo ORDER BY scoreOfPlayer DESC"); // "SELECT id, nom, prochMaintenance FROM proj.machine WHERE prochMaintenance <= \'" + dateFilter + "\'"
             
+            
             // Collect informations until it reach the end or the ammount to fetch
             while(allTableInformations.next() && ((fetchedInformations.size() / 2) < ammountToFetch)){
                 fetchedInformations.add(allTableInformations.getString(1));
                 fetchedInformations.add(allTableInformations.getInt(2));
             }
+            
+            allTableInformations.close();
+            generalStat.close();
 
             return fetchedInformations;
         } catch (SQLException e) {
@@ -61,18 +66,72 @@ public class LeaderboardHandler {
             Statement generalStat = this.connection.createStatement();
             ResultSet allTableInformations = generalStat.executeQuery("SELECT nameOfPlayers, scoreOfTeam FROM " + DATABASE_NAME + ".leaderboard_coop ORDER BY scoreOfTeam DESC");
             
+            
             // Collect informations until it reach the end or the ammount to fetch
             while(allTableInformations.next() && ((fetchedInformations.size() / 2) < ammountToFetch)){
                 fetchedInformations.add(allTableInformations.getArray(1));
                 fetchedInformations.add(allTableInformations.getInt(2));
             }
+            
+            allTableInformations.close();
+            generalStat.close();
 
             return fetchedInformations;
         } catch (SQLException e) {
+
             System.out.println("\nERROR GameInterface/Leaderboard/LeaderboardHandler.java: function fetchAllSoloLeaderboardDatabase catched a SQLException");
             e.printStackTrace();
         }
 
         return null;
+    }
+
+    //TODO test the 2 add function, to verify if everything work
+    public void addPlayerToSoloLeaderboardDatabase(String playerUsername, int scoreOfPlayer){
+        try {
+            PreparedStatement addToTable = this.connection.prepareStatement(
+                "INSERT INTO " + this.DATABASE_NAME + ".leaderboard_solo(nameOfPlayer, scoreOfPlayer) VALUES (?, ?)"
+            );
+            
+            addToTable.setString(1, playerUsername);
+            addToTable.setInt(2, scoreOfPlayer);
+
+            addToTable.executeUpdate();
+
+            addToTable.close();
+        } catch (SQLException e) {
+            System.out.println("\nERROR GameInterface/Leaderboard/LeaderboardHandler.java: function addPlayerToSoloLeaderboardDatabase catched a SQLException");
+            e.printStackTrace();
+        }
+        
+    }
+    public void addPlayersToCoopLeaderboardDatabase(ArrayList<String> playersNames, int scoreOfTeam){
+        try {
+            // Prepare the statment until the array
+            String statmentToPrepare = "INSERT INTO " + this.DATABASE_NAME + ".leaderboard_coop(nameOfPlayers, scoreOfTeam) VALUES (ARRAY[?";
+            
+            // Add a additional slot for every player
+            for (int i = 1; i < playersNames.size(); i++) {
+                statmentToPrepare += ", ?";
+            }
+            // end the array and add a slot for the score of the team
+            statmentToPrepare += "], ?)";
+            
+            PreparedStatement preparedStatement = this.connection.prepareStatement(statmentToPrepare);
+
+            // Add to the preparedStatment all the names, based on the slots created before
+            for (int i = 1; i < playersNames.size() + 1; i++) {
+                preparedStatement.setString(i, playersNames.get(i - 1));
+            }
+
+            preparedStatement.setInt(playersNames.size() + 1, scoreOfTeam);
+
+            preparedStatement.executeUpdate();
+            preparedStatement.close();
+        } catch (SQLException e) {
+            System.out.println("\nERROR GameInterface/Leaderboard/LeaderboardHandler.java: function addPlayersToCoopLeaderboardDatabase catched a SQLException");
+            e.printStackTrace();
+        }
+        
     }
 }
