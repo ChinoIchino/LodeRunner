@@ -32,13 +32,13 @@ public class LeaderboardHandler {
             ArrayList<Object> fetchedInformations = new ArrayList<>();
             
             Statement generalStat = this.connection.createStatement();
-            ResultSet allTableInformations = generalStat.executeQuery("SELECT nameOfPlayer, scoreOfPlayer FROM " + DATABASE_NAME + ".leaderboard_solo ORDER BY scoreOfPlayer DESC"); // "SELECT id, nom, prochMaintenance FROM proj.machine WHERE prochMaintenance <= \'" + dateFilter + "\'"
+            ResultSet allTableInformations = generalStat.executeQuery("SELECT id, nameOfPlayer, scoreOfPlayer FROM " + DATABASE_NAME + ".leaderboard_solo ORDER BY scoreOfPlayer DESC, id ASC"); // "SELECT id, nom, prochMaintenance FROM proj.machine WHERE prochMaintenance <= \'" + dateFilter + "\'"
             
             
             // Collect informations until it reach the end or the ammount to fetch
             while(allTableInformations.next() && ((fetchedInformations.size() / 2) < ammountToFetch)){
-                fetchedInformations.add(allTableInformations.getString(1));
-                fetchedInformations.add(allTableInformations.getInt(2));
+                fetchedInformations.add(allTableInformations.getString(2));
+                fetchedInformations.add(allTableInformations.getInt(3));
             }
             
             allTableInformations.close();
@@ -64,13 +64,13 @@ public class LeaderboardHandler {
             ArrayList<Object> fetchedInformations = new ArrayList<>();
             
             Statement generalStat = this.connection.createStatement();
-            ResultSet allTableInformations = generalStat.executeQuery("SELECT nameOfPlayers, scoreOfTeam FROM " + DATABASE_NAME + ".leaderboard_coop ORDER BY scoreOfTeam DESC");
+            ResultSet allTableInformations = generalStat.executeQuery("SELECT id, nameOfPlayers, scoreOfTeam FROM " + DATABASE_NAME + ".leaderboard_coop ORDER BY scoreOfTeam DESC, id ASC");
             
             
             // Collect informations until it reach the end or the ammount to fetch
             while(allTableInformations.next() && ((fetchedInformations.size() / 2) < ammountToFetch)){
-                fetchedInformations.add(allTableInformations.getArray(1));
-                fetchedInformations.add(allTableInformations.getInt(2));
+                fetchedInformations.add(allTableInformations.getArray(2));
+                fetchedInformations.add(allTableInformations.getInt(3));
             }
             
             allTableInformations.close();
@@ -86,11 +86,20 @@ public class LeaderboardHandler {
         return null;
     }
 
-    //TODO test the 2 add function, to verify if everything work
     public void addPlayerToSoloLeaderboardDatabase(String playerUsername, int scoreOfPlayer){
         try {
+            Statement generalStat = this.connection.createStatement();
+
+            ResultSet ammountOfPlayers = generalStat.executeQuery("SELECT COUNT(*) FROM " + this.DATABASE_NAME + ".leaderboard_solo");
+            ammountOfPlayers.next();
+
+            int idOfPlayer = ammountOfPlayers.getInt(1) + 1;
+
+            ammountOfPlayers.close();
+            generalStat.close();
+
             PreparedStatement addToTable = this.connection.prepareStatement(
-                "INSERT INTO " + this.DATABASE_NAME + ".leaderboard_solo(nameOfPlayer, scoreOfPlayer) VALUES (?, ?)"
+                "INSERT INTO " + this.DATABASE_NAME + ".leaderboard_solo(id, nameOfPlayer, scoreOfPlayer) VALUES (" + idOfPlayer + ", ?, ?)"
             );
             
             addToTable.setString(1, playerUsername);
@@ -107,8 +116,18 @@ public class LeaderboardHandler {
     }
     public void addPlayersToCoopLeaderboardDatabase(ArrayList<String> playersNames, int scoreOfTeam){
         try {
+            Statement generalStat = this.connection.createStatement();
+
+            ResultSet ammountOfGroups = generalStat.executeQuery("SELECT COUNT(*) FROM " + this.DATABASE_NAME + ".leaderboard_coop");
+            ammountOfGroups.next();
+
+            int idOfPlayer = ammountOfGroups.getInt(1) + 1;
+
+            ammountOfGroups.close();
+            generalStat.close();
+
             // Prepare the statment until the array
-            String statmentToPrepare = "INSERT INTO " + this.DATABASE_NAME + ".leaderboard_coop(nameOfPlayers, scoreOfTeam) VALUES (ARRAY[?";
+            String statmentToPrepare = "INSERT INTO " + this.DATABASE_NAME + ".leaderboard_coop(id, nameOfPlayers, scoreOfTeam) VALUES (" + idOfPlayer + ", ARRAY[?";
             
             // Add a additional slot for every player
             for (int i = 1; i < playersNames.size(); i++) {

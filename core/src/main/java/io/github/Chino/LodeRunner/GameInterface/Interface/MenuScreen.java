@@ -88,7 +88,6 @@ public class MenuScreen implements Screen {
                 main.setScreen(main.getMultiplayerScreen());
             }
         });
-        //TODO send client to leaderboard screen
         this.leaderboardButton.addListener(new ClickListener(){
             @Override
             public void clicked(InputEvent e, float x, float y){
