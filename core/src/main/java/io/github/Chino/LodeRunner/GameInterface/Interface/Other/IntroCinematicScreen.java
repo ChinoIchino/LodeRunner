@@ -59,7 +59,7 @@ public class IntroCinematicScreen implements Screen {
             Gdx.input.setInputProcessor(null);
 
             this.player = VideoPlayerCreator.createVideoPlayer();
-            this.videoFile = Gdx.files.internal("IntroCinematic.webm");
+            this.videoFile = Gdx.files.internal("IntroCinematicV4.2.webm");
         
             this.player.setOnCompletionListener(new VideoPlayer.CompletionListener() {
                 @Override

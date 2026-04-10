@@ -144,8 +144,6 @@ public class LeaderboardScreen implements Screen {
 
         this.uiStage.act(delta);
         this.uiStage.draw();
-
-        this.uiStage.setDebugAll(true);
     }
 
     private void moveBackground(){
