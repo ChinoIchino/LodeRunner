@@ -19,4 +19,5 @@ public abstract class Entity {
     public abstract void physicalBodyMoveY(int yMovement);
     public abstract void snapToLadder(Rectangle ladderHitbox);
     public abstract void render(SpriteBatch batch);
+    public abstract void setPosition(int x, int y);
 }

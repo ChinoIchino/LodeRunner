@@ -83,12 +83,13 @@ public class WorldManager {
         return true;
     }
     public Rectangle entityOverlapWithALadder(Rectangle hitboxOfEntity){
+        int blockX = ((int) hitboxOfEntity.x / 32)+this.blockMatrix[0].length/2;
+        int blockY = (((int) hitboxOfEntity.y/ 32)+this.blockMatrix.length/2)-1;
+        if(blockY<=0)return null;
+        if((this.blockMatrix[blockY-1][blockX] != null) && (!this.blockMatrix[blockY-1][blockX].isSolid())) return this.blockMatrix[blockY-1][blockX].getHitbox();
         for (int i = 0; i < (int) (this.worldResolution.y); i++) {
             for(int j = 0; j < (int) (this.worldResolution.x); j++){
-                if((this.blockMatrix[i][j] != null) && (hitboxOfEntity.overlaps(this.blockMatrix[i][j].getHitbox()))){
-                    // System.out.println("Player is colliding with a ladder");
-                    return this.blockMatrix[i][j].getHitbox();
-                }
+                if((this.blockMatrix[i][j] != null) && (hitboxOfEntity.overlaps(this.blockMatrix[i][j].getHitbox()))) return this.blockMatrix[i][j].getHitbox();
             }
         }
         return null;
@@ -128,17 +129,44 @@ public class WorldManager {
         }
         return false;
     }
+    public boolean entityReachGroungWithALadder(Entity entity){
+        Block blockUnderEntity = null;
+        int blockX = ((int) entity.getPosX() / 32)+this.blockMatrix[0].length/2;
+        int blockY = (((int) entity.getPosY()/ 32)+this.blockMatrix.length/2)-1;
+        if(blockX >=0 && blockY >= 0)blockUnderEntity = this.blockMatrix[blockY][blockX];
+        if(blockUnderEntity != null)if(blockUnderEntity.isSolid()){
+            return true;
+        }
+        return false;
+    }
 
-    public void aiOverlapsWithBlock(AI ai){
-        Rectangle blockHitbox = null; 
+    public Rectangle aiOverlapsWithBlock(AI ai){
+        Rectangle blockHitbox = null;
         for (int i = 0; i < (int) (this.worldResolution.y); i++) {
             for(int j = 0; j < (int) (this.worldResolution.x); j++){
-                if((this.blockMatrix[i][j] != null) && (this.blockMatrix[i][j].isSolid()) && (ai.getHitbox().overlaps(this.blockMatrix[i][j].getHitbox()))){
-                    System.out.println("AI is colliding with a block");
-                    blockHitbox = blockMatrix[i][j].getHitbox();
-                    ai.snapToBlock(blockHitbox);
+                if(
+                    (this.blockMatrix[i][j] != null)
+                    && this.blockMatrix[i][j].isSolid() 
+                    && ai.getHitbox().overlaps(this.blockMatrix[i][j].getHitbox())
+                ){
+                    blockHitbox = this.blockMatrix[i][j].getHitbox();
+                    return blockHitbox;
                 }
             }
+        }
+        return null;
+    }
+
+    public void entityFellOutTheWorld(Entity entity){
+        int resolutionX = (int)this.worldResolution.x*16;
+        int resolutionY = (int)this.worldResolution.y*16;
+        if(entity.getPosY() < -200){
+            if(entity instanceof Player){
+                entity.setPosition(0, 0);
+            }else
+                entity.setPosition((int)(Math.random()*(resolutionX*2))-resolutionX, (int)(Math.random()*(resolutionY*2))-resolutionY);
+                if(aiOverlapsWithBlock((AI)entity)!=null) ((AI)entity).snapToBlock(aiOverlapsWithBlock((AI)entity));
+            
         }
     }
 

@@ -29,4 +29,9 @@ public class Block{
         this.texture = texture;
     }
 
+    @Override
+    public String toString(){
+        return "Block {\n\thitbox : (" + hitbox.x + "," + hitbox.y +")\n\tisSolid :" + isSolid +"\n}";
+    }
+
 }

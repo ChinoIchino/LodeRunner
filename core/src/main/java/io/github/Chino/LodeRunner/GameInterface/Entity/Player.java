@@ -106,6 +106,14 @@ public class Player extends Entity{
         this.hitbox.x = (int) ladderHitbox.x;
         this.isOnGroundHitbox.x = this.hitbox.x;
     }
+    public void setPosition(int x,int y){
+        this.hitbox.x = x;
+        this.hitbox.y = y;
+        this.posX = x;
+        this.posY = y;
+        this.isOnGroundHitbox.x = posX;
+        this.isOnGroundHitbox.y = posY-4;
+    }
 
     public void render(SpriteBatch batch){
         batch.begin();
@@ -136,8 +144,6 @@ public class Player extends Entity{
         );
         shapeRenderer.end();
     }
-
-    
 
 
 }

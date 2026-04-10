@@ -74,7 +74,11 @@ public class GameScreen implements Screen{
         int resolutionX = (int)this.worldManager.worldResolution.x*16;
         int resolutionY = (int)this.worldManager.worldResolution.y*16;
         for(int i = 0 ; i< this.AI_NUMBER;i++){
-            AI entity = new AI((int)(Math.random()*(resolutionX*2))-resolutionX, (int)(Math.random()*(resolutionY*2))-resolutionY);
+            AI entity = new AI((int)(Math.random()*(resolutionX*2))-resolutionX, (int)(Math.random()*(resolutionY*2))-resolutionY, this.worldManager);
+            // handleAIOverlaps(entity);
+            handleAIOverlaps(entity);
+            entity.setNearestPlayer(this.player);
+            entity.startAIThread();
             this.aiList[i] = entity;
         }
     }
@@ -96,6 +100,7 @@ public class GameScreen implements Screen{
                 
         // Handle player movement
         handlePlayerInput();
+        worldManager.entityFellOutTheWorld(this.player);
         handleEntityGravity(this.player);
         handlePlayerCollection();
         
@@ -110,8 +115,14 @@ public class GameScreen implements Screen{
         batch.begin();
         for(int i = 0; i<AI_NUMBER;i++){
             handleEntityGravity(this.aiList[i]);
-            handleAIOverlaps(this.aiList[i]);
-            this.aiList[i].render(batch);
+            // handleAIOverlaps(this.aiList[i]);
+            worldManager.entityFellOutTheWorld(this.aiList[i]);
+            // this.aiList[i].render(batch);
+            batch.draw(this.aiList[i].currentAISprite, this.aiList[i].getPosX(), this.aiList[i].getPosY());
+        }  
+        for( AI ai : this.aiList){
+            ai.displayHitboxes();
+            // ai.syncAll();
         }
         batch.end();
         
@@ -127,7 +138,9 @@ public class GameScreen implements Screen{
         
     }
     private void handleAIOverlaps(AI ai){
-        worldManager.aiOverlapsWithBlock(ai);
+        if(worldManager.aiOverlapsWithBlock(ai) !=null){
+            ai.snapToBlock(worldManager.aiOverlapsWithBlock(ai));
+        }
         
     }
 
@@ -178,6 +191,28 @@ public class GameScreen implements Screen{
         }else{
             player.isOnALadder = false;
         }
+        if (Gdx.input.isKeyPressed(Input.Keys.S)){
+            Rectangle collidingLadder = this.worldManager.entityOverlapWithALadder(this.player.getHitbox());
+            //checking if the player is on the ground
+            if(this.worldManager.entityReachGroungWithALadder(player)){
+                collidingLadder = null;
+            }
+            
+            if(collidingLadder != null){
+                // Snap player to ladder
+                player.snapToLadder(collidingLadder);
+
+                //Ignore gravitation bacause the player is on a ladder
+                player.isOnALadder = true;
+
+                //Move the player up
+                player.physicalBodyMoveY(-4);
+                
+                player.syncAll();
+            }
+        }else{
+            player.isOnALadder = false;
+        }
 
         if(Gdx.input.isKeyPressed(Input.Keys.E)){
             if(player.getPosX() >0){
@@ -219,6 +254,13 @@ public class GameScreen implements Screen{
 
     private void updateScoreLabel(Player player){
         this.scoreLabel.setText("Score: " + player.getScore());
+    }
+
+    public void killAll(){
+        for(AI ai : this.aiList){
+            ai.close();
+            System.out.println("Ai is deleting");
+        }
     }
 
     @Override

@@ -63,6 +63,7 @@ public class GDXMain extends Game {
 
     @Override
     public void dispose() {
+        gameScreen.killAll();
         super.dispose();
     }
 
