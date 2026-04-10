@@ -1,6 +1,7 @@
 package io.github.Chino.LodeRunner.GameInterface.Interface;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
@@ -36,6 +37,7 @@ public class MenuScreen implements Screen {
     private TextButton playButton;
     private TextButton multiplayerButton;
     private TextButton leaderboardButton;
+    private TextButton introButton;
 
     public MenuScreen(GDXMain main) {
         this.main = main;
@@ -61,7 +63,9 @@ public class MenuScreen implements Screen {
         this.playButton = new TextButton("Play", skin);
         this.multiplayerButton = new TextButton("Multiplayer", skin);
         this.leaderboardButton = new TextButton("Leaderboard", skin);
-    
+        this.introButton = new TextButton("Introduction", skin);
+        this.introButton.setPosition(Gdx.graphics.getWidth() + 10 , 0);
+        
         this.tableForButtons = new Table();
         this.tableForButtons.setFillParent(false);
         this.tableForButtons.setSize(250, 250);
@@ -69,7 +73,7 @@ public class MenuScreen implements Screen {
             this.screenViewport.getScreenWidth() / 2 - this.tableForButtons.getWidth() / 2,
             this.screenViewport.getScreenHeight() / 2 - this.tableForButtons.getHeight() / 2
         );
-
+        
         this.tableForButtons.add(this.playButton).pad(10).row();
         this.tableForButtons.add(this.multiplayerButton).pad(10).row();
         this.tableForButtons.add(this.leaderboardButton).pad(10);
@@ -79,6 +83,12 @@ public class MenuScreen implements Screen {
             @Override
             public void clicked(InputEvent e, float x, float y){
                 main.setScreen(main.getGameScreen());
+            }
+        });
+        this.introButton.addListener(new ClickListener(){
+            @Override
+            public void clicked(InputEvent e, float x, float y){
+                main.setScreen(main.getIntroScreen());
             }
         });
         this.multiplayerButton.addListener(new ClickListener(){
@@ -97,6 +107,7 @@ public class MenuScreen implements Screen {
         });
 
         this.uiStage.addActor(this.tableForButtons);
+        this.uiStage.addActor(this.introButton);
     }
 
     private void initBackground(){
@@ -116,8 +127,20 @@ public class MenuScreen implements Screen {
         this.batch.draw(this.backgroundTexture, this.currentBackgroundXOffset, -200);
         this.batch.end();
 
+        handleInput();
+
         this.uiStage.act(delta);
         this.uiStage.draw();
+    }
+
+    private void handleInput(){
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT) && this.introButton.getX() > (Gdx.graphics.getWidth() - this.introButton.getWidth() - 10)){
+            this.introButton.setPosition(this.introButton.getX() - 10, 0);
+        }else{
+            if(this.introButton.getX() < Gdx.graphics.getWidth()){
+                this.introButton.setPosition(this.introButton.getX() + 0.2f, 0);
+            }
+        }     
     }
 
     private void moveBackground(){
@@ -147,6 +170,8 @@ public class MenuScreen implements Screen {
             this.screenViewport.getScreenWidth() / 2 - this.tableForButtons.getWidth() / 2,
             this.screenViewport.getScreenHeight() / 2 - this.tableForButtons.getHeight() / 2
         );
+
+        this.introButton.setPosition(Gdx.graphics.getWidth() + 10, 0);
     }
 
     @Override
