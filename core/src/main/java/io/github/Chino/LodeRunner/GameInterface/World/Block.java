@@ -9,9 +9,10 @@ public class Block{
     private Rectangle hitbox;
     private Texture texture;
 
-    Block(Texture texture, Rectangle hitbox, boolean isSolid){
+    public Block(Texture texture, Rectangle hitbox, boolean isSolid){
         this.hitbox = hitbox;
         this.texture = texture;
+
         this.isSolid = isSolid;
         this.isLadder = false;
     }

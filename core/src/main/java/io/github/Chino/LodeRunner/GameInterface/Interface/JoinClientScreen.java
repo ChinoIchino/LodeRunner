@@ -1,6 +1,7 @@
 package io.github.Chino.LodeRunner.GameInterface.Interface;
 
 import java.io.IOException;
+import java.net.Socket;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -20,8 +21,10 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import io.github.Chino.LodeRunner.GameInterface.GDXMain;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.ClientSide;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.TranslateToBytes;
 
 public class JoinClientScreen implements Screen{
+    //TODO make that its possible that multiple servers are on the same connection via port modifications
     private GDXMain main;
 
     private SpriteBatch batch;
@@ -37,9 +40,11 @@ public class JoinClientScreen implements Screen{
     private Label errorLabel;
     private Label ipAdresseLabel;
     private Label portLabel;
+    private Label usernameLabel;
     private Label passwordLabel;
     private TextField ipAdresseTextField;
     private TextField portTextField;
+    private TextField usernameTextField;
     private TextField passwordTextField;
     private TextButton submitButton;
     private TextButton goBackButton;
@@ -56,9 +61,11 @@ public class JoinClientScreen implements Screen{
         Skin skin = new Skin(Gdx.files.internal("textbuttonskin/textbuttonSkin.json"));
 
         this.errorLabel = new Label("", skin);
+        this.usernameLabel = new Label("Username: ", skin);
         this.ipAdresseLabel = new Label("Ip: ", skin);
         this.passwordLabel = new Label("Password: ", skin);
 
+        this.usernameTextField = new TextField("", skin);
         this.ipAdresseTextField = new TextField("", skin);
         this.passwordTextField = new TextField("", skin);
 
@@ -73,6 +80,8 @@ public class JoinClientScreen implements Screen{
         );
 
         this.tableOfContent.add(this.errorLabel).pad(10).colspan(3).align(Align.center).row();
+        this.tableOfContent.add(this.usernameLabel).pad(10).align(Align.center);
+        this.tableOfContent.add(this.usernameTextField).pad(10).colspan(2).row();
         this.tableOfContent.add(this.ipAdresseLabel).pad(10).align(Align.center);
         this.tableOfContent.add(this.ipAdresseTextField).pad(10).align(Align.center).row();
         this.tableOfContent.add(this.passwordLabel).pad(10).align(Align.center);
@@ -82,10 +91,10 @@ public class JoinClientScreen implements Screen{
 
         this.uiStage.addActor(this.tableOfContent);
 
-        //TODO send to createdLobby
         this.submitButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y){
+                // If the connection succeed, client get sent to the Lobby screen
                 connectToServer();
             }
         });
@@ -130,22 +139,26 @@ public class JoinClientScreen implements Screen{
 
     private final Runnable connectToServerRunnable = () ->{
         // Added that in a thread so the game dont freeze when the user try to connect to a server
-        String ipFromFromTextField = this.ipAdresseTextField.getText();
+        String ipFromTextField = this.ipAdresseTextField.getText();
         String passwordFromTextField = this.passwordTextField.getText();
 
-        if(passwordFromTextField.isEmpty()){
-            Gdx.app.postRunnable(() -> updateErrorLabel("ERROR: Password Is Empty"));
+        if(!(isPasswordValid() && isUsernameValid())){
             return;
         }
 
         try {
-            ClientSide client = new ClientSide();
-            client.connectToServer(this.main, ipFromFromTextField, 5000);
+            Socket socket = new Socket(ipFromTextField, 5000);
 
+            ClientSide client = new ClientSide(socket, this.main, this.usernameTextField.getText());
+            client.start();
+
+            client.writeStream.write(TranslateToBytes.toPlayerListPacket(this.usernameTextField.getText()));
+            client.writeStream.flush();
+            
             // Used so Gdx handle the rendering/UI, else it send a error.
             Gdx.app.postRunnable(() ->{
                 main.getLobbyScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
-                main.getLobbyScreen().setLobbyInformationForClient(client, ipFromFromTextField, "5000", passwordFromTextField);
+                main.getLobbyScreen().setLobbyInformationForClient(client, usernameTextField.getText(), ipFromTextField, "5000", passwordFromTextField);
                 main.setScreen(this.main.getLobbyScreen());
             });
         } catch (IOException e) {
@@ -153,6 +166,31 @@ public class JoinClientScreen implements Screen{
         }
         Gdx.app.postRunnable(() -> updateErrorLabel("ERROR: Didn't Found Server"));
     };
+
+    private boolean isPasswordValid(){
+        String passwordFromTextField = this.passwordTextField.getText();
+        if(passwordFromTextField.isEmpty()){
+            updateErrorLabel("ERROR: Password Is Empty");
+            return false;
+        }
+        if(passwordFromTextField.length() > 10){
+            updateErrorLabel("ERROR: Password must be under 10 characters");
+            return false;
+        }
+        return true;
+    }
+    private boolean isUsernameValid(){
+        String usernameFromTextField = this.usernameTextField.getText();
+        if(usernameFromTextField.isEmpty()){
+            updateErrorLabel("ERROR: Username Is Empty");
+            return false;
+        }
+        if(usernameFromTextField.length() > 14){
+            updateErrorLabel("ERROR: Username must be under 14 characters");
+            return false;
+        }
+        return true;
+    }
 
     private void updateErrorLabel(String errorMesssage){
         this.errorLabel.setText(errorMesssage);
@@ -207,8 +245,5 @@ public class JoinClientScreen implements Screen{
     public void dispose() {
         this.uiStage.dispose();
         this.batch.dispose();
-        
     }
-    
-    
 }

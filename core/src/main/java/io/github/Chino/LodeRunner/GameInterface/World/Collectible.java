@@ -7,7 +7,7 @@ public class Collectible extends Block{
     private int score;
 
     public Collectible(Texture texture, Rectangle hitbox, int score) {
-        super(texture, hitbox, false);
+        super(texture, hitbox, false, false);
         this.score = score;
     }
 

@@ -1,6 +1,7 @@
 package io.github.Chino.LodeRunner.GameInterface.Interface;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -29,8 +30,6 @@ public class GameScreen implements Screen{
     private WorldCreator worldCreator;
     private WorldManager worldManager;
     
-    /** The txt that contain the canvas of the world to draw */
-    private final String WORLD_FILE = "WorldFile"; 
 
     //** Resize the window size based on the resolution */
     private StretchViewport stretchViewport;
@@ -61,10 +60,17 @@ public class GameScreen implements Screen{
         
         this.stretchViewport = new StretchViewport(this.SCREEN_WIDTH, this.SCREEN_HEIGH);
 
-        this.worldCreator = new WorldCreator(this.batch, this.WORLD_FILE);
+        this.worldCreator = new WorldCreator(this.batch);
         
         try {
+            // Take the player as a attribut so it play him immediately at the bottom
+            this.player.isInLoading = true;
+
             this.worldManager = this.worldCreator.initWorld();
+            player.moveToCoordinate(0, this.worldManager.getBottomYPosition() + 32);
+            // player.moveToCoordinate(0, 0);
+            
+            this.player.isInLoading = false;
         } catch (IOException e) {
             System.out.println("\nERROR GameInterface/GameScreen.java: Constructor catched IOException will initializing the world");
         }
@@ -75,7 +81,9 @@ public class GameScreen implements Screen{
         int resolutionX = (int)this.worldManager.worldResolution.x*16;
         int resolutionY = (int)this.worldManager.worldResolution.y*16;
         for(int i = 0 ; i< this.AI_NUMBER;i++){
-            AI entity = new AI((int)(Math.random()*(resolutionX*2))-resolutionX, (int)(Math.random()*(resolutionY*2))-resolutionY, this.worldManager);
+            // AI entity = new AI((int)(Math.random()*(resolutionX*2))-resolutionX, (int)(Math.random()*(resolutionY*2))-resolutionY, this.worldManager);
+            AI entity = new AI((int)(Math.random()*(resolutionX*2))-resolutionX, (int)(this.worldManager.getBottomYPosition() + 32),this.worldManager);
+            
             this.aiList[i] = entity; 
             entity.setNearestPlayer(this.player);
             handleAIOverlaps(entity);
@@ -196,7 +204,7 @@ public class GameScreen implements Screen{
             Rectangle collidingLadder = this.worldManager.entityOverlapWithALadder(this.player.getHitbox());
 
             boolean canClimb = collidingLadder != null || this.worldManager.isLadderUnderEntity(player);
-            
+            System.out.println(canClimb);
             if(canClimb){
                 // Snap player to ladder
                 if(collidingLadder!=null)player.snapToLadder(collidingLadder);
@@ -267,10 +275,14 @@ public class GameScreen implements Screen{
         }
     }
     private void handlePlayerCollection(){
-        Collectible possibleCollectible = this.worldManager.playerOverlapWithCollectible(this.player);
+        List<Object> possibleCollectible = this.worldManager.playerOverlapWithCollectible(this.player);
         if(possibleCollectible != null){
-            this.player.addToScore(possibleCollectible.getScore());
+            this.player.addToScore(((Collectible)possibleCollectible.get(0)).getScore());
             updateScoreLabel(this.player);
+
+            if(!this.worldManager.isThereCollectibles()){
+                this.worldManager.openExitToNextLevel();
+            }
             // System.out.println("Score was modified into: " + player.getScore());
         }
     }
@@ -286,7 +298,7 @@ public class GameScreen implements Screen{
 
     @Override
     public void resume(){
-        Gdx.graphics.setForegroundFPS(15);
+        Gdx.graphics.setForegroundFPS(20);
     }
 
     @Override
@@ -297,7 +309,7 @@ public class GameScreen implements Screen{
     
     @Override
     public void show(){
-        Gdx.graphics.setForegroundFPS(15);
+        Gdx.graphics.setForegroundFPS(20);
         Gdx.input.setInputProcessor(this.uiStage);
 
         // Create a stage to draw based on the screen
