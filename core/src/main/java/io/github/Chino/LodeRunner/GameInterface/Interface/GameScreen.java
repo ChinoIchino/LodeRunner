@@ -41,7 +41,9 @@ public class GameScreen implements Screen{
     private final int AI_NUMBER = 3;
     public AI[] aiList = new AI[AI_NUMBER];
 
-    
+    private final double GRAVITY_POWER = 0.5;
+
+    private boolean isGameOver = false;
     private Player player;
     private SpriteBatch batch;
     private boolean orientation = true;
@@ -67,19 +69,16 @@ public class GameScreen implements Screen{
             System.out.println("\nERROR GameInterface/GameScreen.java: Constructor catched IOException will initializing the world");
         }
         
-        initAIinWorld();
     }
 
-    private void initAIinWorld(){
+    public void initAIinWorld(){
         int resolutionX = (int)this.worldManager.worldResolution.x*16;
         int resolutionY = (int)this.worldManager.worldResolution.y*16;
         for(int i = 0 ; i< this.AI_NUMBER;i++){
             AI entity = new AI((int)(Math.random()*(resolutionX*2))-resolutionX, (int)(Math.random()*(resolutionY*2))-resolutionY, this.worldManager);
-            // handleAIOverlaps(entity);
-            handleAIOverlaps(entity);
+            this.aiList[i] = entity; 
             entity.setNearestPlayer(this.player);
-            entity.startAIThread();
-            this.aiList[i] = entity;
+            handleAIOverlaps(entity);
         }
     }
 
@@ -99,10 +98,17 @@ public class GameScreen implements Screen{
         this.player.spriteChangeToIdle();
                 
         // Handle player movement
+        this.player.isOnALadder = (worldManager.entityOverlapWithALadder(player.getHitbox()) != null);
+        // System.out.println("overlap with ladder: " + worldManager.entityOverlapWithALadder(player) != null);
         handlePlayerInput();
-        worldManager.entityFellOutTheWorld(this.player);
-        handleEntityGravity(this.player);
+        if (!player.isOnALadder || !player.wasOnALadder) player.climbing = false;
+        if(!this.isGameOver && worldManager.entityFellOutTheWorld(this.player)){
+            System.out.println("Player hs been killed");
+            this.isGameOver = true;
+        }
+        if(!this.player.isOnALadder || !player.wasOnALadder) handleEntityGravity(this.player);
         handlePlayerCollection();
+        player.syncAll();
         
         // Render player after the movement
         this.player.camera.update();
@@ -110,21 +116,29 @@ public class GameScreen implements Screen{
         
         this.worldManager.displayHitboxes();
         this.player.displayHitboxes();
-        
         //render IAs
         batch.begin();
-        for(int i = 0; i<AI_NUMBER;i++){
-            handleEntityGravity(this.aiList[i]);
-            // handleAIOverlaps(this.aiList[i]);
-            worldManager.entityFellOutTheWorld(this.aiList[i]);
-            // this.aiList[i].render(batch);
-            batch.draw(this.aiList[i].currentAISprite, this.aiList[i].getPosX(), this.aiList[i].getPosY());
+        for(AI ai : this.aiList)/*int i = 0; i<AI_NUMBER;i++)*/{
+            ai.updateMovement(delta);
+            handleEntityGravity(ai);
+            if(!this.isGameOver && ai.killPlayer()){
+                System.out.println("Player has been killed");
+                this.isGameOver = true;
+            }
+            handleAIOverlaps(ai);
+            if(worldManager.entityFellOutTheWorld(ai)){
+                ai.setPosition(0, 0);
+            }
+            ai.render(batch);
+            // batch.draw(this.aiList[i].currentAISprite, this.aiList[i].getPosX(), this.aiList[i].getPosY());
         }  
+        batch.end();
         for( AI ai : this.aiList){
             ai.displayHitboxes();
-            // ai.syncAll();
+            ai.drawPath();
+            ai.syncAll();
         }
-        batch.end();
+
         
         // apply the stretched view on the screen
         this.stretchViewport.apply();
@@ -136,10 +150,17 @@ public class GameScreen implements Screen{
         this.uiStage.act(delta);
         this.uiStage.draw();
         
+        this.player.wasOnALadder = this.player.isOnALadder;
+
+        if(isGameOver){
+            System.out.println("switching screen");
+            this.isGameOver = false;
+            main.setScreen(main.getGameOverScreen());
+        }
     }
     private void handleAIOverlaps(AI ai){
-        if(worldManager.aiOverlapsWithBlock(ai) !=null){
-            ai.snapToBlock(worldManager.aiOverlapsWithBlock(ai));
+        if(!worldManager.entityDoesntOverlapWorld(ai.getHitbox())){
+            ai.snapToBlock(new Rectangle(ai.getPosX(),ai.getPosY(),0,0));
         }
         
     }
@@ -150,13 +171,13 @@ public class GameScreen implements Screen{
             player.physicalBodyMoveX(-this.player.speed);
             this.orientation = false;
             
-            player.syncAll();
+            // player.syncAll();
 
             // -7 is a offset based on the player sprite
-            if(player.getPosX() < (this.worldManager.worldResolution.x * -16 - 7) || !this.worldManager.entityDoesntOverlapWorld(this.player)){
+            if(player.getPosX() < (this.worldManager.worldResolution.x * -16 - 7) || !this.worldManager.entityDoesntOverlapWorld(this.player.getHitbox())){
                 player.physicalBodyMoveX(this.player.speed);
                 
-                player.syncAll();
+                // player.syncAll();
             }
         }
         if (Gdx.input.isKeyPressed(Input.Keys.D)){
@@ -164,32 +185,36 @@ public class GameScreen implements Screen{
             player.physicalBodyMoveX(this.player.speed);
             this.orientation = true;
             
-            player.syncAll();
+            // player.syncAll();
             
             // -13 is a offset based on the player sprite
-            if(player.getPosX() > (this.worldManager.worldResolution.x * 16 - 13) || !this.worldManager.entityDoesntOverlapWorld(this.player)){
+            if(player.getPosX() > (this.worldManager.worldResolution.x * 16 - 13) || !this.worldManager.entityDoesntOverlapWorld(this.player.getHitbox())){
                 player.physicalBodyMoveX(-this.player.speed);
                 
-                player.syncAll();
             }
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.W)){
+        
+        
+        player.climbing = (Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.S));
+        if(this.player.climbing){
+
+        if (Gdx.input.isKeyPressed(Input.Keys.W )){
             Rectangle collidingLadder = this.worldManager.entityOverlapWithALadder(this.player.getHitbox());
+
+            boolean canClimb = collidingLadder != null || this.worldManager.isLadderUnderEntity(player);
             
-            if(collidingLadder != null){
+            if(canClimb){
+                // System.out.println("Collision Y blocked");
                 // Snap player to ladder
-                player.snapToLadder(collidingLadder);
-
-                //Ignore gravitation bacause the player is on a ladder
-                player.isOnALadder = true;
-
-                //Move the player up
-                player.physicalBodyMoveY(4);
+                if(collidingLadder!=null)player.snapToLadder(collidingLadder);
                 
-                player.syncAll();
-            }
-        }else{
-            player.isOnALadder = false;
+                //Ignore gravitation bacause the player is on a ladder
+                if(collidingLadder!=null)player.isOnALadder = true;
+                
+                //Move the player up
+                if(player.isOnALadder) player.physicalBodyMoveY(4);
+                
+            }else{player.isOnALadder = false;player.wasOnALadder = true;}
         }
         if (Gdx.input.isKeyPressed(Input.Keys.S)){
             Rectangle collidingLadder = this.worldManager.entityOverlapWithALadder(this.player.getHitbox());
@@ -197,23 +222,22 @@ public class GameScreen implements Screen{
             if(this.worldManager.entityReachGroungWithALadder(player)){
                 collidingLadder = null;
             }
+            boolean canClimb = collidingLadder != null || this.worldManager.isLadderUnderEntity(player);
             
-            if(collidingLadder != null){
+            if(canClimb){
                 // Snap player to ladder
-                player.snapToLadder(collidingLadder);
+                if(collidingLadder!=null)player.snapToLadder(collidingLadder);
 
                 //Ignore gravitation bacause the player is on a ladder
-                player.isOnALadder = true;
+                if(collidingLadder!=null)player.isOnALadder = true;
 
                 //Move the player up
                 player.physicalBodyMoveY(-4);
                 
-                player.syncAll();
+                // player.syncAll();
+            }else{player.isOnALadder = false;}
             }
-        }else{
-            player.isOnALadder = false;
         }
-
         if(Gdx.input.isKeyPressed(Input.Keys.E)){
             if(player.getPosX() >0){
                 if(this.orientation){
@@ -233,14 +257,20 @@ public class GameScreen implements Screen{
         }
     }
     private void handleEntityGravity(Entity entity){
-        if(!this.worldManager.entityIsOnGround(entity) && !entity.isOnALadder){
-            entity.physicalBodyMoveY(-8);
+        // System.out.println("Applying gravity");
+        if(entity.isOnALadder){
+            entity.fallSpeed = 0;
+            return;
+        } 
+        entity.fallSpeed-= this.GRAVITY_POWER;
+        if(entity.fallSpeed < -8 ) entity.fallSpeed = -8;
+        Rectangle next = new Rectangle(entity.getHitbox());
+        next.y += entity.fallSpeed;
 
-            if(this.worldManager.entityOverlapWithFloor(entity)){
-                entity.physicalBodyMoveY(4);
-            }
-
-            entity.syncAll();
+        if(this.worldManager.entityDoesntOverlapWorld(next)) {
+            entity.physicalBodyMoveY((int)entity.fallSpeed);
+        } else {
+            entity.fallSpeed = 0;
         }
     }
     private void handlePlayerCollection(){
@@ -258,8 +288,7 @@ public class GameScreen implements Screen{
 
     public void killAll(){
         for(AI ai : this.aiList){
-            ai.close();
-            System.out.println("Ai is deleting");
+            if(ai!=null) ai.close();
         }
     }
 

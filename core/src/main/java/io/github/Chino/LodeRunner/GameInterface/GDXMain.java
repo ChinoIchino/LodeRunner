@@ -2,6 +2,7 @@ package io.github.Chino.LodeRunner.GameInterface;
 
 import com.badlogic.gdx.Game;
 
+import io.github.Chino.LodeRunner.GameInterface.Interface.GameOverScreen;
 import io.github.Chino.LodeRunner.GameInterface.Interface.GameRuleScreen;
 import io.github.Chino.LodeRunner.GameInterface.Interface.GameScreen;
 import io.github.Chino.LodeRunner.GameInterface.Interface.JoinClientScreen;
@@ -16,6 +17,7 @@ public class GDXMain extends Game {
     private GameRuleScreen gameruleScreen;
     private JoinClientScreen joinClientScreen;
     private LobbyScreen lobbyScreen;
+    private GameOverScreen gameOverScreen;
 
     @Override
     public void create() {
@@ -29,6 +31,7 @@ public class GDXMain extends Game {
         this.gameruleScreen = new GameRuleScreen(this);
         this.joinClientScreen = new JoinClientScreen(this);
         this.lobbyScreen = new LobbyScreen(this);
+        this.gameOverScreen = new GameOverScreen(this);
     }
 
     public GameScreen getGameScreen() {
@@ -48,6 +51,9 @@ public class GDXMain extends Game {
     }
     public LobbyScreen getLobbyScreen() {
         return lobbyScreen;
+    }
+    public GameOverScreen getGameOverScreen() {
+        return gameOverScreen;
     }
 
     /** When a window resize occur change the resolution */

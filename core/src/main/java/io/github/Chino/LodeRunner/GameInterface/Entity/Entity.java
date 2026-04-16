@@ -4,7 +4,12 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 
 public abstract class Entity {
-    public boolean isOnALadder;
+
+    public double fallSpeed = 0;
+    public boolean climbing = false;
+    public boolean isOnALadder = false;
+    public boolean wasOnALadder = false;
+
     protected abstract void initEntityTextures();
     public abstract void spriteChangeToMovingLeft();
     public abstract void spriteChangeToMovingRight();

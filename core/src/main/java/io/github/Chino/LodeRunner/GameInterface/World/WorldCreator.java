@@ -109,7 +109,8 @@ public class WorldCreator{
                     this.blockMatrix[yIndexToInit][currentXIndex] = new Block(
                         this.ladderTexture,
                         new Rectangle(currentXPos, currentYPos, 32, 32),
-                        false
+                        false,
+                        true
                     );
                     break;
 

@@ -23,12 +23,12 @@ public class MenuScreen implements Screen {
 
     private final int SCREEN_WIDTH = 854;
     private final int SCREEN_HEIGH = 480;
-    
+
     // UI part:
     private SpriteBatch batch;
     private Stage uiStage;
     private final ScreenViewport screenViewport = new ScreenViewport();
-    
+
     private Texture backgroundTexture;
     private int currentBackgroundXOffset = 0;
     private boolean isBackgroundMovingLeft = false;
@@ -46,7 +46,7 @@ public class MenuScreen implements Screen {
 
         initButtons();
         initBackground();
-        
+
     }
 
     @Override
@@ -55,8 +55,8 @@ public class MenuScreen implements Screen {
         Gdx.input.setInputProcessor(this.uiStage);
     }
 
-    //TODO finish init
-    private void initButtons(){
+    // TODO finish init
+    private void initButtons() {
         Skin skin = new Skin(Gdx.files.internal("textButtonskin/textbuttonSkin.json"));
 
         Gdx.input.setInputProcessor(this.uiStage);
@@ -64,14 +64,13 @@ public class MenuScreen implements Screen {
         this.playButton = new TextButton("Play", skin);
         this.multiplayerButton = new TextButton("Multiplayer", skin);
         this.leaderboardButton = new TextButton("Leaderboard", skin);
-    
+
         this.tableForButtons = new Table();
         this.tableForButtons.setFillParent(false);
         this.tableForButtons.setSize(250, 250);
         this.tableForButtons.setPosition(
-            this.screenViewport.getScreenWidth() / 2 - this.tableForButtons.getWidth() / 2,
-            this.screenViewport.getScreenHeight() / 2 - this.tableForButtons.getHeight() / 2
-        );
+                this.screenViewport.getScreenWidth() / 2 - this.tableForButtons.getWidth() / 2,
+                this.screenViewport.getScreenHeight() / 2 - this.tableForButtons.getHeight() / 2);
 
         this.tableForButtons.add(this.playButton).pad(10).row();
         this.tableForButtons.add(this.multiplayerButton).pad(10).row();
@@ -80,22 +79,22 @@ public class MenuScreen implements Screen {
         // Adding the listeners to every buttons
         this.playButton.addListener(new ClickListener() {
             @Override
-            public void clicked(InputEvent e, float x, float y){
+            public void clicked(InputEvent e, float x, float y) {
                 main.setScreen(main.getGameScreen());
-                //start ia
+                main.getGameScreen().initAIinWorld();
             }
         });
-        this.multiplayerButton.addListener(new ClickListener(){
+        this.multiplayerButton.addListener(new ClickListener() {
             @Override
-            public void clicked(InputEvent e, float x, float y){
+            public void clicked(InputEvent e, float x, float y) {
                 main.getMultiplayerScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
                 main.setScreen(main.getMultiplayerScreen());
             }
         });
-        //TODO send client to leaderboard screen
-        this.leaderboardButton.addListener(new ClickListener(){
+        // TODO send client to leaderboard screen
+        this.leaderboardButton.addListener(new ClickListener() {
             @Override
-            public void clicked(InputEvent e, float x, float y){
+            public void clicked(InputEvent e, float x, float y) {
 
             }
         });
@@ -103,7 +102,7 @@ public class MenuScreen implements Screen {
         this.uiStage.addActor(this.tableForButtons);
     }
 
-    private void initBackground(){
+    private void initBackground() {
         this.batch = new SpriteBatch();
 
         this.backgroundTexture = new Texture("menuBackground.png");
@@ -124,32 +123,33 @@ public class MenuScreen implements Screen {
         this.uiStage.draw();
     }
 
-    private void moveBackground(){
-        if(this.isBackgroundMovingLeft){
+    private void moveBackground() {
+        if (this.isBackgroundMovingLeft) {
             this.currentBackgroundXOffset -= 1;
-            if(this.currentBackgroundXOffset < -1100){
+            if (this.currentBackgroundXOffset < -1100) {
                 this.isBackgroundMovingLeft = false;
             }
-        }else{
+        } else {
             this.currentBackgroundXOffset += 1;
-            if(this.currentBackgroundXOffset > -200){
+            if (this.currentBackgroundXOffset > -200) {
                 this.isBackgroundMovingLeft = true;
             }
         }
     }
-    public void setMovingBackgroundInfo(int currentXOffset, boolean isMovingLeft){
+
+    public void setMovingBackgroundInfo(int currentXOffset, boolean isMovingLeft) {
         this.currentBackgroundXOffset = currentXOffset;
         this.isBackgroundMovingLeft = isMovingLeft;
-    } 
+    }
 
-
-    //TODO Not working :(
-    private void displayTableHitbox(){
+    // TODO Not working :(
+    private void displayTableHitbox() {
         ShapeRenderer sp = new ShapeRenderer();
-        
+
         sp.begin(ShapeRenderer.ShapeType.Line);
         sp.setColor(Color.RED);
-        sp.rect(this.tableForButtons.getOriginX(),this.tableForButtons.getOriginY(),this.tableForButtons.getWidth(),this.tableForButtons.getHeight());
+        sp.rect(this.tableForButtons.getOriginX(), this.tableForButtons.getOriginY(), this.tableForButtons.getWidth(),
+                this.tableForButtons.getHeight());
         sp.end();
     }
 
@@ -158,14 +158,13 @@ public class MenuScreen implements Screen {
         this.uiStage.getViewport().update(width, height, true);
 
         this.tableForButtons.setPosition(
-            this.screenViewport.getScreenWidth() / 2 - this.tableForButtons.getWidth() / 2,
-            this.screenViewport.getScreenHeight() / 2 - this.tableForButtons.getHeight() / 2
-        );
+                this.screenViewport.getScreenWidth() / 2 - this.tableForButtons.getWidth() / 2,
+                this.screenViewport.getScreenHeight() / 2 - this.tableForButtons.getHeight() / 2);
     }
 
     @Override
     public void pause() {
-        //if the game was minimized, set the fps to 10 to save user performance
+        // if the game was minimized, set the fps to 10 to save user performance
         Gdx.graphics.setForegroundFPS(10);
     }
 
@@ -183,5 +182,5 @@ public class MenuScreen implements Screen {
         this.uiStage.dispose();
         this.batch.dispose();
     }
-    
+
 }

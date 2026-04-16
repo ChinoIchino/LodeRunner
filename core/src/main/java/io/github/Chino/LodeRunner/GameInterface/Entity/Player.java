@@ -28,8 +28,6 @@ public class Player extends Entity{
     private final Rectangle hitbox;
     private final Rectangle isOnGroundHitbox;
 
-    public boolean isOnALadder = false;
-
     public Player() {
         initEntityTextures();
 

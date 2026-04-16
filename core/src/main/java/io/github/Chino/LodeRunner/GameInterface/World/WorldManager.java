@@ -1,6 +1,11 @@
 package io.github.Chino.LodeRunner.GameInterface.World;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.Queue;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
@@ -62,37 +67,55 @@ public class WorldManager {
             currentXPosition += 32;
         }
     }
-
-    // public playerBreakBlock(Player player){
-    //     Rectangle toBreak = isBlockThere(x, y);
-    // }
     
-    public boolean entityDoesntOverlapWorld(Entity entity){
-        for (int i = 0; i < (int) (this.worldResolution.y); i++) {
-            for(int j = 0; j < (int) (this.worldResolution.x); j++){
-                if(
-                    (this.blockMatrix[i][j] != null)
-                    && this.blockMatrix[i][j].isSolid() 
-                    && entity.getHitbox().overlaps(this.blockMatrix[i][j].getHitbox())
-                ){
-                    // System.out.println("Player is colliding with a wall");
-                    return false;
+    public boolean entityDoesntOverlapWorld(Rectangle hitboxOfEntity){
+        double left   = hitboxOfEntity.x;
+        double right  = hitboxOfEntity.x + hitboxOfEntity.width-1;
+        double bottom = hitboxOfEntity.y;
+        double top    = hitboxOfEntity.y + hitboxOfEntity.height-1;
+
+        int blockLeft   = (int)Math.floor(left / 32.0)+this.blockMatrix[0].length /2;;
+        int blockRight  = (int)Math.floor(right / 32.0)+this.blockMatrix[0].length /2;;
+        int blockBottom = (int)Math.floor(bottom / 32.0)+this.blockMatrix.length /2;
+        int blockTop    = (int)Math.floor(top / 32.0)+this.blockMatrix.length /2;
+
+            for (int i = blockBottom; i <= blockTop; i++) {
+                for(int j = blockLeft; j <= blockRight; j++){
+
+                    if (i < 0 || i >= blockMatrix.length) continue;
+                    if (j < 0 || j >= blockMatrix[0].length) continue;
+                    
+                    if(
+                        (this.blockMatrix[i][j] != null)
+                        && this.blockMatrix[i][j].isSolid() 
+                        && hitboxOfEntity.overlaps(this.blockMatrix[i][j].getHitbox())
+                    ){
+                        return false;
+                    }
                 }
-            }
-        }
+            }    
         return true;
     }
+
     public Rectangle entityOverlapWithALadder(Rectangle hitboxOfEntity){
-        int blockX = ((int) hitboxOfEntity.x / 32)+this.blockMatrix[0].length/2;
-        int blockY = (((int) hitboxOfEntity.y/ 32)+this.blockMatrix.length/2)-1;
+        int blockX = ((int)(hitboxOfEntity.x / 32))+this.blockMatrix[0].length/2;
+        int blockY = (((int)(hitboxOfEntity.y/ 32))+this.blockMatrix.length/2)-1;
+        // System.out.println("Checking block at: " + blockX + "," + (blockY-1));
+        // System.out.println("Player Y: " +(entity.getHitbox().y));
         if(blockY<=0)return null;
-        if((this.blockMatrix[blockY-1][blockX] != null) && (!this.blockMatrix[blockY-1][blockX].isSolid())) return this.blockMatrix[blockY-1][blockX].getHitbox();
         for (int i = 0; i < (int) (this.worldResolution.y); i++) {
             for(int j = 0; j < (int) (this.worldResolution.x); j++){
-                if((this.blockMatrix[i][j] != null) && (hitboxOfEntity.overlaps(this.blockMatrix[i][j].getHitbox()))) return this.blockMatrix[i][j].getHitbox();
+                if((this.blockMatrix[i][j] != null) && (this.blockMatrix[i][j].isLadder()) && (hitboxOfEntity.overlaps(this.blockMatrix[i][j].getHitbox()))) return this.blockMatrix[i][j].getHitbox();
             }
         }
         return null;
+    }
+
+    public boolean isLadderUnderEntity(Entity entity){
+        int blockX = ((int)(entity.getHitbox().x / 32))+getBlockMatrix()[0].length/2;
+        int blockYBottom = (((int) (entity.getHitbox().y-1)/ 32)+getBlockMatrix().length/2)-1;
+        if(blockX <0 || blockX >=getBlockMatrix()[0].length || blockYBottom < 0 || blockYBottom >=getBlockMatrix().length|| getBlockMatrix()[blockYBottom][blockX] == null) return false;
+        return getBlockMatrix()[blockYBottom][blockX].isLadder();
     }
 
     //TODO To fix, getting the level of the player but cant get the block for a reason
@@ -107,7 +130,7 @@ public class WorldManager {
             level++;
         }
         // this.printHitbox();
-        System.out.println("Got the level " + level + " // and the yPos =" + yPosition);
+        // System.out.println("Got the level " + level + " // and the yPos =" + yPosition);
         for(int x = 0; x < (int) (this.worldResolution.x); x++){
             if(this.blockMatrix[level][x] != null){
                 if(entity.getHitbox().overlaps(this.blockMatrix[level][x].getHitbox())){
@@ -140,34 +163,9 @@ public class WorldManager {
         return false;
     }
 
-    public Rectangle aiOverlapsWithBlock(AI ai){
-        Rectangle blockHitbox = null;
-        for (int i = 0; i < (int) (this.worldResolution.y); i++) {
-            for(int j = 0; j < (int) (this.worldResolution.x); j++){
-                if(
-                    (this.blockMatrix[i][j] != null)
-                    && this.blockMatrix[i][j].isSolid() 
-                    && ai.getHitbox().overlaps(this.blockMatrix[i][j].getHitbox())
-                ){
-                    blockHitbox = this.blockMatrix[i][j].getHitbox();
-                    return blockHitbox;
-                }
-            }
-        }
-        return null;
-    }
-
-    public void entityFellOutTheWorld(Entity entity){
-        int resolutionX = (int)this.worldResolution.x*16;
-        int resolutionY = (int)this.worldResolution.y*16;
-        if(entity.getPosY() < -200){
-            if(entity instanceof Player){
-                entity.setPosition(0, 0);
-            }else
-                entity.setPosition((int)(Math.random()*(resolutionX*2))-resolutionX, (int)(Math.random()*(resolutionY*2))-resolutionY);
-                if(aiOverlapsWithBlock((AI)entity)!=null) ((AI)entity).snapToBlock(aiOverlapsWithBlock((AI)entity));
-            
-        }
+    //TODO adapt this for any map height not only for map that void is at y: -200
+    public boolean entityFellOutTheWorld(Entity entity){
+        return entity.getPosY() < -200;
     }
 
     public Collectible playerOverlapWithCollectible(Player player){
@@ -198,8 +196,142 @@ public class WorldManager {
         return null;
     }
 
+    //pathfindings system : BFS best option after some researh
+
+    public ArrayList<int[]> getNeighbors(int x, int y){
+        ArrayList<int[]> neighbors = new ArrayList<>();
+        int[] neighbor;
+
+        boolean isOnLadder= this.blockMatrix[y][x] != null && this.blockMatrix[y][x].isLadder();
+        boolean isOnGround = y>0 && this.blockMatrix[y-1][x] != null && this.blockMatrix[y-1][x].isSolid();
+
+        if(isOnLadder){ // if ai is on ladder, he can go on the four direction if it's not solid
+
+            if(x+1 < this.blockMatrix[0].length && (this.blockMatrix[y][x+1] == null||(this.blockMatrix[y][x+1] != null && !this.blockMatrix[y][x+1].isSolid()))) {
+                
+                if(y>0 && (this.blockMatrix[y-1][x+1] == null)){neighbor = new int[]{x+1,y-1}; neighbors.add(neighbor);}
+                else{neighbor = new int[]{x+1,y}; neighbors.add(neighbor);}
+
+            }
+
+            if(x>0 && (this.blockMatrix[y][x-1] == null||(this.blockMatrix[y][x-1] != null && !this.blockMatrix[y][x-1].isSolid()))) {
+                
+                if(y>0 && (this.blockMatrix[y-1][x-1] == null)){neighbor = new int[]{x-1,y-1}; neighbors.add(neighbor);}
+                else{neighbor = new int[]{x-1,y}; neighbors.add(neighbor);}
+            
+            }
+
+            if(y+1<this.blockMatrix.length && this.blockMatrix[y+1][x]==null){
+                if(x>0 && (this.blockMatrix[y][x-1] != null && this.blockMatrix[y][x-1].isSolid()) && (this.blockMatrix[y+1][x-1] == null||this.blockMatrix[y+1][x-1] != null && !this.blockMatrix[y][x-1].isSolid())){neighbor = new int[]{x-1,y+1}; neighbors.add(neighbor);}
+
+                if(x+1 < this.blockMatrix[0].length && (this.blockMatrix[y][x+1] != null && this.blockMatrix[y][x+1].isSolid()) && (this.blockMatrix[y+1][x+1] == null||this.blockMatrix[y+1][x+1] != null && !this.blockMatrix[y][x+1].isSolid())){neighbor = new int[]{x+1,y+1}; neighbors.add(neighbor);}
+            }
+            
+            if(y+1 < this.blockMatrix.length && (this.blockMatrix[y+1][x] == null||(this.blockMatrix[y+1][x] != null && !this.blockMatrix[y+1][x].isSolid()))) {neighbor = new int[]{x,y+1}; neighbors.add(neighbor);}
+
+            if(y>0 && (this.blockMatrix[y-1][x] == null||(this.blockMatrix[y-1][x] != null && !this.blockMatrix[y-1][x].isSolid()))) {neighbor = new int[]{x,y-1}; neighbors.add(neighbor);}
+
+        }else if(isOnGround){ // if ai walkOn ground, she only can go left/right, not climb
+        
+            if(x+1 < this.blockMatrix[0].length && (this.blockMatrix[y][x+1] == null||(this.blockMatrix[y][x+1] != null && !this.blockMatrix[y][x+1].isSolid()))) {
+
+                if(y>0 && (this.blockMatrix[y-1][x+1] == null)){neighbor = new int[]{x+1,y-1}; neighbors.add(neighbor);}
+                else{neighbor = new int[]{x+1,y}; neighbors.add(neighbor);}
+        
+            }
+
+            if(x>0 && (this.blockMatrix[y][x-1] == null||(this.blockMatrix[y][x-1] != null && !this.blockMatrix[y][x-1].isSolid()))) {
+                
+                if(y>0 && (this.blockMatrix[y-1][x-1] == null)){neighbor = new int[]{x-1,y-1}; neighbors.add(neighbor);}
+                else{neighbor = new int[]{x-1,y}; neighbors.add(neighbor);}
+        
+            }
+        
+        }else{ // if is not on ladder and any ground below, so ai must fall
+
+            if(y>0 && (this.blockMatrix[y-1][x] == null)) {neighbor = new int[]{x,y-1}; neighbors.add(neighbor);}
+
+        }
+        return neighbors;
+    }
+
+    public ArrayList<int[]> findPath(int startX, int startY, int goalX, int goalY){
+        int worldHeight = this.blockMatrix.length;
+        int worldWidth = this.blockMatrix[0].length;
+
+        // System.out.println("ia: " + startX + "," + startY);
+        // System.out.println("player: " + goalX + "," + goalY);
+
+        int[][] parentX = new int[worldHeight][worldWidth];
+        int[][] parentY = new int[worldHeight][worldWidth];
+        Queue<int[]> queue = new LinkedList<>();
+        boolean[][] visited = new boolean[worldHeight][worldWidth];
+
+        if(startY < 0 || startY >= worldHeight){
+            return new ArrayList<>();
+        }
+        if(startX < 0 || startX >= worldWidth){
+            return new ArrayList<>();
+        }
+
+        queue.add(new int[]{startX, startY});
+        visited[startY][startX] = true;
+
+        for(int y = 0; y < worldHeight; y++){
+            for(int x = 0; x < worldWidth; x++){
+                parentX[y][x] = -1;
+                parentY[y][x] = -1;
+            }
+        }
+
+        while(!queue.isEmpty()){
+            int[] current = queue.poll();
+            int x = current[0];
+            int y = current[1];
+
+            if(x == goalX && y == goalY) break;
+            for(int[] neighbor : getNeighbors(x, y)){
+                int nx = neighbor[0];
+                int ny = neighbor[1];
+                if(!visited[ny][nx]){
+                    visited[ny][nx] = true;
+                    parentX[ny][nx] = x;
+                    parentY[ny][nx] = y;
+                    queue.add(new int[]{nx, ny});
+                }
+            }
+        }
+
+        if(goalY >= this.blockMatrix.length) goalY--;
+        if(goalY < 0) goalY++;
+        if(goalX >= this.blockMatrix[0].length) goalX--;
+        if(goalX < 0) goalX++;
+
+        if(!visited[goalY][goalX]){
+            return new ArrayList<>();
+        }
+
+        ArrayList<int[]> path = new ArrayList<>();
+
+        int x = goalX;
+        int y = goalY;
+
+        while(x != startX || y != startY){
+            path.add(new int[]{x, y});
+
+            int px = parentX[y][x];
+            int py = parentY[y][x];
+
+            x = px;
+            y = py;
+        }
+        path.add(new int[]{startX, startY});
+        Collections.reverse(path);
+
+        return path;
+    }
+
     public void breakBlockAtPos(int x, int y){
-        // System.out.println("x : " + blockMatrix[0].length + "y : "+ this.blockMatrix.length);
         int blockXIndex = ((int) x / 32)+this.blockMatrix[0].length/2;
         int blockYIndex = (((int) y / 32)+this.blockMatrix.length/2)-1;
         if(blockXIndex >=0 && blockYIndex >= 0){
