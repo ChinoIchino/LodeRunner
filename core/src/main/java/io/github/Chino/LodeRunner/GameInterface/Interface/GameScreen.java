@@ -99,7 +99,6 @@ public class GameScreen implements Screen{
                 
         // Handle player movement
         this.player.isOnALadder = (worldManager.entityOverlapWithALadder(player.getHitbox()) != null);
-        // System.out.println("overlap with ladder: " + worldManager.entityOverlapWithALadder(player) != null);
         handlePlayerInput();
         if (!player.isOnALadder || !player.wasOnALadder) player.climbing = false;
         if(!this.isGameOver && worldManager.entityFellOutTheWorld(this.player)){
@@ -118,7 +117,7 @@ public class GameScreen implements Screen{
         this.player.displayHitboxes();
         //render IAs
         batch.begin();
-        for(AI ai : this.aiList)/*int i = 0; i<AI_NUMBER;i++)*/{
+        for(AI ai : this.aiList){
             ai.updateMovement(delta);
             handleEntityGravity(ai);
             if(!this.isGameOver && ai.killPlayer()){
@@ -130,7 +129,6 @@ public class GameScreen implements Screen{
                 ai.setPosition(0, 0);
             }
             ai.render(batch);
-            // batch.draw(this.aiList[i].currentAISprite, this.aiList[i].getPosX(), this.aiList[i].getPosY());
         }  
         batch.end();
         for( AI ai : this.aiList){
@@ -156,6 +154,7 @@ public class GameScreen implements Screen{
             System.out.println("switching screen");
             this.isGameOver = false;
             main.setScreen(main.getGameOverScreen());
+            this.dispose();
         }
     }
     private void handleAIOverlaps(AI ai){
@@ -170,23 +169,18 @@ public class GameScreen implements Screen{
             player.spriteChangeToMovingLeft();
             player.physicalBodyMoveX(-this.player.speed);
             this.orientation = false;
-            
-            // player.syncAll();
 
             // -7 is a offset based on the player sprite
             if(player.getPosX() < (this.worldManager.worldResolution.x * -16 - 7) || !this.worldManager.entityDoesntOverlapWorld(this.player.getHitbox())){
                 player.physicalBodyMoveX(this.player.speed);
                 
-                // player.syncAll();
             }
         }
         if (Gdx.input.isKeyPressed(Input.Keys.D)){
             player.spriteChangeToMovingRight();
             player.physicalBodyMoveX(this.player.speed);
             this.orientation = true;
-            
-            // player.syncAll();
-            
+              
             // -13 is a offset based on the player sprite
             if(player.getPosX() > (this.worldManager.worldResolution.x * 16 - 13) || !this.worldManager.entityDoesntOverlapWorld(this.player.getHitbox())){
                 player.physicalBodyMoveX(-this.player.speed);
@@ -204,7 +198,6 @@ public class GameScreen implements Screen{
             boolean canClimb = collidingLadder != null || this.worldManager.isLadderUnderEntity(player);
             
             if(canClimb){
-                // System.out.println("Collision Y blocked");
                 // Snap player to ladder
                 if(collidingLadder!=null)player.snapToLadder(collidingLadder);
                 
@@ -284,12 +277,6 @@ public class GameScreen implements Screen{
 
     private void updateScoreLabel(Player player){
         this.scoreLabel.setText("Score: " + player.getScore());
-    }
-
-    public void killAll(){
-        for(AI ai : this.aiList){
-            if(ai!=null) ai.close();
-        }
     }
 
     @Override

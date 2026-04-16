@@ -67,15 +67,14 @@ public class WorldManager {
             currentXPosition += 32;
         }
     }
-    
     public boolean entityDoesntOverlapWorld(Rectangle hitboxOfEntity){
         double left   = hitboxOfEntity.x;
         double right  = hitboxOfEntity.x + hitboxOfEntity.width-1;
         double bottom = hitboxOfEntity.y;
         double top    = hitboxOfEntity.y + hitboxOfEntity.height-1;
 
-        int blockLeft   = (int)Math.floor(left / 32.0)+this.blockMatrix[0].length /2;;
-        int blockRight  = (int)Math.floor(right / 32.0)+this.blockMatrix[0].length /2;;
+        int blockLeft   = (int)Math.floor(left / 32.0)+this.blockMatrix[0].length /2;
+        int blockRight  = (int)Math.floor(right / 32.0)+this.blockMatrix[0].length /2;
         int blockBottom = (int)Math.floor(bottom / 32.0)+this.blockMatrix.length /2;
         int blockTop    = (int)Math.floor(top / 32.0)+this.blockMatrix.length /2;
 
@@ -100,8 +99,6 @@ public class WorldManager {
     public Rectangle entityOverlapWithALadder(Rectangle hitboxOfEntity){
         int blockX = ((int)(hitboxOfEntity.x / 32))+this.blockMatrix[0].length/2;
         int blockY = (((int)(hitboxOfEntity.y/ 32))+this.blockMatrix.length/2)-1;
-        // System.out.println("Checking block at: " + blockX + "," + (blockY-1));
-        // System.out.println("Player Y: " +(entity.getHitbox().y));
         if(blockY<=0)return null;
         for (int i = 0; i < (int) (this.worldResolution.y); i++) {
             for(int j = 0; j < (int) (this.worldResolution.x); j++){
@@ -118,7 +115,6 @@ public class WorldManager {
         return getBlockMatrix()[blockYBottom][blockX].isLadder();
     }
 
-    //TODO To fix, getting the level of the player but cant get the block for a reason
     public boolean entityOverlapWithFloor(Entity entity){
         int level = 0;
         int yPosition = (int) (this.worldResolution.y) * -10;
@@ -258,9 +254,6 @@ public class WorldManager {
     public ArrayList<int[]> findPath(int startX, int startY, int goalX, int goalY){
         int worldHeight = this.blockMatrix.length;
         int worldWidth = this.blockMatrix[0].length;
-
-        // System.out.println("ia: " + startX + "," + startY);
-        // System.out.println("player: " + goalX + "," + goalY);
 
         int[][] parentX = new int[worldHeight][worldWidth];
         int[][] parentY = new int[worldHeight][worldWidth];

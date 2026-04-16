@@ -80,6 +80,7 @@ public class MenuScreen implements Screen {
         this.playButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y) {
+                main.setNewGameScreen();
                 main.setScreen(main.getGameScreen());
                 main.getGameScreen().initAIinWorld();
             }

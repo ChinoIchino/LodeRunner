@@ -25,13 +25,16 @@ public class GDXMain extends Game {
         setScreen(this.menuScreen);
     }
     private void initScreens(){
-        this.gameScreen = new GameScreen(this);
         this.menuScreen = new MenuScreen(this);
         this.multiplayerScreen = new MultiplayerScreen(this);
         this.gameruleScreen = new GameRuleScreen(this);
         this.joinClientScreen = new JoinClientScreen(this);
         this.lobbyScreen = new LobbyScreen(this);
         this.gameOverScreen = new GameOverScreen(this);
+    }
+    
+    public void setNewGameScreen(){
+        this.gameScreen = new GameScreen(this);
     }
 
     public GameScreen getGameScreen() {
@@ -69,7 +72,6 @@ public class GDXMain extends Game {
 
     @Override
     public void dispose() {
-        gameScreen.killAll();
         super.dispose();
     }
 

@@ -40,32 +40,25 @@ public class BreakBlockThreadManager{
         semaphore.releaseToken();
         try{
             worldManager.setBlockTextureAt(indexXOfBlock, indexYOfBlock, this.threeQuarterBlock);
-            // System.out.println("3/4");
             Thread.sleep(400);
             worldManager.setBlockTextureAt(indexXOfBlock, indexYOfBlock, this.halfBlock);
-            // System.out.println("2/4");
             Thread.sleep(400);
             worldManager.setBlockTextureAt(indexXOfBlock, indexYOfBlock, this.quarterBlock);
-            // System.out.println("1/4");
             Thread.sleep(400);
             worldManager.setBlockAt(indexXOfBlock, indexYOfBlock, null);
-            // System.out.println("block has disapear");
             Thread.sleep(2500);
             worldManager.setBlockAt(indexXOfBlock, indexYOfBlock, new Block(this.quarterBlock, new Rectangle(), true));
-            // System.out.println("1/4");
             Thread.sleep(400);
             worldManager.setBlockTextureAt(indexXOfBlock, indexYOfBlock, this.halfBlock);
             Thread.sleep(400);
             worldManager.setBlockTextureAt(indexXOfBlock, indexYOfBlock, this.threeQuarterBlock);
-            // System.out.println("3/4");
             Thread.sleep(400);
-            // System.out.println("4/4");
             indexXHitbox = (indexXOfBlock)*32 - (this.worldManager.getBlockMatrix()[0].length/2)*32;
             indexYHitbox = (indexYOfBlock)*32 - (this.worldManager.getBlockMatrix().length/2)*32;
             worldManager.setBlockAt(indexXOfBlock, indexYOfBlock, new Block(fullBlock, new Rectangle(indexXHitbox, indexYHitbox, 32, 32), true));
-            // System.out.println("block re create");
         }catch(InterruptedException e){
             System.out.println("\nError GameInterface/World/BreakBlockThreadManager.java: catched InterruptedException while running thread to break a block");
+        }catch(NullPointerException npe){
         }
     };
 }

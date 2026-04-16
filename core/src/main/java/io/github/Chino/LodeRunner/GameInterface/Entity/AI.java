@@ -7,8 +7,6 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
-
-import io.github.Chino.LodeRunner.GameInterface.World.Block;
 import io.github.Chino.LodeRunner.GameInterface.World.WorldManager;
 
 public class AI extends Entity{
@@ -21,7 +19,6 @@ public class AI extends Entity{
 
     //For AI deplacement
     private Player nearestPlayer= null;
-    private int targetLadderX = -1;
     private ArrayList<int[]> currentPath = new ArrayList<>();
     private int pathIndex = 0;
     private double pathTimer = 0;
@@ -38,9 +35,6 @@ public class AI extends Entity{
     private final Rectangle isOnGroundHitbox;
 
     private WorldManager worldManager;
-
-    private boolean threadActive =true;
-
 
     public AI(int x, int y, WorldManager worldManager) {
         initEntityTextures();
@@ -133,38 +127,6 @@ public class AI extends Entity{
     public void setNearestPlayer(Player nearestPlayer){
         this.nearestPlayer = nearestPlayer;
     }
-    
-    public double getDistanceToNearestPlayerX(){
-        if (nearestPlayer == null) return 0;
-        return this.nearestPlayer.getPosX()-this.posX;
-    }
-    public double getDistanceToNearestPlayerY(){
-        if (nearestPlayer == null) return 0;
-        return this.nearestPlayer.getPosY()-this.posY;
-    }
-    
-    public int selectTheNearestLadder(boolean needToCheckUnder){
-        int distLeft = 0;
-        int distRight = 0;
-        int ladderLeftX=0;
-        int ladderRightX=0;
-        Rectangle mooveingHitbox = new Rectangle(this.getHitbox());
-        for(int i = 0; i< (worldManager.getBlockMatrix()[0].length/2)*32;i+=32){
-            mooveingHitbox.x += 32;
-            if(this.worldManager.entityOverlapWithALadder(mooveingHitbox) != null){ladderRightX = (int)mooveingHitbox.x;break;}
-            else distRight++;
-        }
-        mooveingHitbox.x = this.getHitbox().x;
-        for(int i = 0; i< (worldManager.getBlockMatrix()[0].length/2)*32;i+=32){
-            mooveingHitbox.x -= 32;
-            if(this.worldManager.entityOverlapWithALadder(mooveingHitbox) != null){ladderLeftX = (int)mooveingHitbox.x;break;}
-            else distLeft++;
-        }
-
-        if(distLeft < distRight){this.targetLadderX = ladderLeftX; return 1;}
-        else {this.targetLadderX = ladderRightX; return 2;}
-
-    }
     public boolean canMove(int dx){
         Rectangle nextHitbox = new Rectangle(hitbox);
         nextHitbox.x += dx;
@@ -176,9 +138,6 @@ public class AI extends Entity{
 
         int offsetX = worldManager.getBlockMatrix()[0].length / 2;
         int offsetY = worldManager.getBlockMatrix().length / 2;
-
-        // System.out.println("ia stuck at node : " + pathIndex);
-        // System.out.println("current path size : " + currentPath.size());
         
         pathTimer += delta;
         stuckTimer += delta;
@@ -192,7 +151,6 @@ public class AI extends Entity{
             int nearestPlayerGridX = (int)(nearestPlayer.getPosX() / 32) +offsetX;
             int nearestPlayerGridY = (int)(nearestPlayer.getPosY() / 32) + offsetY;
             
-            // System.out.println("grid in ai : " + gridX + "," + gridY);
             currentPath = worldManager.findPath(gridX, gridY, nearestPlayerGridX, nearestPlayerGridY);
             pathIndex = 0;
         }
@@ -205,7 +163,6 @@ public class AI extends Entity{
             
             int targetX = (next[0]- offsetX) * 32 ;
             int targetY = (next[1]- offsetY) * 32 ;
-            // System.out.println("Next: " + next[0] + "," + next[1]);
             
             int dx = targetX - (int)this.getHitbox().x;
             int dy = targetY - (int)this.getHitbox().y;
@@ -218,6 +175,7 @@ public class AI extends Entity{
                 Rectangle ladder = worldManager.entityOverlapWithALadder(this.getHitbox());
                 if(ladder != null){
                     snapToLadder(ladder);
+                    spriteChangeToIdle();
                 }
 
                 if(dy > 0){
@@ -225,7 +183,7 @@ public class AI extends Entity{
                 } else {
                     physicalBodyMoveY(-speed);
                 }
-            }else /*if(Math.abs(dx) > 2)*/{
+            }else{
                 if(dx > 0 && canMove(speed)){
                     spriteChangeToMovingRight();
                     if(this.speed > Math.abs(dx)) this.physicalBodyMoveX((int)(Math.abs(dx%this.speed )));
@@ -248,140 +206,8 @@ public class AI extends Entity{
 
             
         }     
-        
-        
-        // Local pathfinding : if playerY != aiY : go ti nearest ladder else follow player in x
-
-        /*int ladderChoice = selectTheNearestLadder(getDistanceToNearestPlayerY()<0);  
-        t("Choice: " + ladderChoice);
-        System.out.println("On ladder: " + isOnALadder);
-        System.out.println("AI X: " + this.getHitbox().x);
-        System.out.println("Target ladder: " + targetLadderX);
-        if(this.isOnALadder && Math.abs(getDistanceToNearestPlayerY()) != 0){
-            snapToLadder(this.worldManager.entityOverlapWithALadder(this.getHitbox()));
-            if(getDistanceToNearestPlayerY()<0){
-                if(this.speed > Math.abs(getDistanceToNearestPlayerY()))this.physicalBodyMoveY((int)-(Math.abs(getDistanceToNearestPlayerY()%this.speed )));
-                else this.physicalBodyMoveY(-this.speed);
-            }
-             else{
-                if(this.speed > Math.abs(getDistanceToNearestPlayerY()))this.physicalBodyMoveY((int)(Math.abs(getDistanceToNearestPlayerY()%this.speed )));
-                else this.physicalBodyMoveY(this.speed);
-            }
-        }
-        else if(Math.abs(getDistanceToNearestPlayerY())>16){
-            if(this.worldManager.entityOverlapWithALadder(this.getHitbox())!=null){
                 
-                snapToLadder(this.worldManager.entityOverlapWithALadder(this.getHitbox()));
-                if(getDistanceToNearestPlayerY()<0){
-                    if(this.speed > Math.abs(getDistanceToNearestPlayerY()))this.physicalBodyMoveY((int)-(Math.abs(getDistanceToNearestPlayerY()%this.speed )));
-                    else this.physicalBodyMoveY(-this.speed);
-                }
-                else{
-                    if(this.speed > Math.abs(getDistanceToNearestPlayerY()))this.physicalBodyMoveY((int)(Math.abs(getDistanceToNearestPlayerY()%this.speed )));
-                    else this.physicalBodyMoveY(this.speed);
-                }
-            }else{
-                switch(ladderChoice){
-                
-                    case 1 : {
-    
-                        if(canMove(-this.speed)){
-                            this.spriteChangeToMovingLeft();
-                            this.physicalBodyMoveX(-(this.speed));
-                        }
-    
-                        break;
-    
-                    }
-    
-                    case 2 : {
-    
-                        if(canMove(this.speed)){
-                            this.spriteChangeToMovingRight();
-                            this.physicalBodyMoveX(this.speed);
-                        }
-    
-                        break;
-    
-                    }
-    
-                    default : break;
-                }
-            }
-            
-        }else{
-            if(getDistanceToNearestPlayerX()<0 && canMove(-this.speed)){
-
-                    this.spriteChangeToMovingLeft();
-                    if(this.speed > Math.abs(getDistanceToNearestPlayerX())) this.physicalBodyMoveX((int)-(Math.abs(getDistanceToNearestPlayerX()%this.speed )));
-                    else this.physicalBodyMoveX(-(this.speed));
-
-            }else if(getDistanceToNearestPlayerX()>0 && canMove(this.speed)){
-
-                    this.spriteChangeToMovingRight();
-                    if(this.speed > Math.abs(getDistanceToNearestPlayerX())) this.physicalBodyMoveX((int)(Math.abs(getDistanceToNearestPlayerX()%this.speed )));
-                    else this.physicalBodyMoveX(this.speed);
-                }
-
-            else{
-
-                this.spriteChangeToIdle();
-    
-            }
-    
-        }*/
-                
-        // System.out.println("Hitbox of ai pos {\n\t x : " + this.getHitbox().x + "\n\t" + "y : " + this.getHitbox().y +"\n}");
     }
-
-
-    /*   Old method for the movement
-    
-
-    public void startAIThread(){
-        Thread moveThread = new Thread(movementThread);
-        moveThread.start();
-    }
-
-    private Runnable movementThread = () ->{
-        while(this.threadActive){
-            /*if(getPosY() != this.nearestPlayer.getPosY()){
-
-                if(this.worldManager.entityOverlapWithALadder(getHitbox())!= null && posX != selectTheNearestLadder()*32){
-
-                    if((getPosX() - (selectTheNearestLadder())*32 - (this.worldManager.getBlockMatrix()[0].length/2)*32) <= 0){
-                        this.spriteChangeToMovingLeft();
-                        this.physicalBodyMoveX(-this.speed);
-                    }else{
-                        this.spriteChangeToMovingRight();
-                        this.physicalBodyMoveX(this.speed);
-                    }
-
-                }else{
-
-                    this.spriteChangeToIdle();
-
-                    if(this.worldManager.entityOverlapWithALadder(this.hitbox)!=null && this.worldManager.entityOverlapWithALadder(this.nearestPlayer.getHitbox())!=null){
-
-                        snapToLadder(this.worldManager.entityOverlapWithALadder(this.hitbox));
-                        if(getDistanceToNearestPlayerY()<0)this.physicalBodyMoveY(-this.speed);
-                        else this.physicalBodyMoveY(this.speed);
-
-                    }
-                }          
-            }
-            else{
-
-                try{
-                    Thread.sleep(2*100/3);
-                }catch(InterruptedException e){
-                    System.err.println("AI Movement Runnable ERROR\n\n");
-                    e.printStackTrace();
-                }
-            }
-        System.out.println("AI Thread is finish");
-        
-    };*/
 
     public void render(SpriteBatch batch){
         batch.draw(this.currentAISprite, this.posX, this.posY);
@@ -425,10 +251,5 @@ public class AI extends Entity{
         }
 
         shapeRenderer.end();
-    }
-    
-    
-    public void close(){
-        this.threadActive = false;
     }
 }
