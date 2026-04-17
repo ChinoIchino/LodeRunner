@@ -41,11 +41,9 @@ public class JoinClientScreen implements Screen{
     private Label ipAdresseLabel;
     private Label portLabel;
     private Label usernameLabel;
-    private Label passwordLabel;
     private TextField ipAdresseTextField;
     private TextField portTextField;
     private TextField usernameTextField;
-    private TextField passwordTextField;
     private TextButton submitButton;
     private TextButton goBackButton;
 
@@ -63,11 +61,11 @@ public class JoinClientScreen implements Screen{
         this.errorLabel = new Label("", skin);
         this.usernameLabel = new Label("Username: ", skin);
         this.ipAdresseLabel = new Label("Ip: ", skin);
-        this.passwordLabel = new Label("Password: ", skin);
+        this.portLabel = new Label("Port: ", skin);
 
         this.usernameTextField = new TextField("", skin);
         this.ipAdresseTextField = new TextField("", skin);
-        this.passwordTextField = new TextField("", skin);
+        this.portTextField = new TextField("", skin);
 
         this.submitButton = new TextButton("Submit", skin);
         this.goBackButton = new TextButton("Go Back", skin);
@@ -84,8 +82,8 @@ public class JoinClientScreen implements Screen{
         this.tableOfContent.add(this.usernameTextField).pad(10).colspan(2).row();
         this.tableOfContent.add(this.ipAdresseLabel).pad(10).align(Align.center);
         this.tableOfContent.add(this.ipAdresseTextField).pad(10).align(Align.center).row();
-        this.tableOfContent.add(this.passwordLabel).pad(10).align(Align.center);
-        this.tableOfContent.add(this.passwordTextField).pad(10).align(Align.center).row();
+        this.tableOfContent.add(this.portLabel).pad(10).align(Align.center);
+        this.tableOfContent.add(this.portTextField).pad(10).align(Align.center).row();
         this.tableOfContent.add(this.submitButton).pad(10).colspan(3).align(Align.center).row();
         this.tableOfContent.add(this.goBackButton).pad(10).colspan(3).center();
 
@@ -140,14 +138,14 @@ public class JoinClientScreen implements Screen{
     private final Runnable connectToServerRunnable = () ->{
         // Added that in a thread so the game dont freeze when the user try to connect to a server
         String ipFromTextField = this.ipAdresseTextField.getText();
-        String passwordFromTextField = this.passwordTextField.getText();
+        String portFromTextField = this.portTextField.getText();
 
-        if(!(isPasswordValid() && isUsernameValid())){
+        if(!isUsernameValid()){
             return;
         }
 
         try {
-            Socket socket = new Socket(ipFromTextField, 5000);
+            Socket socket = new Socket(ipFromTextField, Integer.valueOf(portFromTextField));
 
             ClientSide client = new ClientSide(socket, this.main, this.usernameTextField.getText());
             client.start();
@@ -158,7 +156,7 @@ public class JoinClientScreen implements Screen{
             // Used so Gdx handle the rendering/UI, else it send a error.
             Gdx.app.postRunnable(() ->{
                 main.getLobbyScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
-                main.getLobbyScreen().setLobbyInformationForClient(client, usernameTextField.getText(), ipFromTextField, "5000", passwordFromTextField);
+                main.getLobbyScreen().setLobbyInformationForClient(client, usernameTextField.getText(), ipFromTextField, this.portTextField.getText());
                 main.setScreen(this.main.getLobbyScreen());
             });
         } catch (IOException e) {
@@ -167,18 +165,6 @@ public class JoinClientScreen implements Screen{
         Gdx.app.postRunnable(() -> updateErrorLabel("ERROR: Didn't Found Server"));
     };
 
-    private boolean isPasswordValid(){
-        String passwordFromTextField = this.passwordTextField.getText();
-        if(passwordFromTextField.isEmpty()){
-            updateErrorLabel("ERROR: Password Is Empty");
-            return false;
-        }
-        if(passwordFromTextField.length() > 10){
-            updateErrorLabel("ERROR: Password must be under 10 characters");
-            return false;
-        }
-        return true;
-    }
     private boolean isUsernameValid(){
         String usernameFromTextField = this.usernameTextField.getText();
         if(usernameFromTextField.isEmpty()){

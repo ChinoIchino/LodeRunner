@@ -139,7 +139,6 @@ public class ClientSide extends Thread{
                             break;
                         // Lobby Host started the game
                         case 6:
-                            this.main.setNewGameCoopScreen();
                             this.isVersus = this.main.getLobbyScreen().isVersus();
                             this.main.getLobbyScreen().sendToGameInterface();
                             break;

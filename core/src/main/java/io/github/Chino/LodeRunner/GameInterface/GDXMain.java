@@ -46,6 +46,13 @@ public class GDXMain extends Game {
         this.gameScreen = new GameScreen(this);
     }
     public void setNewGameCoopScreen(){
+        // // If there is already a existing screen, recreate it
+        // if(this.getGameCoopScreen() != null){
+        //     this.getGameCoopScreen().dispose();
+        //     this.setNewGameCoopScreen();
+        // }else{
+        //     this.setNewGameCoopScreen();
+        // }
         this.gameCoopScreen = new GameCoopScreen(this);
     }
 

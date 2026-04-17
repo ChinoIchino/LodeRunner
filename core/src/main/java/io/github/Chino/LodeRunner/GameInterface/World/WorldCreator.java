@@ -125,7 +125,6 @@ public class WorldCreator{
 
     // Used when the host create a lobby, so the server keep the maps
     public static ArrayList<char[][]> getAllMaps() throws IOException{
-        System.out.println("Got to getAllMaps");
         ArrayList<char[][]> maps = new ArrayList<>();
 
         BufferedReader readerOfFile = getWorldTxt();
@@ -153,19 +152,6 @@ public class WorldCreator{
 
             // Skip the empty space between levels
             readerOfFile.readLine();
-        }
-
-        System.out.println("Maps in creator");
-        int count = 1;
-        for (char[][] map : maps) {
-            System.out.println("Map number " + count + " :");
-            for (int y = 0; y < map.length; y++) {
-                for (int x = 0; x < map[y].length; x++) {
-                    System.out.print(map[y][x] + ", ");
-                }
-                System.out.println();
-            }
-            System.out.println("End Map number " + count++);
         }
 
         return maps;

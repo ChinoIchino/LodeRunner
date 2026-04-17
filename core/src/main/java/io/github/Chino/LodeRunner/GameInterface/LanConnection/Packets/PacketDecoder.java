@@ -36,9 +36,7 @@ public class PacketDecoder {
                 return packetToReturn;
             // Pseudo packet: Host quit the lobby
             case 4:
-                packetToReturn = new PseudoPacket(4);
-                packetToReturn.write(bytes);
-                return packetToReturn;
+                return new PseudoPacket(4);
             // Chat packet: Single message
             case 5:
                 packetToReturn = new PacketForLobbyChat();

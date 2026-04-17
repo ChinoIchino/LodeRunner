@@ -34,7 +34,6 @@ public class LobbyScreen implements Screen{
     private ClientSide clientSide;
 
     private String username;
-    private String serverPassword;
 
     private SpriteBatch batch;
 
@@ -55,7 +54,7 @@ public class LobbyScreen implements Screen{
     private Table tableRightSide;
 
     private Label ipLabel;
-    private Label passwordLabel;
+    private Label portLabel;
     private Label gameModeLabel;
     private ScrollPane playerListScroll;
     private ScrollPane chatScrollPane;
@@ -109,14 +108,14 @@ public class LobbyScreen implements Screen{
 
         //Right Side
         this.ipLabel = new Label("", skin);
-        this.passwordLabel = new Label(this.serverPassword, skin);
+        this.portLabel = new Label("", skin);
         this.gameModeLabel = new Label("", skin);
         this.goBackButton = new TextButton("Go Back", skin);
 
         this.tableRightSide = new Table();
 
         this.tableRightSide.add(this.ipLabel).center().padBottom(10).row();
-        this.tableRightSide.add(this.passwordLabel).center().padBottom(10).row();
+        this.tableRightSide.add(this.portLabel).center().padBottom(10).row();
         this.tableRightSide.add(this.gameModeLabel).center().padBottom(10).row();
         this.tableRightSide.add(this.goBackButton).center().padBottom(10).row();
 
@@ -186,6 +185,7 @@ public class LobbyScreen implements Screen{
         }
     }
     private void resetPlayerList(){
+        System.out.println("resetPlayerList called!");
         this.tablePlayersContent.clear();
 
         Label playersLabel = new Label("Players:", skin);
@@ -224,15 +224,14 @@ public class LobbyScreen implements Screen{
         this.currentBackgroundXOffset = currentXOffset;
         this.isBackgroundMovingLeft = isMovingLeft;
     }
-    protected void setLobbyInformationForHost(Server server, ClientSide hostClient, String ip, String port, String username, String password){
+    protected void setLobbyInformationForHost(Server server, ClientSide hostClient, String ip, String port, String username){
         this.hostedServer = server;
         this.clientSide = hostClient;
         this.username = username;
         
         Gdx.app.postRunnable(() ->{
             this.ipLabel.setText("Ip: " + ip);
-            
-            this.passwordLabel.setText("Password: " + password);
+            this.portLabel.setText("Port: " + port);
         });
 
         // Add a extra button for the host to start the game
@@ -260,14 +259,14 @@ public class LobbyScreen implements Screen{
             });
         });
     }
-    protected void setLobbyInformationForClient(ClientSide clientSide, String username ,String ip, String port, String password){
+    protected void setLobbyInformationForClient(ClientSide clientSide, String username ,String ip, String port){
         this.clientSide = clientSide;
         this.username = username;
         this.main.getClientPlayer().setUsername(username);
 
         Gdx.app.postRunnable(() ->{
             this.ipLabel.setText("Ip: " + ip);
-            this.passwordLabel.setText("Password: " + password);
+            this.portLabel.setText("Port: " + port);
         });
     }
 
@@ -278,6 +277,8 @@ public class LobbyScreen implements Screen{
             });
         }else{
             Gdx.app.postRunnable(() ->{
+                this.main.setNewGameCoopScreen();
+
                 this.gameModeLabel.setText("Mode: Coop");
                 this.main.getGameCoopScreen().sendToNextLevel(firstMap);
             });
@@ -299,6 +300,7 @@ public class LobbyScreen implements Screen{
 
     public void sendToGameInterface(){
         if(this.gameModeLabel.getText().substring(6).equals("Coop")){
+            System.out.println("sendToGameInterface gameCoopScreen: " + this.main.getGameCoopScreen());
             this.main.getGameCoopScreen().setClient(this.clientSide);
             Gdx.app.postRunnable(() ->{
                 this.main.getGameCoopScreen().initAmmountOfPlayers(this.tablePlayersContent);

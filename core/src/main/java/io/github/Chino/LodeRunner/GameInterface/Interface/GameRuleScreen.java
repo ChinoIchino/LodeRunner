@@ -46,10 +46,8 @@ public class GameRuleScreen implements Screen{
     private Label usernameLabel;
     private Label isVersusLabel;
     private Label isCoopLabel;
-    private Label passwordLabel;
     private Slider gamemodeTypeSlider;
     private TextField usernameTextField;
-    private TextField passwordTextField;
     private TextButton createLobbyButton;
     private TextButton goBackButton;
 
@@ -68,12 +66,10 @@ public class GameRuleScreen implements Screen{
         this.usernameLabel = new Label("Username: ", skin);
         this.isVersusLabel = new Label("Versus", skin);
         this.isCoopLabel = new Label("Coop", skin);
-        this.passwordLabel = new Label("Password: ", skin);
 
         this.gamemodeTypeSlider = new Slider(0, 1, 1, false, skin);
 
         this.usernameTextField = new TextField("", skin);
-        this.passwordTextField = new TextField("", skin);
 
         this.createLobbyButton = new TextButton("Create Lobby", skin);
         this.goBackButton = new TextButton("Go Back", skin);
@@ -91,8 +87,6 @@ public class GameRuleScreen implements Screen{
         this.tableOfContent.add(this.isVersusLabel).pad(10);
         this.tableOfContent.add(this.gamemodeTypeSlider).pad(10);
         this.tableOfContent.add(this.isCoopLabel).pad(10).row();
-        this.tableOfContent.add(this.passwordLabel).pad(10);
-        this.tableOfContent.add(this.passwordTextField).pad(10).colspan(2).row();
         this.tableOfContent.add(this.createLobbyButton).pad(10).colspan(3).row();
         this.tableOfContent.add(this.goBackButton).pad(10).colspan(3).center();
 
@@ -101,17 +95,17 @@ public class GameRuleScreen implements Screen{
         this.createLobbyButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y){
-                if(isPasswordValid() && isUsernameValid()){
+                if(isUsernameValid()){
                     try {
                         main.getLobbyScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
     
-                        //TODO implement passwords
-                        ServerSocket serverSocket = new ServerSocket(5000);
+                        ServerSocket serverSocket = searchUsablePort();
                         serverHosted = new Server(serverSocket);
+                        // TODO to use: System.out.println(serverSocket.getLocalPort());
                         serverHosted.start();
 
                         // Add also the host as a client
-                        Socket socket = new Socket("localhost", 5000);
+                        Socket socket = new Socket("localhost", serverSocket.getLocalPort());
                         ClientSide hostClient = new ClientSide(socket, main, usernameTextField.getText());
                         hostClient.start();
 
@@ -134,9 +128,8 @@ public class GameRuleScreen implements Screen{
                             serverHosted,
                             hostClient,
                             InetAddress.getLocalHost().getHostAddress(),
-                            "5000",
-                            usernameTextField.getText(),
-                            passwordTextField.getText()
+                            String.valueOf(serverSocket.getLocalPort()),
+                            usernameTextField.getText()
                         );        
                         
                         main.setScreen(main.getLobbyScreen());
@@ -162,18 +155,24 @@ public class GameRuleScreen implements Screen{
         this.backgroundTexture = new Texture("menuBackground.png");
     }
 
-    private boolean isPasswordValid(){
-        String passwordFromTextField = this.passwordTextField.getText();
-        if(passwordFromTextField.isEmpty()){
-            updateErrorLabel("ERROR: Password Is Empty");
-            return false;
+    private ServerSocket searchUsablePort(){
+        int currentPortToTry = 5000;
+
+        // Try 100 ports from 5000 (try a lot of ports in the case some are occupied)
+        while(5100 > currentPortToTry){
+            try {
+                ServerSocket possibleSocket = new ServerSocket(currentPortToTry);
+                return possibleSocket;
+            } catch (IOException e) {
+                System.out.println("Port " + currentPortToTry + " is already used!");
+                currentPortToTry++;
+            }
         }
-        if(passwordFromTextField.length() > 10){
-            updateErrorLabel("ERROR: Password must be under 10 characters");
-            return false;
-        }
-        return true;
+
+        // If the 100 first ports are used, there IS A BIG problem
+        return null;
     }
+
     private boolean isUsernameValid(){
         String usernameFromTextField = this.usernameTextField.getText();
         if(usernameFromTextField.isEmpty()){
