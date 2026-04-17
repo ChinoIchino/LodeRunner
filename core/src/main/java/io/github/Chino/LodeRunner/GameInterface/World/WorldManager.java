@@ -94,38 +94,33 @@ public class WorldManager {
     }
 
     public Rectangle entityOverlapWithALadder(Rectangle hitboxOfEntity){
-        int blockX = ((int)(hitboxOfEntity.x / 32))+this.blockMatrix[0].length/2;
-        int blockY = (((int)(hitboxOfEntity.y/ 32))+this.blockMatrix.length/2)-1;
-        if(blockY<=0)return null;
-        for (int i = 0; i < (int) (this.worldResolution.y); i++) {
-            for(int j = 0; j < (int) (this.worldResolution.x); j++){
-                if((
-                    this.blockMatrix[i][j] != null) 
-                    && (this.blockMatrix[i][j].isLadder())
-                    && (hitboxOfEntity.overlaps(this.blockMatrix[i][j].getHitbox()))) 
-                    return this.blockMatrix[i][j].getHitbox();
+        double left   = hitboxOfEntity.x;
+        double right  = hitboxOfEntity.x + hitboxOfEntity.width-1;
+        double bottom = hitboxOfEntity.y;
+        double top    = hitboxOfEntity.y + hitboxOfEntity.height-1;
+
+        int blockLeft   = (int)Math.floor(left / 32.0)+this.blockMatrix[0].length /2;
+        int blockRight  = (int)Math.floor(right / 32.0)+this.blockMatrix[0].length /2;
+        int blockBottom = (int)Math.floor(bottom / 32.0)+this.blockMatrix.length /2;
+        int blockTop    = (int)Math.floor(top / 32.0)+this.blockMatrix.length /2;
+
+            for (int i = blockBottom; i <= blockTop; i++) {
+                for(int j = blockLeft; j <= blockRight; j++){
+
+                    if (i < 0 || i >= blockMatrix.length) continue;
+                    if (j < 0 || j >= blockMatrix[0].length) continue;
+                    
+                    if(
+                        (this.blockMatrix[i][j] != null)
+                        && this.blockMatrix[i][j].isLadder() 
+                        && hitboxOfEntity.overlaps(this.blockMatrix[i][j].getHitbox())
+                    ){
+                        return this.blockMatrix[i][j].getHitbox();
+                    }
                 }
-            }
-            return null;
-        }
-
-    //TODO: mix the both            
-    // public Rectangle playerOverlapWithALadder(Player player){
-    //     ArrayList<ArrayList<Integer>> possibleLevels = getPossibleLevels(player);
-
-    //     for (Integer i: possibleLevels.get(0)) {
-    //         for(Integer j: possibleLevels.get(1)){
-    //             if((this.blockMatrix[i][j] != null) 
-    //                 && (player.getHitbox().overlaps(this.blockMatrix[i][j].getHitbox())
-    //                 && this.blockMatrix[i][j].isClimbable()
-    //             )){
-    //                 // System.out.println("Player is colliding with a ladder");
-    //                 return this.blockMatrix[i][j].getHitbox();
-    //             }
-    //         }
-    //     }
-    //     return null;
-    // }
+            }    
+        return null;
+    }
 
     // // When the player touch the top part of the map it means the player accessed the next level
     public boolean playerOverlapWithNextLevel(Player player){

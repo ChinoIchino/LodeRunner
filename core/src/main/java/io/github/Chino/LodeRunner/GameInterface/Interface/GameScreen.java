@@ -37,7 +37,7 @@ public class GameScreen implements Screen{
     private final int SCREEN_WIDTH = 854;//480;
     private final int SCREEN_HEIGH = 480;//320;
 
-    private final int AI_NUMBER = 3;
+    private final int AI_NUMBER = 0;
     public AI[] aiList = new AI[AI_NUMBER];
 
     private final double GRAVITY_POWER = 0.5;
