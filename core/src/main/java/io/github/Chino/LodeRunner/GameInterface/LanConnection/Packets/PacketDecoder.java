@@ -14,6 +14,10 @@ import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketType
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PseudoPacket;
 
 public class PacketDecoder {
+    /**
+     * @param bytes Encoded packet that need to be decoded
+     * @return A instance of the specific packet with the information inside
+     */
     public Packet decodeStream(ByteBuffer bytes){
         bytes.resetCursor();
         int typeOfPacket = bytes.readInt();

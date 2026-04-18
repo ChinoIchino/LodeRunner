@@ -59,6 +59,11 @@ public class WorldCreator{
         this.blockMatrix = new Block[(int) this.worldResolution.y][(int) this.worldResolution.x];
     }
 
+    /**
+     * Initialize the world based on the WorldFile.txt
+     * @return A WorldManager that handles the world logic
+     * @throws IOException If the BufferedReader throw a IOException
+     */
     public WorldManager initWorld() throws IOException{
         this.ammountOfCollectible = 0;
 
@@ -94,6 +99,11 @@ public class WorldCreator{
         return new WorldManager(this.worldResolution, this.blockMatrix, this.batch, this.ammountOfCollectible);
     }
 
+    /**
+     * @param worldMatrix The world that will be copied
+     * @return A WorldManager that handles the world logic
+     * @throws InvalidAttributeValueException If the worldMatrix is faulty
+     */
     public WorldManager initWorldFromPacket(char[][] worldMatrix) throws InvalidAttributeValueException{
         this.ammountOfCollectible = 0;
 
@@ -124,6 +134,10 @@ public class WorldCreator{
     }
 
     // Used when the host create a lobby, so the server keep the maps
+    /**
+     * @return ArrayList of all the maps in the WorldFile.txt
+     * @throws IOException If BufferedReader fails
+     */
     public static ArrayList<char[][]> getAllMaps() throws IOException{
         ArrayList<char[][]> maps = new ArrayList<>();
 
@@ -157,6 +171,12 @@ public class WorldCreator{
         return maps;
     }
     
+    /**
+     * @param yIndexToInit Y index in the worldMatrix that is being initialized
+     * @param currentYPos Pixel offset used to place blocks
+     * @param worldWidth Ammount of blocks to initialise on the current line
+     * @param currentLine Line used as model
+     */
     private void initLine(int yIndexToInit, int currentYPos, int worldWidth, String currentLine){
         String sliceString;
 

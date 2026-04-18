@@ -23,6 +23,9 @@ public class ByteBuffer {
         this.bytes = new byte[sizeInByte];
     }
 
+    /**
+     * @return the int read from 4 bytes based on the cursor
+     */
     public int readInt(){
         int current = this.cursor;
         this.cursor += 4;
@@ -32,6 +35,9 @@ public class ByteBuffer {
                 ((this.bytes[current + 2] & 0xFF) << 8) |
                 ((this.bytes[current + 3] & 0xFF));
     }
+    /**
+     * @param toWrite int that need to be written in the byte list
+     */
     public void writeInt(int toWrite){
         // Verify if bytes have enough space for a int
         if((this.currentUsedSize + 4) > this.bytes.length){
@@ -50,6 +56,10 @@ public class ByteBuffer {
         this.currentUsedSize += 4;
     }
 
+    /**
+     * @param sizeToRead Ammount of caracters to read
+     * @return the concatenation of all the caracters into a String
+     */
     public String readString(int sizeToRead){
         if((this.cursor + sizeToRead) > this.bytes.length){
             System.out.println(
@@ -64,6 +74,9 @@ public class ByteBuffer {
         }
         return new String(temp, StandardCharsets.UTF_8);
     }
+    /**
+     * @param toAdd String to add in the byte list
+     */
     public void writeString(String toAdd){
         int sizeOfString = toAdd.length();
 
@@ -83,6 +96,9 @@ public class ByteBuffer {
         this.currentUsedSize += sizeOfString;
 
     }
+    /**
+     * @return A single caracter based on the cursor
+     */
     public char readChar(){
         if((this.cursor + 1) > this.bytes.length){
             System.out.println(
@@ -92,6 +108,9 @@ public class ByteBuffer {
         }
         return (char) this.bytes[this.cursor++];
     }
+    /**
+     * @param toAdd The caracter to add in the byte list
+     */
     public void writeChar(char toAdd){
         if((this.currentUsedSize + 1) > this.bytes.length){
             System.out.println(
@@ -103,7 +122,9 @@ public class ByteBuffer {
         this.bytes[this.currentUsedSize++] = (byte) toAdd;
     }
 
-
+    /**
+     * Delete everything from the the byte list, and reset the cursor and used size to 0
+     */ 
     public void clear(){
         this.bytes = new byte[1024];
         this.cursor = 0;

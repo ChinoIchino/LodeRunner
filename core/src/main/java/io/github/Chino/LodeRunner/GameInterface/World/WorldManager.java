@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
-import java.util.Queue;
 import java.util.List;
+import java.util.Queue;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
@@ -14,7 +14,8 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
-import io.github.Chino.LodeRunner.GameInterface.Entity.*;
+import io.github.Chino.LodeRunner.GameInterface.Entity.Entity;
+import io.github.Chino.LodeRunner.GameInterface.Entity.Player;
 
 public class WorldManager {
     private final SpriteBatch batch;
@@ -36,7 +37,7 @@ public class WorldManager {
 
         this.ammountOfCollectible = ammountOfCollectible;
     }
-    
+
     
     public void drawWorld() throws IOException{
         // To get the word that represent the block/ladder/gold/etc...
@@ -64,6 +65,10 @@ public class WorldManager {
             currentXPosition += 32;
         }
     }
+    /**
+     * @param hitboxOfEntity Hitbox of the entity used for the comparisons
+     * @return If entity dont overlap with the world
+     */
     public boolean entityDoesntOverlapWorld(Rectangle hitboxOfEntity){
         double left   = hitboxOfEntity.x;
         double right  = hitboxOfEntity.x + hitboxOfEntity.width-1;
@@ -93,6 +98,10 @@ public class WorldManager {
         return true;
     }
 
+    /**
+     * @param hitboxOfEntity Hitbox of the entity used for the comparisons
+     * @return If entity overlap with a ladder
+     */
     public Rectangle entityOverlapWithALadder(Rectangle hitboxOfEntity){
         double left   = hitboxOfEntity.x;
         double right  = hitboxOfEntity.x + hitboxOfEntity.width-1;
@@ -123,12 +132,20 @@ public class WorldManager {
     }
 
     // // When the player touch the top part of the map it means the player accessed the next level
+    /**
+     * @param hitboxOfEntity Player will be verified with the condition
+     * @return If player overlap with the top of the current level
+     */
     public boolean playerOverlapWithNextLevel(Player player){
         // Added the -20 so the player dont need to go all the way up the ladder
         // System.out.println(player.getPosY() + " >= " + (this.worldResolution.y * 16 - 20));
         return player.getPosY() >= (this.worldResolution.y * 16 - 20);
     }
 
+    /**
+     * @param hitboxOfEntity Entity used for the comparisons
+     * @return If the entity have a ladder under him
+     */
     public boolean isLadderUnderEntity(Entity entity){
         int blockX = ((int)(entity.getHitbox().x / 32))+getBlockMatrix()[0].length/2;
         int blockYBottom = (((int) (entity.getHitbox().y-1)/ 32)+getBlockMatrix().length/2)-1;
@@ -136,6 +153,10 @@ public class WorldManager {
         return getBlockMatrix()[blockYBottom][blockX].isLadder();
     }
 
+    /**
+     * @param hitboxOfEntity Entity used for the comparisons
+     * @return If entity overlap with a floor
+     */
     public boolean entityOverlapWithFloor(Entity entity){
         ArrayList<ArrayList<Integer>> possibleLevels = getPossibleLevels(entity);
         if(possibleLevels.size()==0) return false;
@@ -152,6 +173,10 @@ public class WorldManager {
         return false;
     }
 
+    /**
+     * @param hitboxOfEntity Entity used for the comparisons
+     * @return If the entity is on the ground
+     */
     public boolean entityIsOnGround(Entity entity){
         for (int i = 0; i < (int) (this.worldResolution.y); i++) {
             for(int j = 0; j < (int) (this.worldResolution.x); j++){
@@ -163,6 +188,11 @@ public class WorldManager {
         }
         return false;
     }
+    
+    /**
+     * @param hitboxOfEntity Entity used for the comparisons
+     * @return If the entity has touched the ground will descending a ladder
+     */
     public boolean entityReachGroungWithALadder(Entity entity){
         Block blockUnderEntity = null;
         int blockX = ((int) entity.getPosX() / 32)+this.blockMatrix[0].length/2;
@@ -174,6 +204,10 @@ public class WorldManager {
         return false;
     }
 
+    /**
+     * @param entity Entity used for the comparisons
+     * @return If the entity has fallen under the map
+     */
     public boolean entityFellOutTheWorld(Entity entity){
         return entity.getPosY() < this.getBottomYPosition()-32;
     }
@@ -202,6 +236,10 @@ public class WorldManager {
         return null;
     }
 
+    /**
+     * @param entity Entity used for the comparisons
+     * @return Return a 2x2 square size were the entity is located
+     */
     private ArrayList<ArrayList<Integer>> getPossibleLevels(Entity entity){
         ArrayList<ArrayList<Integer>> possibleLevels = new ArrayList<>();
         ArrayList<Integer> yPossibleLevels = new ArrayList<>();
@@ -260,8 +298,10 @@ public class WorldManager {
         }
     }
 
-    // Search for the first ladder from the top of the world
-    // Return a Object[Block ladderFound, int yIndexOfLadder, int xIndexOfLadder]
+    /**
+     * Search for the first ladder from the top of the world
+     * @return Object[Block ladderFound, int yIndexOfLadder, int xIndexOfLadder]
+     */
     private Object[] getNearestTopLadderInformations(){
         Object[] ladderInformations = new Object[3];
         
@@ -280,8 +320,12 @@ public class WorldManager {
         return null;
     }
 
-    //pathfindings system : BFS best option after some researh
-
+    /**
+     * pathfindings system : BFS best option after some research
+     * @param x X index of the ai based on the world matrix
+     * @param y Y index of the ai based on the world matrix
+     * @return ArrayList that contain indexes of all possible neighbors
+     */
     public ArrayList<int[]> getNeighbors(int x, int y){
         ArrayList<int[]> neighbors = new ArrayList<>();
         int[] neighbor;
@@ -338,7 +382,13 @@ public class WorldManager {
         }return neighbors;
     }
 
-
+    /**
+     * @param startX X index where the path start
+     * @param startY Y index where the path start
+     * @param goalX X index where the path need to end
+     * @param goalY Y index where the path need to enb
+     * @return ArrayList that contain all the block position that need to be crossed to arrive to the goal
+     */
     public ArrayList<int[]> findPath(int startX, int startY, int goalX, int goalY){
         int worldHeight = this.blockMatrix.length;
         int worldWidth = this.blockMatrix[0].length;
@@ -412,6 +462,10 @@ public class WorldManager {
         return path;
     }
 
+    /**
+     * @param x X index of the block to be broken based on the world matrix
+     * @param y Y index of the block to be broken based on the world matrix
+     */
     public void breakBlockAtPos(int x, int y){
         int blockXIndex = ((int) x / 32)+this.blockMatrix[0].length/2;
         int blockYIndex = (((int) y / 32)+this.blockMatrix.length/2)-1;
