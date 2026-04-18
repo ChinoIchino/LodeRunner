@@ -42,8 +42,8 @@ public class GDXMain extends Game {
         this.joinClientScreen = new JoinClientScreen(this);
         this.lobbyScreen = new LobbyScreen(this);
     }
-    public void setNewGameEndScreen(boolean isFinish){
-        this.gameEndScreen = new GameEndScreen(this, isFinish);
+    public void setNewGameEndScreen(boolean isFinish,int score){
+        this.gameEndScreen = new GameEndScreen(this, isFinish,score);
     }
     public void setNewGameScreen(){
         this.gameScreen = new GameScreen(this);

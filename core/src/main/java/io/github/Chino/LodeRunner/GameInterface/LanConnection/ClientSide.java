@@ -13,6 +13,7 @@ import io.github.Chino.LodeRunner.GameInterface.GDXMain;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketDecoder;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.Packet;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForPlayerMovement;
 
 public class ClientSide extends Thread{
     private volatile boolean isRunning = true;
@@ -72,7 +73,7 @@ public class ClientSide extends Thread{
 
                     decodedPacket = packetDecoder.decodeStream(buffer);
                     buffer.clear();
-                    // System.out.println("Client got the packet: " + decodedPacket.toString());
+                    if(!(decodedPacket instanceof PacketForPlayerMovement))System.out.println("Client got the packet: " + decodedPacket.toString());
                             
                     //Getting all the attributs from the packet into a List
                     packetItems = decodedPacket.unpackPacket();
@@ -152,10 +153,11 @@ public class ClientSide extends Thread{
                             break;
                         // Player update score label
                         case 8:
-                            int newScore = (int) packetItems.get(0);
-                            int yIndex = (int) packetItems.get(1);
-                            int xIndex = (int) packetItems.get(2);
-                            int playerId = (int) packetItems.get(3);
+
+                            int newScore = (int) packetItems.get(1);
+                            int yIndex = (int) packetItems.get(2);
+                            int xIndex = (int) packetItems.get(3);
+                            int playerId = (int) packetItems.get(4);
                             Gdx.app.postRunnable(() -> {
                                 if(isVersus){
                                     this.main.getGameVersusScreen().updateScoreLabel(playerId,newScore, yIndex, xIndex);
@@ -201,6 +203,19 @@ public class ClientSide extends Thread{
                             final int posY = (int) packetItems.get(4); 
                             Gdx.app.postRunnable(() -> {
                                 this.main.getGameCoopScreen().setAIInfoForGuest(aiId, nearestPlayerId, animationId, posX, posY);
+                            });
+                            break;
+                        case 13:
+                            Gdx.app.postRunnable(() -> {
+                                this.main.getGameCoopScreen().sendToGameOverScreen();
+                            });
+                            break;
+                        case 14:
+                            Gdx.app.postRunnable(() -> {
+                                if(isVersus){
+                                    
+                                    this.main.getGameVersusScreen().sendToGameEndScreen();
+                                }else this.main.getGameCoopScreen().sendToGameEndScreen();
                             });
                             break;
                         default:

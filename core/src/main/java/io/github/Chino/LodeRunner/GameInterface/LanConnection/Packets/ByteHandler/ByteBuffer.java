@@ -2,8 +2,6 @@ package io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandl
 
 import java.nio.charset.StandardCharsets;
 
-// TODO add a auto alloc, so if the buffer get a exceding ammount of bytes his size is changed
-// Maybe a autoAlloc function that with a value and a boolean so the buffer get his size changed if the size was defined 
 
 public class ByteBuffer {
     // Public for easier access via the in/out streams

@@ -102,7 +102,6 @@ public class GameVersusScreen implements Screen{
             System.err.println("\nERROR GameInterface/GameScreen.java: Function render catched IOException while rendering the world");
         }
 
-        // TODO Find a better way to manage the sprite of the player
         this.player.spriteChangeToIdle();
                 
         // Handle player movement
@@ -111,9 +110,8 @@ public class GameVersusScreen implements Screen{
                 this.player.isOnALadder = (worldManager.entityOverlapWithALadder(player.getHitbox()) != null);
 
                 // Send to server the movement based on the input and gravity in the current frame
-                if(!this.isGameOver && worldManager.entityFellOutTheWorld(this.player)){
-                    System.out.println("Player hs been killed");
-                    this.isGameOver = true;
+                if(worldManager.entityFellOutTheWorld(this.player)){
+                    this.player.setPosition(0, 0);
                 }
                 
                 int animationId = handlePlayerInput();
@@ -325,7 +323,7 @@ public class GameVersusScreen implements Screen{
         // Return collectible, y index position on world and x index position on world
         List<Object> possibleCollectibleList = this.worldManager.playerOverlapWithCollectible(this.player);
         if(possibleCollectibleList != null){
-            this.client.writeStream.write(TranslateToBytes.toPlayerScoreAdd(possibleCollectibleList,this.player.getId()));
+            this.client.writeStream.write(TranslateToBytes.toPlayerScoreAdd(possibleCollectibleList,this.player.getId(),1));
             this.client.writeStream.flush();
 
             if(!this.worldManager.isThereCollectibles()){
@@ -367,12 +365,28 @@ public class GameVersusScreen implements Screen{
             System.out.println("\nERROR GameInterface/Interface/GameCoopScreen.java: catched IOException will loading to next level");
         }
     }
+        public void sendToGameEndScreen(){
+        System.out.println("switching screen");
+        this.isGameOver = true;
+        main.setNewGameEndScreen(true,Integer.valueOf(this.scoreLabels[this.player.getId()].getText().substring(this.scoreLabels[this.player.getId()].getText().indexOf(": ")+2)));
+        main.setScreen(main.getGameEndScreen());
+        this.dispose();
+    }
 
-    //TODO: idk why but score is the socre +++ for each player, need to fix that
     public void updateScoreLabel(int playerId,int newScore, int yIndexOfItem, int xIndexOfItem){
         this.worldManager.setBlockAt(xIndexOfItem, yIndexOfItem, null);
+        this.worldManager.reduceAmountOfCollectible();
+        if(!this.worldManager.isThereCollectibles()){
+            try{
+                ByteBuffer buffer = new ByteBuffer(1024);
+                buffer.writeInt(9);
 
-        this.scoreLabels[playerId].setText("Score of " +this.playersInformations.get(playerId)[0] +" : " + newScore);
+                this.client.writeStream.write(buffer.getBytesList());
+                this.client.writeStream.flush();
+            }catch(IOException e){}
+            }
+        newScore += Integer.valueOf(this.scoreLabels[playerId].getText().substring(this.scoreLabels[playerId].getText().indexOf(": ")+2));
+        this.scoreLabels[playerId].setText("Score of " +this.playersInformations.get(playerId)[0] +" : " +newScore);
     }
 
     @Override
@@ -404,7 +418,7 @@ public class GameVersusScreen implements Screen{
         int pading=0;
         for(int i = 0 ; i < this.scoreLabels.length;i++){
             Label label = new Label(
-                "Score: 0",
+                "Score of  : 0",
                 new Label.LabelStyle(new BitmapFont(), Color.WHITE)
             );
             label.setSize(70, 30);
@@ -452,10 +466,7 @@ public class GameVersusScreen implements Screen{
     public void dispose(){
         this.batch.dispose();
         this.uiStage.dispose();
-        
         this.font.dispose();
-
-        this.main.getLobbyScreen().forceDispose();
     }
     
 }

@@ -213,6 +213,7 @@ public class AI extends Entity{
         }
         if (currentPath.size() <= 1) {
             pathTimer = 0;
+            pathIndex++;
             return-1;
         }
         if(currentPath.size() > 1 && pathIndex < currentPath.size()){
@@ -234,7 +235,7 @@ public class AI extends Entity{
                     snapToLadder(ladder);
                     spriteChangeToIdle();
                 }
-
+                
                 if(dy > 0){
                     physicalBodyMoveY(speed);
                     return 0;

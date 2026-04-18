@@ -124,7 +124,6 @@ public class GameCoopScreen implements Screen{
             System.err.println("\nERROR GameInterface/GameScreen.java: Function render catched IOException while rendering the world");
         }
 
-        // TODO Find a better way to manage the sprite of the player
         this.player.spriteChangeToIdle();
                 
         // Handle player movement
@@ -136,6 +135,10 @@ public class GameCoopScreen implements Screen{
                 if(!this.isGameOver && worldManager.entityFellOutTheWorld(this.player)){
                     System.out.println("Player hs been killed");
                     this.isGameOver = true;
+                    ByteBuffer killBuffer = new ByteBuffer(8);
+                    killBuffer.writeInt(13);
+                    this.client.writeStream.write(killBuffer.getBytesList());
+                    this.client.writeStream.flush();
                 }
                 
                 int animationId = handlePlayerInput();
@@ -193,8 +196,13 @@ public class GameCoopScreen implements Screen{
                     handleEntityGravity(ai);
                     if(!this.isGameOver && ai.killPlayer()){
                         System.out.println("Player has been killed");
+                        ByteBuffer killBuffer = new ByteBuffer(8);
+                        killBuffer.writeInt(13);
+                        this.client.writeStream.write(killBuffer.getBytesList());
+                        this.client.writeStream.flush();
                     }
                     handleAIOverlaps(ai);
+                    ai.syncAll();
                     if(worldManager.entityFellOutTheWorld(ai)){
                         ai.setPosition(0, 0);
                     }
@@ -205,10 +213,6 @@ public class GameCoopScreen implements Screen{
             }  
         }else{
             for(AI ai : this.aiList){
-                if(!this.isGameOver && ai.killPlayer()){
-                        System.out.println("Player has been killed");
-                        this.isGameOver = true;
-                    }
                 ai.render(batch);
             }
         }
@@ -233,7 +237,7 @@ public class GameCoopScreen implements Screen{
 
         this.player.wasOnALadder = this.player.isOnALadder;
 
-    }//TODO: do the death system
+    }
 
 
     private void handleAIOverlaps(AI ai){
@@ -243,11 +247,9 @@ public class GameCoopScreen implements Screen{
         
     }
 
-    //TODO: Not working but good idea i think
     public void setAIInfoForGuest(int aiId,int nearestPlayerId,int animationId,int positionX,int positionY){
         AI currentAIToModifiy = this.AIInformations.get(aiId);
         if(!(nearestPlayerId == currentAIToModifiy.getNearestPlayer().getId())){
-            //TODO: put here the player with the id in parameter thanks to hashmap
             currentAIToModifiy.setNearestPlayer(player);
         }
         switch(animationId){
@@ -264,7 +266,6 @@ public class GameCoopScreen implements Screen{
         int distMax = 10000;
         for(int i = 0;i<this.playersInformations.size();i++){
             if(Math.abs(ai.getPosX()-((int)this.playersInformations.get(i)[3])) < distMax){
-                //TODO: find a way to get the player instance by is id and put it here
                 ai.setNearestPlayer(player);
             }
         }
@@ -416,7 +417,7 @@ public class GameCoopScreen implements Screen{
         // Return collectible, y index position on world and x index position on world
         List<Object> possibleCollectibleList = this.worldManager.playerOverlapWithCollectible(this.player);
         if(possibleCollectibleList != null){
-            this.client.writeStream.write(TranslateToBytes.toPlayerScoreAdd(possibleCollectibleList,0));
+            this.client.writeStream.write(TranslateToBytes.toPlayerScoreAdd(possibleCollectibleList,0,0));
             this.client.writeStream.flush();
 
             if(!this.worldManager.isThereCollectibles()){
@@ -454,14 +455,48 @@ public class GameCoopScreen implements Screen{
             this.player.moveToCoordinate(0, this.worldManager.getBottomYPosition() + 32);
             
             this.player.isInLoading = false;
+            this.getAIListEmpty();
+            this.initAIinWorld();
         } catch (InvalidAttributeValueException e) {
             System.out.println("\nERROR GameInterface/Interface/GameCoopScreen.java: catched IOException will loading to next level");
         }
     }
 
+    private void getAIListEmpty(){
+        for(int i = 0 ; i< this.AI_NUMBER;i++){
+            this.aiList[i] = null;
+        }
+    }
+
+    //TODO: update leaderBoard in these two func
+    public void sendToGameOverScreen(){
+        System.out.println("switching screen");
+        this.isGameOver = false;
+        main.setNewGameEndScreen(false,Integer.valueOf(this.scoreLabel.getText().substring(7)));
+        main.setScreen(main.getGameEndScreen());
+        this.dispose();
+    }
+    public void sendToGameEndScreen(){
+        System.out.println("switching screen");
+        this.isGameOver = true;
+        main.setNewGameEndScreen(true,Integer.valueOf(this.scoreLabel.getText().substring(7)));
+        main.setScreen(main.getGameEndScreen());
+        this.dispose();
+    }
+
     public void updateScoreLabel(int newScore, int yIndexOfItem, int xIndexOfItem){
         this.worldManager.setBlockAt(xIndexOfItem, yIndexOfItem, null);
+        this.worldManager.reduceAmountOfCollectible();
+        if(!this.worldManager.isThereCollectibles()){
+            try{
+                ByteBuffer buffer = new ByteBuffer(1024);
+                buffer.writeInt(9);
 
+                this.client.writeStream.write(buffer.getBytesList());
+                this.client.writeStream.flush();
+            }catch(IOException e){}
+            }
+        newScore += Integer.valueOf(this.scoreLabel.getText().substring(this.scoreLabel.getText().indexOf(": ")+2));
         this.scoreLabel.setText("Score: " + newScore);
     }
 
@@ -538,7 +573,7 @@ public class GameCoopScreen implements Screen{
         
         this.font.dispose();
 
-        this.main.getLobbyScreen().forceDispose();
+
     }
     
 }

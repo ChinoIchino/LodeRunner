@@ -4,64 +4,74 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
+
 import io.github.Chino.LodeRunner.GameInterface.GDXMain;
 
 public class GameEndScreen implements Screen{
 
     private GDXMain main;
-    
-    private SpriteBatch batch;
-
-    private BitmapFont bitmapFont;
-    
-    private Texture backgroundTexture;
 
     private boolean isFinish;
+
+    private Table tableContent;
+    private Stage stage;
+
+    private int score;
+
     
-    public GameEndScreen(GDXMain gdxMain,boolean isFinish){
+    public GameEndScreen(GDXMain gdxMain,boolean isFinish,int score){
         this.main = gdxMain;
-        this.bitmapFont = new BitmapFont();
         this.isFinish = isFinish;
+        this.score = score;
     }
 
     @Override
     public void show() {
-        this.initBackground();
+        Skin skin = new Skin(Gdx.files.internal("textbuttonskin/textbuttonSkin.json"));
+        this.tableContent = new Table();
+        this.tableContent.setFillParent(true);
+        this.stage = new Stage(new ScreenViewport());
+        Label labelTOBackToMenu = new Label("Press ENTER to return to Menu", skin);
+        Label labelForGameEnd;
+        if(isFinish){
+            labelForGameEnd = new Label("YOU REACH THE END !", skin);
+        }else{
+            labelForGameEnd = new Label("GAME OVER !", skin);
+            
+        }
+        Label labelForScore = new Label("You have " + this.score + " points !", skin);
+
+        tableContent.add(labelForGameEnd).row();
+        tableContent.add(labelForScore).row();
+        tableContent.add(labelTOBackToMenu).row();
+
+
+        this.stage.addActor(tableContent);
+
         Gdx.graphics.setForegroundFPS(60);
     }
 
-    private void initBackground() {
-        this.batch = new SpriteBatch();
-        this.backgroundTexture = new Texture("menuBackground.png");
-    }
 
     @Override
     public void render(float delta) {
         handleClientInput();
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        // Brown = 150, 89, 39
-        Gdx.gl.glClearColor(150 / 255f, 89 / 255f, 39 / 255f, 1f);
+        Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
+        this.stage.act(delta);
+        this.stage.draw();
 
-        //TODO: print score and rework the font placement + background full black
-        this.batch.begin();
-        this.batch.draw(this.backgroundTexture,0,0);
-        this.bitmapFont.getData().setScale(3, 3);
-        if(isFinish){
-            this.bitmapFont.draw(batch, "GAME IS FINISH !", 100,300); 
-        }else{
-            this.bitmapFont.draw(batch, "GAME OVER !", 100,300); 
-        }
-        this.bitmapFont.getData().setScale(2, 2);
-        this.bitmapFont.draw(batch, "Press ENTER to return to Menu", 100, 200);
-        this.batch.end();
     }
 
     public void handleClientInput(){
         if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)){
             this.main.setScreen(main.getMenuScreen());
+            this.main.getLobbyScreen().closeServer();
         }
     }
 
@@ -86,9 +96,7 @@ public class GameEndScreen implements Screen{
 
     @Override
     public void dispose() {
-        this.batch.dispose();
-        this.bitmapFont.dispose();
-        this.backgroundTexture.dispose();
+        this.stage.dispose();
     }
     
 }

@@ -145,10 +145,12 @@ public class TranslateToBytes{
 
         return buffer.getBytesList();
     }
-    public static byte[] toPlayerScoreAdd(List<Object> collectibleInformations,int playerId){
+    public static byte[] toPlayerScoreAdd(List<Object> collectibleInformations,int playerId,int gameModeId){
         ByteBuffer buffer = new ByteBuffer(1024);
 
         buffer.writeInt(8);
+        
+        buffer.writeInt(gameModeId);
         
         Collectible collectible = (Collectible) collectibleInformations.get(0);
         buffer.writeInt(collectible.getScore());

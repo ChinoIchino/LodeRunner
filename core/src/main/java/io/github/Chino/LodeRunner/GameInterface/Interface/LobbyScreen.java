@@ -120,7 +120,6 @@ public class LobbyScreen implements Screen{
         this.tableRightSide.add(this.goBackButton).center().padBottom(10).row();
 
         this.tableOfContent.add(this.tableRightSide).width(Gdx.graphics.getWidth() * 0.40f).height(Gdx.graphics.getHeight() * 0.75f).pad(10);
-        this.tableOfContent.setDebug(true); // TODO delete after testing
 
         this.chatTextField.addListener(new InputListener(){
             @Override
@@ -383,6 +382,14 @@ public class LobbyScreen implements Screen{
         }
 
         this.resetPlayerList();
+    }
+
+    public void closeServer(){
+        if(this.hostedServer != null){
+            this.hostedServer.closeServerProperly();
+        }else if(this.clientSide != null){
+            this.clientSide.closeEverything();
+        }
     }
     // Used only when the host of the lobby quit, so the users must be kicked from the interface
     public void forceDispose(){

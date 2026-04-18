@@ -10,8 +10,10 @@ public class PacketForAddScore extends Packet{
     private int yIndex;
     private int xIndex;
     private int playerId;
+    private int gameMode;
 
-    public PacketForAddScore(int valueToAdd, int yIndex, int xIndex,int playerId) {
+    public PacketForAddScore(int gameMode,int valueToAdd, int yIndex, int xIndex,int playerId) {
+        this.gameMode = gameMode;
         this.valueToAdd = valueToAdd;
         this.yIndex = yIndex;
         this.xIndex = xIndex;
@@ -24,7 +26,7 @@ public class PacketForAddScore extends Packet{
         this.playerId = 0;
     }
     public PacketForAddScore() {
-        this(0, -1, -1,0);
+        this(0,0, -1, -1,0);
     }
 
 
@@ -33,6 +35,8 @@ public class PacketForAddScore extends Packet{
         inPacket.resetCursor();
 
         inPacket.writeInt(this.getPacketId());
+
+        inPacket.writeInt(this.gameMode);
 
         inPacket.writeInt(this.valueToAdd);
 
@@ -46,6 +50,8 @@ public class PacketForAddScore extends Packet{
         outPacket.resetCursor();
 
         outPacket.readInt();
+
+        this.gameMode = outPacket.readInt();
 
         this.valueToAdd = outPacket.readInt();
 
@@ -63,6 +69,7 @@ public class PacketForAddScore extends Packet{
     public List<Object> unpackPacket() {
         List<Object> list = new ArrayList<>();
 
+        list.add(this.gameMode);
         list.add(this.valueToAdd);
         list.add(this.yIndex);
         list.add(this.xIndex);

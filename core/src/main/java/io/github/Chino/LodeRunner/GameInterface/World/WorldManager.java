@@ -174,20 +174,18 @@ public class WorldManager {
         return false;
     }
 
-    //TODO adapt this for any map height not only for map that void is at y: -200
     public boolean entityFellOutTheWorld(Entity entity){
-        return entity.getPosY() > this.getBottomYPosition()*-16;
+        return entity.getPosY() < this.getBottomYPosition()-32;
     }
 
     public List<Object> playerOverlapWithCollectible(Player player){
         ArrayList<ArrayList<Integer>> possibleLevels = getPossibleLevels(player);
-        if (possibleLevels.size() ==0 ) return null;
+        if (possibleLevels.size() == 0 ) return null;
 
         for (Integer y: possibleLevels.get(0)) {
             for (Integer x: possibleLevels.get(1)) {
                 if(this.blockMatrix[y][x] != null && this.blockMatrix[y][x] instanceof Collectible){
                     if(this.blockMatrix[y][x].getHitbox().overlaps(player.getHitbox())){
-                        this.ammountOfCollectible--;
 
                         List<Object> toReturn = new ArrayList<>();
                         // Casted Collectible because if the statement is correctly it must be a Collectible
@@ -204,51 +202,35 @@ public class WorldManager {
         return null;
     }
 
-    //pathfindings system : BFS best option after some researh
-
-    
-    private ArrayList<ArrayList<Integer>> getPossibleLevels(Entity player){
+    private ArrayList<ArrayList<Integer>> getPossibleLevels(Entity entity){
         ArrayList<ArrayList<Integer>> possibleLevels = new ArrayList<>();
         ArrayList<Integer> yPossibleLevels = new ArrayList<>();
-        
-        int currentY = (int) this.worldResolution.y * -16;
-        for (int i = 0; i < (int) this.worldResolution.y; i++) {
-            if(currentY <= player.getPosY() && (currentY + 32) >= player.getPosY()){
-                yPossibleLevels.add(i);
-                break;
-            }
-            currentY += 32;
-        }
+        ArrayList<Integer> xPossibleLevels = new ArrayList<>();
+        double left   = entity.getHitbox().x;
+        double right  = entity.getHitbox().x + entity.getHitbox().width-1;
+        double bottom = entity.getHitbox().y;
+        double top    = entity.getHitbox().y + entity.getHitbox().height-1;
 
-        if(yPossibleLevels.get(0) != 0){
-            yPossibleLevels.add(yPossibleLevels.get(0) - 1);
-        }
-        if(this.worldResolution.y - 1 != yPossibleLevels.get(0)){
-            yPossibleLevels.add(yPossibleLevels.get(0) + 1);
-        }
+        int blockLeft   = (int)Math.floor(left / 32.0)+this.blockMatrix[0].length /2;
+        int blockRight  = (int)Math.floor(right / 32.0)+this.blockMatrix[0].length /2;
+        int blockBottom = (int)Math.floor(bottom / 32.0)+this.blockMatrix.length /2;
+        int blockTop    = (int)Math.floor(top / 32.0)+this.blockMatrix.length /2;
+
+            for (int i = blockBottom; i <= blockTop; i++) {
+                if (i < 0 || i >= blockMatrix.length) continue;
+                yPossibleLevels.add(i);
+                for(int j = blockLeft; j <= blockRight; j++){
+
+                    if (i < 0 || i >= blockMatrix.length) continue;
+                    if (j < 0 || j >= blockMatrix[0].length) continue;
+                    
+                    xPossibleLevels.add(j);
+                }
+            }    
 
         possibleLevels.add(yPossibleLevels);
-
-        ArrayList<Integer> xPossibleLevels = new ArrayList<>();
-
-        int currentX = (int) this.worldResolution.x * -16;
-        for(int i = 0; i < (int) this.worldResolution.x; i++){
-            if(currentX <= player.getPosX() && (currentX + 32) >= player.getPosX()){
-                xPossibleLevels.add(i);
-                break;
-            }
-            currentX += 32;
-        }
-
-        if(xPossibleLevels.get(0) != 0){
-            xPossibleLevels.add(xPossibleLevels.get(0) - 1);
-        }
-        if(this.worldResolution.x - 1 != xPossibleLevels.get(0)){
-            xPossibleLevels.add(xPossibleLevels.get(0) + 1);
-        }
-
         possibleLevels.add(xPossibleLevels);
-
+        System.out.println(possibleLevels);
         return possibleLevels;
     }
 
@@ -298,6 +280,8 @@ public class WorldManager {
         }
         return null;
     }
+
+    //pathfindings system : BFS best option after some researh
 
     public ArrayList<int[]> getNeighbors(int x, int y){
         ArrayList<int[]> neighbors = new ArrayList<>();
@@ -447,6 +431,10 @@ public class WorldManager {
     }
     public Block[][] getBlockMatrix() {
         return blockMatrix;
+    }
+
+    public void reduceAmountOfCollectible(){
+        this.ammountOfCollectible--;
     }
 
     public boolean isThereCollectibles(){

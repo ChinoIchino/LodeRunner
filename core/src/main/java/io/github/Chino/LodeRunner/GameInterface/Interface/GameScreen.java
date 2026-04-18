@@ -3,6 +3,8 @@ package io.github.Chino.LodeRunner.GameInterface.Interface;
 import java.io.IOException;
 import java.util.List;
 
+import javax.management.InvalidAttributeValueException;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
@@ -37,7 +39,7 @@ public class GameScreen implements Screen{
     private final int SCREEN_WIDTH = 854;//480;
     private final int SCREEN_HEIGH = 480;//320;
 
-    private final int AI_NUMBER = 03;
+    private final int AI_NUMBER = 3;
     public AI[] aiList = new AI[AI_NUMBER];
 
     private final double GRAVITY_POWER = 0.5;
@@ -81,7 +83,6 @@ public class GameScreen implements Screen{
         int resolutionX = (int)this.worldManager.worldResolution.x*16;
         int resolutionY = (int)this.worldManager.worldResolution.y*16;
         for(int i = 0 ; i< this.AI_NUMBER;i++){
-            // AI entity = new AI((int)(Math.random()*(resolutionX*2))-resolutionX, (int)(Math.random()*(resolutionY*2))-resolutionY, this.worldManager);
             AI entity = new AI((int)(Math.random()*(resolutionX*2))-resolutionX, (int)(this.worldManager.getBottomYPosition() + 32),i,this.worldManager);
             
             this.aiList[i] = entity; 
@@ -101,8 +102,6 @@ public class GameScreen implements Screen{
         }catch(IOException e){
             System.err.println("\nERROR GameInterface/GameScreen.java: Function render catched IOException while rendering the world");
         }
-
-        // TODO Find a better way to manage the sprite of the player
         this.player.spriteChangeToIdle();
                 
         // Handle player movement
@@ -160,8 +159,8 @@ public class GameScreen implements Screen{
 
         if(isGameOver){
             System.out.println("switching screen");
-            main.setNewGameEndScreen(isGameOver);
             this.isGameOver = false;
+            main.setNewGameEndScreen(false,Integer.valueOf(this.scoreLabel.getText().substring(7)));
             main.setScreen(main.getGameEndScreen());
             this.dispose();
         }
@@ -215,6 +214,9 @@ public class GameScreen implements Screen{
                 
                 //Move the player up
                 if(player.isOnALadder) player.physicalBodyMoveY(4);
+
+                // to send to next level if the player reach the height limit
+                if(this.worldManager.playerOverlapWithNextLevel(this.player)) sendToNextLevel();
                 
             }else{player.isOnALadder = false;player.wasOnALadder = true;}
         }
@@ -280,11 +282,41 @@ public class GameScreen implements Screen{
         if(possibleCollectible != null){
             this.player.addToScore(((Collectible)possibleCollectible.get(0)).getScore());
             updateScoreLabel(this.player);
+            this.worldManager.reduceAmountOfCollectible();
 
             if(!this.worldManager.isThereCollectibles()){
                 this.worldManager.openExitToNextLevel();
             }
             // System.out.println("Score was modified into: " + player.getScore());
+        }
+    }
+
+    public void sendToNextLevel(){
+        try {
+            // Take the player as a attribut so it play him immediately at the bottom
+            this.player.isInLoading = true;
+
+            this.worldManager = this.worldCreator.initWorld();
+            player.moveToCoordinate(0, this.worldManager.getBottomYPosition() + 32);
+            // player.moveToCoordinate(0, 0);
+            
+            this.player.isInLoading = false;
+            getAIListEmpty();
+            initAIinWorld();
+        } catch (Exception e) {
+            // System.out.println("\nERROR GameInterface/GameScreen.java: Constructor catched IOException will initializing the world");
+            Gdx.app.postRunnable(() ->{
+                System.out.println("switching screen");
+                main.setNewGameEndScreen(true,Integer.valueOf(this.scoreLabel.getText().substring(7)));
+                main.setScreen(main.getGameEndScreen());
+                this.dispose();
+            });
+        }
+    }
+
+    private void getAIListEmpty(){
+        for(int i = 0 ; i< this.AI_NUMBER;i++){
+            this.aiList[i] = null;
         }
     }
 
@@ -328,7 +360,6 @@ public class GameScreen implements Screen{
         label.setPosition(10, Gdx.graphics.getHeight() - 30);
         
         this.scoreLabel = label;
-
         this.uiStage.addActor(label);
     }
     

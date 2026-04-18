@@ -3,7 +3,6 @@ package io.github.Chino.LodeRunner.GameInterface.World;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
 
-// TODO make the block breaking functions
 
 public class BreakBlockThreadManager{
     private Texture fullBlock = new Texture("data/textures/blocks/dirt.png");

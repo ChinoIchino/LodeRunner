@@ -73,6 +73,10 @@ public class PacketDecoder {
                 packetToReturn = new PacketForAIMovement();
                 packetToReturn.write(bytes);
                 return packetToReturn;
+            case 13:
+                return new PseudoPacket(13);
+            case 14:
+                return new PseudoPacket(14);
 
             default:
                 System.out.println(

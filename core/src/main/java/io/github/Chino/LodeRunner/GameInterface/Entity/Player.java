@@ -184,7 +184,6 @@ public class Player extends Entity{
     }
     @Override
     protected void initEntityTextures() {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'initEntityTextures'");
     }
 

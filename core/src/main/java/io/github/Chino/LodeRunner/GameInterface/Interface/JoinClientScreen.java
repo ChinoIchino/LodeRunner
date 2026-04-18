@@ -24,7 +24,6 @@ import io.github.Chino.LodeRunner.GameInterface.LanConnection.ClientSide;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.TranslateToBytes;
 
 public class JoinClientScreen implements Screen{
-    //TODO make that its possible that multiple servers are on the same connection via port modifications
     private GDXMain main;
 
     private SpriteBatch batch;

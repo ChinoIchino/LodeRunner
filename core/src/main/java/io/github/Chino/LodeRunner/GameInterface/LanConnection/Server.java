@@ -115,7 +115,7 @@ public class Server extends Thread{
         }
         
         // Type 8: A player has interacted with a collectible
-        if(packetType == 8){
+        if(packetType == 8 && buffer.readInt() == 0){
             int toAdd = buffer.readInt();
 
             buffer.resetCursor();
@@ -129,7 +129,12 @@ public class Server extends Thread{
 
         // Type 10: The next level need to be loaded
         if(packetType == 10){
-            this.loadNextMapInBuffer(buffer);
+            if(!this.loadNextMapInBuffer(buffer)){
+                ByteBuffer noNextMapBuffer = new ByteBuffer(8);
+                noNextMapBuffer.writeInt(14);
+                broadcastPacket(noNextMapBuffer.getBytesList());
+                return false;
+            }
         }
 
         return true;
@@ -189,8 +194,12 @@ public class Server extends Thread{
         System.out.println("The server saved all the maps from the host side!");
         // this.debugPrintLoadedMaps();
     }
-    private void loadNextMapInBuffer(ByteBuffer buffer){
+    private boolean loadNextMapInBuffer(ByteBuffer buffer){
+        if(this.maps.size() <= this.currentLevel){
+            return false;
+        }
         char[][] nextLevelMap = this.maps.get(this.currentLevel++);
+
         
         buffer.resetCursor();
 
@@ -204,6 +213,7 @@ public class Server extends Thread{
                 buffer.writeChar(nextLevelMap[y][x]);
             }
         }
+        return true;
     }
 
     public synchronized void closeServerProperly(){

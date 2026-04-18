@@ -101,7 +101,6 @@ public class GameRuleScreen implements Screen{
     
                         ServerSocket serverSocket = searchUsablePort();
                         serverHosted = new Server(serverSocket);
-                        // TODO to use: System.out.println(serverSocket.getLocalPort());
                         serverHosted.start();
 
                         // Add also the host as a client
