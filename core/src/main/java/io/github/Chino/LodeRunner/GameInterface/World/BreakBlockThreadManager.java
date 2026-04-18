@@ -23,6 +23,10 @@ public class BreakBlockThreadManager{
         this.semaphore = new Semaphore();
     }
 
+    /**
+     * @param indexX index x of the block based on the world matrix
+     * @param indexY index y of the block based on the world matrix
+     */
     public synchronized void breakBlock(int indexX, int indexY) {
         this.semaphore.takeToken();
         this.indexX = indexX;

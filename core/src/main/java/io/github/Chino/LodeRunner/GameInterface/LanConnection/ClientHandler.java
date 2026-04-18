@@ -62,6 +62,11 @@ public class ClientHandler implements Runnable{
         }
     }
 
+    /**
+     * @param socket Socket of the client that is connected to the server
+     * @param writer BufferedOutputStream of the client
+     * @param reader BufferedInputStream of the client
+     */
     protected void closeEverything(Socket socket, BufferedOutputStream writer, BufferedInputStream reader){
         if(isRunning){
             isRunning = false;

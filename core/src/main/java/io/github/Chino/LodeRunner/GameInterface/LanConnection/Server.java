@@ -6,8 +6,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
 import io.github.Chino.LodeRunner.GameInterface.Entity.Player;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
 
 public class Server extends Thread{
     private ServerSocket serverSocket;
@@ -58,6 +58,9 @@ public class Server extends Thread{
     }
 
     // Send to each client. Received via ClientSide.java listenForPackets function
+    /**
+     * @param bytes Packet that will be broadcasted to every client connected
+     */
     protected synchronized void broadcastPacket(byte[] bytes){
         // if interceptPacket return false, it dont send the current packet
         if(!interceptPacket(bytes)){
@@ -82,6 +85,10 @@ public class Server extends Thread{
 
     // Verify the packet that was send by the users
     // If the packet is only only for the server or have invalid informations return false
+    /**
+     * @param bytes Packet to verify
+     * @return boolean that represent if the packet can be send or not
+     */
     private boolean interceptPacket(byte[] bytes){
         this.buffer.clear();
         this.buffer.bytes = bytes;
@@ -140,6 +147,9 @@ public class Server extends Thread{
         return true;
     }
 
+    /**
+     * @param client Client that will receive the essential packet
+     */
     private void sendToClientLobbyEssentials(ClientHandler client){
         // Convert from ArrayList<String> into String[]
         String[] list = getPlayerUsernamesList();
@@ -170,6 +180,9 @@ public class Server extends Thread{
         clientHandlersInServer.remove(client); 
     }
 
+    /**
+     * @param buffer ByteBuffer that contain all the maps that the server need to load
+     */
     private void loadMapsOnServer(ByteBuffer buffer){
         // Just in case start from the beginning of the buffer
         buffer.resetCursor();
@@ -194,6 +207,10 @@ public class Server extends Thread{
         System.out.println("The server saved all the maps from the host side!");
         // this.debugPrintLoadedMaps();
     }
+    /**
+     * @param buffer ByteBuffer where the map will be written
+     * @return boolean that represent if the map about to be loaded exist
+     */
     private boolean loadNextMapInBuffer(ByteBuffer buffer){
         if(this.maps.size() <= this.currentLevel){
             return false;

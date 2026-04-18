@@ -3,12 +3,16 @@ package io.github.Chino.LodeRunner.GameInterface.LanConnection;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
 import io.github.Chino.LodeRunner.GameInterface.Entity.Player;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
 import io.github.Chino.LodeRunner.GameInterface.World.Collectible;
 
 public class TranslateToBytes{
     // It compact the string into the "protocol" of a PacketForLobbyPlayersList
+    /**
+     * @param toEncode Username of the player to encode
+     * @return byte[] list in the packet id 2 format
+     */
     public static byte[] toPlayerListPacket(String toEncode){
         ByteBuffer buffer = new ByteBuffer(1024);
         buffer.writeInt(2);
@@ -19,6 +23,10 @@ public class TranslateToBytes{
 
         return buffer.getBytesList();
     } 
+    /**
+     * @param toEncode Username of the player to encode
+     * @return byte[] list in the packet id 3 format
+     */
     public static byte[] toPlayerLeaveListPacket(String toEncode){
         ByteBuffer buffer = new ByteBuffer(1024);
         buffer.writeInt(3);
@@ -30,6 +38,12 @@ public class TranslateToBytes{
         return buffer.bytes;
     }
     // Added the firstMap so the level creation isn't local anymore
+    /**
+     * @param isVersus Gamemode of the current session
+     * @param firstMap Map of the first level
+     * @param players All the players currently in the session
+     * @return byte[] list in the packet id 1 format
+     */
     public static byte[] toLobbyEssentials(boolean isVersus, char[][] firstMap, String... players){
         ByteBuffer buffer = new ByteBuffer(1024);
         buffer.writeInt(1);
@@ -74,6 +88,10 @@ public class TranslateToBytes{
 
         return buffer.bytes;
     }
+    /**
+     * @param maps All the maps to use from WorldFile.txt
+     * @return byte[] list in the packet id 11 format
+     */
     public static byte[] toMapsPacket(ArrayList<char[][]> maps){
         ByteBuffer buffer = new ByteBuffer(1024);
         
@@ -99,25 +117,11 @@ public class TranslateToBytes{
         return buffer.getBytesList();
     }
 
-    public static byte[] toLobbyChatMessages(ArrayList<String> usernameList, ArrayList<String> messageList){
-        ByteBuffer buffer = new ByteBuffer(1024);
-        buffer.writeInt(4);
-        buffer.writeInt(usernameList.size());
-
-        int sizeOfUsername;
-        int sizeOfMessage;
-        for (int i = 0; i < usernameList.size(); i++) {
-            sizeOfUsername = usernameList.get(i).length();
-            buffer.writeInt(sizeOfUsername);
-            buffer.writeString(usernameList.get(i));
-
-            sizeOfMessage = messageList.get(i).length();
-            buffer.writeInt(sizeOfMessage);
-            buffer.writeString(messageList.get(i));
-        }
-
-        return buffer.bytes;
-    }
+    /**
+     * @param username Username of the player
+     * @param message Message of the player
+     * @return byte[] list in the packet id 5 format
+     */
     public static byte[] toLobbyChatMessage(String username, String message){
         ByteBuffer buffer = new ByteBuffer(1024);
         buffer.writeInt(5);
@@ -131,6 +135,11 @@ public class TranslateToBytes{
         return buffer.bytes;
     }
     // textureId: 0 = idle / 1 = moving left / 2 = moving right
+    /**
+     * @param player The player that is moving
+     * @param textureId 0 = idle / 1 = moving left / 2 = moving right
+     * @return byte[] list in the packet id 7 format
+     */
     public static byte[] toPlayerMovement(Player player, int textureId){
         ByteBuffer buffer = new ByteBuffer(1024);
 
@@ -145,6 +154,12 @@ public class TranslateToBytes{
 
         return buffer.getBytesList();
     }
+    /**
+     * @param collectibleInformations Need to contain index 1 : the collectible, index 2: y index of the item based on the world, index 3 : x index of the item based on the world
+     * @param playerId The id of the player
+     * @param gameModeId 0 = Versus / 1 = Coop
+     * @return byte[] list in the packet id 8 format
+     */
     public static byte[] toPlayerScoreAdd(List<Object> collectibleInformations,int playerId,int gameModeId){
         ByteBuffer buffer = new ByteBuffer(1024);
 
@@ -162,6 +177,11 @@ public class TranslateToBytes{
         return buffer.getBytesList();
     }
 
+    /**
+     * @param x Index x of the block based on the world matrix
+     * @param y Index y of the block based on the world matrix
+     * @return byte[] list in the packet id 11 format
+     */
     public static byte[] toBreakBlock(int x,int y){
         ByteBuffer buffer = new ByteBuffer(1024);
         buffer.resetCursor();
@@ -172,6 +192,14 @@ public class TranslateToBytes{
         buffer.writeInt(y);
         return buffer.getBytesList();
     }
+    /**
+     * @param aiId Id of the ai
+     * @param nearestPlayerId Id of the nearest player
+     * @param animationId 0 = idle / 1 = moving left / 2 = moving right
+     * @param positionX Position x of the ai
+     * @param positionY Position y of the ai
+     * @return byte[] list in the packet id 12 format
+     */
     public static byte[] toAIMovement(int aiId,int nearestPlayerId,int animationId,int positionX,int positionY){
         ByteBuffer buffer = new ByteBuffer(1024);
         buffer.resetCursor();
