@@ -153,7 +153,10 @@ public class GameRuleScreen implements Screen{
 
         this.backgroundTexture = new Texture("menuBackground.png");
     }
-
+    /**
+     * 
+     * @return ServerSocket that was free for the server
+     */
     private ServerSocket searchUsablePort(){
         int currentPortToTry = 5000;
 
@@ -171,7 +174,6 @@ public class GameRuleScreen implements Screen{
         // If the 100 first ports are used, there IS A BIG problem
         return null;
     }
-
     private boolean isUsernameValid(){
         String usernameFromTextField = this.usernameTextField.getText();
         if(usernameFromTextField.isEmpty()){
@@ -187,7 +189,6 @@ public class GameRuleScreen implements Screen{
     private void updateErrorLabel(String errorMesssage){
         this.errorLabel.setText(errorMesssage);
     }
-
     public void setMovingBackgroundInfo(int currentXOffset, boolean isMovingLeft){
         this.currentBackgroundXOffset = currentXOffset;
         this.isBackgroundMovingLeft = isMovingLeft;

@@ -133,7 +133,7 @@ public class JoinClientScreen implements Screen{
         Thread tryToConnectThread = new Thread(connectToServerRunnable);
         tryToConnectThread.start();
     }
-
+    
     private final Runnable connectToServerRunnable = () ->{
         // Added that in a thread so the game dont freeze when the user try to connect to a server
         String ipFromTextField = this.ipAdresseTextField.getText();

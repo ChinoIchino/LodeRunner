@@ -24,7 +24,12 @@ public class GameEndScreen implements Screen{
 
     private int score;
 
-    
+    /**
+     * 
+     * @param gdxMain
+     * @param isFinish need it to know if it's game over
+     * @param score is the final score
+     */
     public GameEndScreen(GDXMain gdxMain,boolean isFinish,int score){
         this.main = gdxMain;
         this.isFinish = isFinish;
@@ -68,6 +73,9 @@ public class GameEndScreen implements Screen{
 
     }
 
+    /**
+     * To comeback to menu
+     */
     public void handleClientInput(){
         if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)){
             this.main.setScreen(main.getMenuScreen());

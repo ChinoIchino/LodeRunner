@@ -162,13 +162,20 @@ public class LobbyScreen implements Screen{
 
         this.backgroundTexture = new Texture("menuBackground.png");
     }
-
+    /**
+     * 
+     * @param username of the player to add
+     */
     public void addANewPlayerToList(String username){
         Label nameLabel = new Label(username, skin);
         Gdx.app.postRunnable(() ->{
             this.tablePlayersContent.add(nameLabel).expandX().fillX().row();
         });
     }
+    /**
+     * 
+     * @param username of the player to remove
+     */
     public void removeAPlayerFromTheList(String username){
         Label currentLabel;
 
@@ -184,14 +191,17 @@ public class LobbyScreen implements Screen{
         }
     }
     private void resetPlayerList(){
-        System.out.println("resetPlayerList called!");
         this.tablePlayersContent.clear();
 
         Label playersLabel = new Label("Players:", skin);
         this.tablePlayersContent.add(playersLabel).expandX().fillX().row();
     }
 
-    // This function is only called via the server
+    /**
+     * This function is only called via the server
+     * @param username of the player that sent a message
+     * @param message content of the message to send
+     */
     public void logMessageSend(String username, String message){
         if(username.isEmpty() || message.isEmpty()){
             return;
@@ -210,6 +220,10 @@ public class LobbyScreen implements Screen{
             this.chatScrollPane.setScrollPercentY(this.chatScrollPane.getMaxY());
         });
     }
+    /**
+     * 
+     * @param message what message to send to the server
+     */
     private void sendMessageToChat(String message){
         try{
             this.clientSide.writeStream.write(TranslateToBytes.toLobbyChatMessage(this.username, message));
@@ -223,6 +237,14 @@ public class LobbyScreen implements Screen{
         this.currentBackgroundXOffset = currentXOffset;
         this.isBackgroundMovingLeft = isMovingLeft;
     }
+    /**
+     * 
+     * @param server Current server of the lobby
+     * @param hostClient The CLientSide of the host
+     * @param ip of the server/lobby
+     * @param port of the server/lobby
+     * @param username username of the host player
+     */
     protected void setLobbyInformationForHost(Server server, ClientSide hostClient, String ip, String port, String username){
         this.hostedServer = server;
         this.clientSide = hostClient;
@@ -258,6 +280,13 @@ public class LobbyScreen implements Screen{
             });
         });
     }
+    /**
+     * 
+     * @param clientSide clientside that connected
+     * @param username client username
+     * @param ip of the server/lobby
+     * @param port of the server/lobby
+     */
     protected void setLobbyInformationForClient(ClientSide clientSide, String username ,String ip, String port){
         this.clientSide = clientSide;
         this.username = username;
@@ -268,7 +297,11 @@ public class LobbyScreen implements Screen{
             this.portLabel.setText("Port: " + port);
         });
     }
-
+    /**
+     * 
+     * @param isVersus gamemode boolean
+     * @param firstMap char matrix of the first map
+     */
     public void setGameModeAndFirstMap(boolean isVersus, char[][] firstMap){
         if(isVersus){
             Gdx.app.postRunnable(() ->{
@@ -304,14 +337,12 @@ public class LobbyScreen implements Screen{
 
     public void sendToGameInterface(){
         if(this.gameModeLabel.getText().substring(6).equals("Coop")){
-            System.out.println("sendToGameInterface gameCoopScreen: " + this.main.getGameCoopScreen());
             this.main.getGameCoopScreen().setClient(this.clientSide);
             Gdx.app.postRunnable(() ->{
                 this.main.getGameCoopScreen().initAmmountOfPlayers(this.tablePlayersContent);
                 this.main.setScreen(this.main.getGameCoopScreen());
             });
         }else{
-            System.out.println("sendToGameInterface gameVersusScreen: " + this.main.getGameVersusScreen());
             this.main.getGameVersusScreen().setClient(this.clientSide);
             Gdx.app.postRunnable(() ->{
                 this.main.getGameVersusScreen().initAmmountOfPlayers(this.tablePlayersContent);
@@ -383,7 +414,9 @@ public class LobbyScreen implements Screen{
 
         this.resetPlayerList();
     }
-
+    /**
+     * must be used at the end of a game to not have a server running in background
+     */
     public void closeServer(){
         if(this.hostedServer != null){
             this.hostedServer.closeServerProperly();
@@ -391,10 +424,10 @@ public class LobbyScreen implements Screen{
             this.clientSide.closeEverything();
         }
     }
-    // Used only when the host of the lobby quit, so the users must be kicked from the interface
-    public void forceDispose(){
-        System.out.println("\nABOUT TO FORCE DISPOSE");
-        
+    /** 
+     * Used only when the host of the lobby quit, so the users must be kicked from the interface
+     */
+    public void forceDispose(){  
         Gdx.app.postRunnable(() ->{
             dispose();
             this.main.setScreen(this.main.getMultiplayerScreen());

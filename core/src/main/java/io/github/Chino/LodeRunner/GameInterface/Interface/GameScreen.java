@@ -109,7 +109,6 @@ public class GameScreen implements Screen{
         handlePlayerInput();
         if (!player.isOnALadder || !player.wasOnALadder) player.climbing = false;
         if(!this.isGameOver && worldManager.entityFellOutTheWorld(this.player)){
-            System.out.println("Player hs been killed");
             this.isGameOver = true;
         }
         if(!this.player.isOnALadder || !player.wasOnALadder) handleEntityGravity(this.player);
@@ -128,7 +127,6 @@ public class GameScreen implements Screen{
             ai.updateMovement(delta);
             handleEntityGravity(ai);
             if(!this.isGameOver && ai.killPlayer()){
-                System.out.println("Player has been killed");
                 this.isGameOver = true;
             }
             handleAIOverlaps(ai);
@@ -158,13 +156,16 @@ public class GameScreen implements Screen{
         this.player.wasOnALadder = this.player.isOnALadder;
 
         if(isGameOver){
-            System.out.println("switching screen");
             this.isGameOver = false;
             main.setNewGameEndScreen(false,Integer.valueOf(this.scoreLabel.getText().substring(7)));
             main.setScreen(main.getGameEndScreen());
             this.dispose();
         }
     }
+    /**
+     * 
+     * @param ai to check about overlaps
+     */
     private void handleAIOverlaps(AI ai){
         if(!worldManager.entityDoesntOverlapWorld(ai.getHitbox())){
             ai.snapToBlock(new Rectangle(ai.getPosX(),ai.getPosY(),0,0));
@@ -204,7 +205,6 @@ public class GameScreen implements Screen{
             Rectangle collidingLadder = this.worldManager.entityOverlapWithALadder(this.player.getHitbox());
 
             boolean canClimb = collidingLadder != null || this.worldManager.isLadderUnderEntity(player);
-            System.out.println(canClimb);
             if(canClimb){
                 // Snap player to ladder
                 if(collidingLadder!=null)player.snapToLadder(collidingLadder);
@@ -260,6 +260,10 @@ public class GameScreen implements Screen{
             }
         }
     }
+    /**
+     * 
+     * @param entity entity to handle gravity
+     */
     private void handleEntityGravity(Entity entity){
         // System.out.println("Applying gravity");
         if(entity.isOnALadder){
@@ -277,6 +281,9 @@ public class GameScreen implements Screen{
             entity.fallSpeed = 0;
         }
     }
+    /**
+     * Update score and map if the player pick up a gem
+     */
     private void handlePlayerCollection(){
         List<Object> possibleCollectible = this.worldManager.playerOverlapWithCollectible(this.player);
         if(possibleCollectible != null){
@@ -306,7 +313,6 @@ public class GameScreen implements Screen{
         } catch (Exception e) {
             // System.out.println("\nERROR GameInterface/GameScreen.java: Constructor catched IOException will initializing the world");
             Gdx.app.postRunnable(() ->{
-                System.out.println("switching screen");
                 main.setNewGameEndScreen(true,Integer.valueOf(this.scoreLabel.getText().substring(7)));
                 main.setScreen(main.getGameEndScreen());
                 this.dispose();

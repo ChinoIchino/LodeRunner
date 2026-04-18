@@ -133,7 +133,6 @@ public class GameCoopScreen implements Screen{
 
                 // Send to server the movement based on the input and gravity in the current frame
                 if(!this.isGameOver && worldManager.entityFellOutTheWorld(this.player)){
-                    System.out.println("Player hs been killed");
                     this.isGameOver = true;
                     ByteBuffer killBuffer = new ByteBuffer(8);
                     killBuffer.writeInt(13);
@@ -195,7 +194,6 @@ public class GameCoopScreen implements Screen{
                     int animationId = ai.updateMovement(delta);
                     handleEntityGravity(ai);
                     if(!this.isGameOver && ai.killPlayer()){
-                        System.out.println("Player has been killed");
                         ByteBuffer killBuffer = new ByteBuffer(8);
                         killBuffer.writeInt(13);
                         this.client.writeStream.write(killBuffer.getBytesList());
@@ -239,7 +237,10 @@ public class GameCoopScreen implements Screen{
 
     }
 
-
+    /**
+     * 
+     * @param ai to check about overlaps
+     */
     private void handleAIOverlaps(AI ai){
         if(!worldManager.entityDoesntOverlapWorld(ai.getHitbox())){
             ai.snapToBlock(new Rectangle(ai.getPosX(),ai.getPosY(),0,0));
@@ -247,6 +248,14 @@ public class GameCoopScreen implements Screen{
         
     }
 
+    /**
+     * 
+     * @param aiId AI id to change inormation about an AI
+     * @param nearestPlayerId to check if it correspond to ai's nearest player
+     * @param animationId for the switch who decide the orientation of ai in interface
+     * @param positionX ai new position x
+     * @param positionY ai new position y
+     */
     public void setAIInfoForGuest(int aiId,int nearestPlayerId,int animationId,int positionX,int positionY){
         AI currentAIToModifiy = this.AIInformations.get(aiId);
         if(!(nearestPlayerId == currentAIToModifiy.getNearestPlayer().getId())){
@@ -262,6 +271,10 @@ public class GameCoopScreen implements Screen{
         currentAIToModifiy.setPosition(positionX, positionY);
     }
 
+    /**
+     * 
+     * @param ai to aplly a new nearest player
+     */
     public void applyTheNearestPlayerOfAnAI(AI ai){
         int distMax = 10000;
         for(int i = 0;i<this.playersInformations.size();i++){
@@ -270,7 +283,11 @@ public class GameCoopScreen implements Screen{
             }
         }
     }
-
+    /**
+     * 
+     * @return information about the player sprite orientation
+     * @throws IOException to avoid too much try catch section
+     */
     private int handlePlayerInput() throws IOException{
         int currentAnimationId = 0;
         if (Gdx.input.isKeyPressed(Input.Keys.A)){
@@ -304,7 +321,6 @@ public class GameCoopScreen implements Screen{
                 Rectangle collidingLadder = this.worldManager.entityOverlapWithALadder(this.player.getHitbox());
 
                 boolean canClimb = collidingLadder != null || this.worldManager.isLadderUnderEntity(player);
-                System.out.println(canClimb);
                 if(canClimb){
                     // Snap player to ladder
                     if(collidingLadder!=null)player.snapToLadder(collidingLadder);
@@ -397,6 +413,10 @@ public class GameCoopScreen implements Screen{
         }
         return currentAnimationId;
     }
+    /**
+     * 
+     * @param entity entity to handle gravity
+     */
     private void handleEntityGravity(Entity entity){
         if(entity.isOnALadder){
             entity.fallSpeed = 0;
@@ -413,6 +433,10 @@ public class GameCoopScreen implements Screen{
             entity.fallSpeed = 0;
         }
     }
+    /**
+     * Update score and map if the player pick up a gem
+     * @throws IOException to avoid useless trycatch
+     */
     private void handlePlayerCollection() throws IOException{
         // Return collectible, y index position on world and x index position on world
         List<Object> possibleCollectibleList = this.worldManager.playerOverlapWithCollectible(this.player);
@@ -430,6 +454,10 @@ public class GameCoopScreen implements Screen{
         }
     }
     // Used to get packets of all players movements
+    /**
+     * 
+     * @param packet for others player's interface information
+     */
     public synchronized void handlePlayersDisplay(List<Object> packet){
         int playerId = (int) packet.get(0);
         
@@ -439,10 +467,13 @@ public class GameCoopScreen implements Screen{
         this.playersInformations.get(playerId)[2] = (int) packet.get(2);
         // Adding the y position from the packet
         this.playersInformations.get(playerId)[3] = (int) packet.get(3);
-         
-        // System.out.println("ID: " + packet.get(0) + " // Position: " + packet.get(2) + " x " + packet.get(3));    
+           
     }
 
+    /**
+     * 
+     * @param map matrix of char that represent the map
+     */
     public void sendToNextLevel(char[][] map){
         if(map.length == 0){
             return;
@@ -470,20 +501,21 @@ public class GameCoopScreen implements Screen{
 
     //TODO: update leaderBoard in these two func
     public void sendToGameOverScreen(){
-        System.out.println("switching screen");
         this.isGameOver = false;
         main.setNewGameEndScreen(false,Integer.valueOf(this.scoreLabel.getText().substring(7)));
         main.setScreen(main.getGameEndScreen());
-        this.dispose();
     }
     public void sendToGameEndScreen(){
-        System.out.println("switching screen");
         this.isGameOver = true;
         main.setNewGameEndScreen(true,Integer.valueOf(this.scoreLabel.getText().substring(7)));
         main.setScreen(main.getGameEndScreen());
-        this.dispose();
     }
-
+    /**
+     * 
+     * @param newScore is the new score to add at the current
+     * @param yIndexOfItem position y of a collectible based on world matrix
+     * @param xIndexOfItem position x of a collectible based on world matrix
+     */
     public void updateScoreLabel(int newScore, int yIndexOfItem, int xIndexOfItem){
         this.worldManager.setBlockAt(xIndexOfItem, yIndexOfItem, null);
         this.worldManager.reduceAmountOfCollectible();
@@ -521,7 +553,6 @@ public class GameCoopScreen implements Screen{
         Gdx.graphics.setForegroundFPS(15);
         Gdx.input.setInputProcessor(this.uiStage);
     }
-
     private void initScoreLabel(){
         this.uiStage = new Stage(new ScreenViewport());
         Label label = new Label(
@@ -535,6 +566,10 @@ public class GameCoopScreen implements Screen{
 
         this.uiStage.addActor(label);
     }
+    /**
+     * 
+     * @param tableOfPlayerList from LobbyScreen
+     */
     protected void initAmmountOfPlayers(Table tableOfPlayerList){
         int bottomYPosition = this.worldManager.getBottomYPosition() + 32;
 
@@ -570,9 +605,7 @@ public class GameCoopScreen implements Screen{
     public void dispose(){
         this.batch.dispose();
         this.uiStage.dispose();
-        
         this.font.dispose();
-
 
     }
     
