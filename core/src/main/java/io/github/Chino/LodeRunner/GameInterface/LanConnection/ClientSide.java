@@ -73,7 +73,6 @@ public class ClientSide extends Thread{
 
                     decodedPacket = packetDecoder.decodeStream(buffer);
                     buffer.clear();
-                    if(!(decodedPacket instanceof PacketForPlayerMovement))System.out.println("Client got the packet: " + decodedPacket.toString());
                             
                     //Getting all the attributs from the packet into a List
                     packetItems = decodedPacket.unpackPacket();
@@ -93,7 +92,6 @@ public class ClientSide extends Thread{
                             // Every last elements in the list are players from the player list
                             for (int i = 0; i < packetItems.size() - 2; i++) {
                                 final String currentPlayerToAdd = (String) packetItems.get(i + 2);
-                                System.out.println("Got the name: " + currentPlayerToAdd);
                                 Gdx.app.postRunnable(() -> {
                                     this.main.getLobbyScreen().addANewPlayerToList((String) currentPlayerToAdd);
                                 });

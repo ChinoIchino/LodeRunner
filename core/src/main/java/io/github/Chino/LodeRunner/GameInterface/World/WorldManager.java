@@ -230,7 +230,6 @@ public class WorldManager {
 
         possibleLevels.add(yPossibleLevels);
         possibleLevels.add(xPossibleLevels);
-        System.out.println(possibleLevels);
         return possibleLevels;
     }
 
@@ -417,11 +416,10 @@ public class WorldManager {
         int blockXIndex = ((int) x / 32)+this.blockMatrix[0].length/2;
         int blockYIndex = (((int) y / 32)+this.blockMatrix.length/2)-1;
         if(blockXIndex >=0 && blockYIndex >= 0){
-            System.out.println("x : " +blockXIndex + "   y : " + blockYIndex);
             if(this.blockMatrix[blockYIndex][blockXIndex] != null && this.blockMatrix[blockYIndex][blockXIndex] instanceof Block && this.blockMatrix[blockYIndex][blockXIndex].isSolid()){
                 this.breakBlockManager.breakBlock(blockXIndex, blockYIndex);
-            }else System.out.println("Breaking that is impossible");
-        }else System.out.println("Breaking that is impossible");
+            }
+        }
     }
     public void setBlockTextureAt(int x,int y,Texture texture){
         this.blockMatrix[y][x].setTexture(texture);

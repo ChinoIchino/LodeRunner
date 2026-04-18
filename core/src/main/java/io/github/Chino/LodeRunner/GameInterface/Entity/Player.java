@@ -60,6 +60,10 @@ public class Player extends Entity{
         this.camera = new OrthographicCamera(480,320);
     }
 
+    /**
+     * 
+     * @param toAdd number to add at the player's score
+     */
     public void addToScore(int toAdd){
         this.score += toAdd;
     }
@@ -73,21 +77,38 @@ public class Player extends Entity{
     public void spriteChangeToIdle(){
         this.currentPlayerSprite = Player.playerSpriteIdle;
     }
-
+    /**
+     * 
+     * @return x position of entity
+     */
     public int getPosX(){
         return this.posX;
     }
+    /**
+     * 
+     * @return y position of entity
+     */
     public int getPosY(){
         return this.posY;
     }
-    
+    /**
+     * 
+     * @return hitbox of entity
+     */
     public Rectangle getHitbox(){
         return this.hitbox;
     }
+    /**
+     * 
+     * @return the ground detectable hitbox
+     */
     public Rectangle getIsOnGroundHitbox(){
         return this.isOnGroundHitbox;
     }
-
+    /**
+     * 
+     * @return get player score
+     */
     public int getScore(){
         return this.score;
     }
@@ -105,16 +126,27 @@ public class Player extends Entity{
         this.camera.position.x = (int) this.hitbox.x + 10;
         this.camera.position.y = (int) this.hitbox.y + 5;
     }
-
+    /**
+     * 
+     * @param xMovement is the distance to moove the player in x axis
+     */
     public void physicalBodyMoveX(int xMovement){
         this.hitbox.x += xMovement;
         this.isOnGroundHitbox.x += xMovement;
     }
+    /**
+     * 
+     * @param yMovement is the distance to moove the player in y axis
+     */
     public void physicalBodyMoveY(int yMovement){
         this.hitbox.y += yMovement;
         this.isOnGroundHitbox.y += yMovement;
     }
-
+    /**
+     * 
+     * @param xCoord x coord to teleport player
+     * @param yCoord y coord to teleport player
+     */
     public void moveToCoordinate(int xCoord, int yCoord){
         this.hitbox.x = xCoord;
         this.hitbox.y = yCoord;
@@ -124,11 +156,19 @@ public class Player extends Entity{
 
         syncAll();
     }
-
+    /**
+     * 
+     * @param ladderHitbox hitbox to snap the entity
+     */
     public void snapToLadder(Rectangle ladderHitbox){
         this.hitbox.x = (int) ladderHitbox.x;
         this.isOnGroundHitbox.x = this.hitbox.x;
     }
+    /**
+     * 
+     * @param x coord to teleport player
+     * @param y coord to teleport player
+     */
     public void setPosition(int x,int y){
         this.hitbox.x = x;
         this.hitbox.y = y;

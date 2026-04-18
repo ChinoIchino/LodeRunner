@@ -174,6 +174,11 @@ public class GameVersusScreen implements Screen{
 
     }
 
+    /**
+     * 
+     * @return information about the player sprite orientation
+     * @throws IOException to avoid too much try catch section
+     */
     private int handlePlayerInput() throws IOException{
         int currentAnimationId = 0;
         if (Gdx.input.isKeyPressed(Input.Keys.A)){
@@ -208,7 +213,6 @@ public class GameVersusScreen implements Screen{
                 Rectangle collidingLadder = this.worldManager.entityOverlapWithALadder(this.player.getHitbox());
 
                 boolean canClimb = collidingLadder != null || this.worldManager.isLadderUnderEntity(player);
-                System.out.println(canClimb);
                 if(canClimb){
                     // Snap player to ladder
                     if(collidingLadder!=null)player.snapToLadder(collidingLadder);
@@ -302,6 +306,10 @@ public class GameVersusScreen implements Screen{
         return currentAnimationId;
     }
 
+    /**
+     * 
+     * @param entity entity to handle gravity
+     */
     private void handleEntityGravity(Entity entity){
         if(entity.isOnALadder){
             entity.fallSpeed = 0;
@@ -319,6 +327,10 @@ public class GameVersusScreen implements Screen{
         }
     }
 
+    /**
+     * Update score and map if the player pick up a gem
+     * @throws IOException to avoid useless trycatch
+     */
     private void handlePlayerCollection() throws IOException{
         // Return collectible, y index position on world and x index position on world
         List<Object> possibleCollectibleList = this.worldManager.playerOverlapWithCollectible(this.player);
@@ -336,6 +348,10 @@ public class GameVersusScreen implements Screen{
         }
     }
     // Used to get packets of all players movements
+    /**
+     * 
+     * @param packet for others player's interface information
+     */
     public synchronized void handlePlayersDisplay(List<Object> packet){
         int playerId = (int) packet.get(0);
         
@@ -349,6 +365,10 @@ public class GameVersusScreen implements Screen{
         // System.out.println("ID: " + packet.get(0) + " // Position: " + packet.get(2) + " x " + packet.get(3));    
     }
 
+    /**
+     * 
+     * @param map matrix of char that represent the map
+     */
     public void sendToNextLevel(char[][] map){
         if(map.length == 0){
             return;
@@ -366,13 +386,18 @@ public class GameVersusScreen implements Screen{
         }
     }
         public void sendToGameEndScreen(){
-        System.out.println("switching screen");
         this.isGameOver = true;
         main.setNewGameEndScreen(true,Integer.valueOf(this.scoreLabels[this.player.getId()].getText().substring(this.scoreLabels[this.player.getId()].getText().indexOf(": ")+2)));
         main.setScreen(main.getGameEndScreen());
         this.dispose();
     }
 
+    /**
+     * 
+     * @param newScore is the new score to add at the current
+     * @param yIndexOfItem position y of a collectible based on world matrix
+     * @param xIndexOfItem position x of a collectible based on world matrix
+     */
     public void updateScoreLabel(int playerId,int newScore, int yIndexOfItem, int xIndexOfItem){
         this.worldManager.setBlockAt(xIndexOfItem, yIndexOfItem, null);
         this.worldManager.reduceAmountOfCollectible();
@@ -431,6 +456,10 @@ public class GameVersusScreen implements Screen{
         
 
     }
+    /**
+     * 
+     * @param tableOfPlayerList from LobbyScreen
+     */
     protected void initAmmountOfPlayers(Table tableOfPlayerList){
         int bottomYPosition = this.worldManager.getBottomYPosition() + 32;
 

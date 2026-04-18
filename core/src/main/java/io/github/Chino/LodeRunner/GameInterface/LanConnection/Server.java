@@ -49,7 +49,7 @@ public class Server extends Thread{
                 threadForClientHandler.start();
 
             }catch(IOException e){
-                System.out.println("\nERROR Server.java: catched IOException in startServer");
+                System.out.println("\nWARN Server.java: server socket was closed");
                 if(!isRunning){
                     break;
                 }
@@ -190,9 +190,6 @@ public class Server extends Thread{
 
             this.maps.add(currentMap);
         }
-
-        System.out.println("The server saved all the maps from the host side!");
-        // this.debugPrintLoadedMaps();
     }
     private boolean loadNextMapInBuffer(ByteBuffer buffer){
         if(this.maps.size() <= this.currentLevel){
