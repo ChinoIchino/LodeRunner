@@ -22,11 +22,13 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 
+import io.github.Chino.LodeRunner.GameInterface.Entity.AI;
+import io.github.Chino.LodeRunner.GameInterface.Entity.Entity;
+import io.github.Chino.LodeRunner.GameInterface.Entity.Player;
 import io.github.Chino.LodeRunner.GameInterface.GDXMain;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.ClientSide;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.TranslateToBytes;
-import io.github.Chino.LodeRunner.GameInterface.Entity.*;
 import io.github.Chino.LodeRunner.GameInterface.World.WorldCreator;
 import io.github.Chino.LodeRunner.GameInterface.World.WorldManager;
 
@@ -216,16 +218,11 @@ public class GameCoopScreen implements Screen{
         }
         batch.end();
         for( AI ai : this.aiList){
-            ai.displayHitboxes();
-            ai.drawPath();
             ai.syncAll();
         }
 
         this.player.camera.update();
         this.player.render(batch);
-                
-        this.worldManager.displayHitboxes();
-        this.player.displayHitboxes();
         
         this.stretchViewport.apply();
         this.batch.setProjectionMatrix(this.player.camera.combined);

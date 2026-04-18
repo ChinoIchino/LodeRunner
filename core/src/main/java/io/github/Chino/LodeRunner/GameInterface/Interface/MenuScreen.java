@@ -1,6 +1,7 @@
 package io.github.Chino.LodeRunner.GameInterface.Interface;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
@@ -21,12 +22,12 @@ public class MenuScreen implements Screen {
 
     private final int SCREEN_WIDTH = 854;
     private final int SCREEN_HEIGH = 480;
-
+    
     // UI part:
     private SpriteBatch batch;
     private Stage uiStage;
     private final ScreenViewport screenViewport = new ScreenViewport();
-
+    
     private Texture backgroundTexture;
     private int currentBackgroundXOffset = 0;
     private boolean isBackgroundMovingLeft = false;
@@ -36,6 +37,7 @@ public class MenuScreen implements Screen {
     private TextButton playButton;
     private TextButton multiplayerButton;
     private TextButton leaderboardButton;
+    private TextButton introButton;
 
     public MenuScreen(GDXMain main) {
         this.main = main;
@@ -44,7 +46,7 @@ public class MenuScreen implements Screen {
 
         initButtons();
         initBackground();
-
+        
     }
 
     @Override
@@ -61,14 +63,17 @@ public class MenuScreen implements Screen {
         this.playButton = new TextButton("Play", skin);
         this.multiplayerButton = new TextButton("Multiplayer", skin);
         this.leaderboardButton = new TextButton("Leaderboard", skin);
-
+        this.introButton = new TextButton("Introduction", skin);
+        this.introButton.setPosition(Gdx.graphics.getWidth() + 10 , 0);
+        
         this.tableForButtons = new Table();
         this.tableForButtons.setFillParent(false);
         this.tableForButtons.setSize(250, 250);
         this.tableForButtons.setPosition(
-                this.screenViewport.getScreenWidth() / 2 - this.tableForButtons.getWidth() / 2,
-                this.screenViewport.getScreenHeight() / 2 - this.tableForButtons.getHeight() / 2);
-
+            this.screenViewport.getScreenWidth() / 2 - this.tableForButtons.getWidth() / 2,
+            this.screenViewport.getScreenHeight() / 2 - this.tableForButtons.getHeight() / 2
+        );
+        
         this.tableForButtons.add(this.playButton).pad(10).row();
         this.tableForButtons.add(this.multiplayerButton).pad(10).row();
         this.tableForButtons.add(this.leaderboardButton).pad(10);
@@ -76,31 +81,36 @@ public class MenuScreen implements Screen {
         // Adding the listeners to every buttons
         this.playButton.addListener(new ClickListener() {
             @Override
-            public void clicked(InputEvent e, float x, float y) {
-                main.setNewGameScreen();
+            public void clicked(InputEvent e, float x, float y){
                 main.setScreen(main.getGameScreen());
-                main.getGameScreen().initAIinWorld();
             }
         });
-        this.multiplayerButton.addListener(new ClickListener() {
+        this.introButton.addListener(new ClickListener(){
             @Override
-            public void clicked(InputEvent e, float x, float y) {
+            public void clicked(InputEvent e, float x, float y){
+                main.setScreen(main.getIntroScreen());
+            }
+        });
+        this.multiplayerButton.addListener(new ClickListener(){
+            @Override
+            public void clicked(InputEvent e, float x, float y){
                 main.getMultiplayerScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
                 main.setScreen(main.getMultiplayerScreen());
             }
         });
-        // TODO send client to leaderboard screen
-        this.leaderboardButton.addListener(new ClickListener() {
+        this.leaderboardButton.addListener(new ClickListener(){
             @Override
-            public void clicked(InputEvent e, float x, float y) {
-
+            public void clicked(InputEvent e, float x, float y){
+                main.getLeaderboardScreen().setMovingBackgroundInfo(currentBackgroundXOffset, isBackgroundMovingLeft);
+                main.setScreen(main.getLeaderboardScreen());
             }
         });
 
         this.uiStage.addActor(this.tableForButtons);
+        this.uiStage.addActor(this.introButton);
     }
 
-    private void initBackground() {
+    private void initBackground(){
         this.batch = new SpriteBatch();
 
         this.backgroundTexture = new Texture("menuBackground.png");
@@ -117,28 +127,39 @@ public class MenuScreen implements Screen {
         this.batch.draw(this.backgroundTexture, this.currentBackgroundXOffset, -200);
         this.batch.end();
 
+        handleInput();
+
         this.uiStage.act(delta);
         this.uiStage.draw();
     }
 
-    private void moveBackground() {
-        if (this.isBackgroundMovingLeft) {
+    private void handleInput(){
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT) && this.introButton.getX() > (Gdx.graphics.getWidth() - this.introButton.getWidth() - 10)){
+            this.introButton.setPosition(this.introButton.getX() - 10, 0);
+        }else{
+            if(this.introButton.getX() < Gdx.graphics.getWidth()){
+                this.introButton.setPosition(this.introButton.getX() + 0.2f, 0);
+            }
+        }     
+    }
+
+    private void moveBackground(){
+        if(this.isBackgroundMovingLeft){
             this.currentBackgroundXOffset -= 1;
-            if (this.currentBackgroundXOffset < -1100) {
+            if(this.currentBackgroundXOffset < -1100){
                 this.isBackgroundMovingLeft = false;
             }
-        } else {
+        }else{
             this.currentBackgroundXOffset += 1;
-            if (this.currentBackgroundXOffset > -200) {
+            if(this.currentBackgroundXOffset > -200){
                 this.isBackgroundMovingLeft = true;
             }
         }
     }
-
-    public void setMovingBackgroundInfo(int currentXOffset, boolean isMovingLeft) {
+    public void setMovingBackgroundInfo(int currentXOffset, boolean isMovingLeft){
         this.currentBackgroundXOffset = currentXOffset;
         this.isBackgroundMovingLeft = isMovingLeft;
-    }
+    } 
 
 
     @Override
@@ -146,13 +167,16 @@ public class MenuScreen implements Screen {
         this.uiStage.getViewport().update(width, height, true);
 
         this.tableForButtons.setPosition(
-                this.screenViewport.getScreenWidth() / 2 - this.tableForButtons.getWidth() / 2,
-                this.screenViewport.getScreenHeight() / 2 - this.tableForButtons.getHeight() / 2);
+            this.screenViewport.getScreenWidth() / 2 - this.tableForButtons.getWidth() / 2,
+            this.screenViewport.getScreenHeight() / 2 - this.tableForButtons.getHeight() / 2
+        );
+
+        this.introButton.setPosition(Gdx.graphics.getWidth() + 10, 0);
     }
 
     @Override
     public void pause() {
-        // if the game was minimized, set the fps to 10 to save user performance
+        //if the game was minimized, set the fps to 10 to save user performance
         Gdx.graphics.setForegroundFPS(10);
     }
 
@@ -170,5 +194,5 @@ public class MenuScreen implements Screen {
         this.uiStage.dispose();
         this.batch.dispose();
     }
-
+    
 }

@@ -3,8 +3,6 @@ package io.github.Chino.LodeRunner.GameInterface.Interface;
 import java.io.IOException;
 import java.util.List;
 
-import javax.management.InvalidAttributeValueException;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
@@ -18,8 +16,10 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 
+import io.github.Chino.LodeRunner.GameInterface.Entity.AI;
+import io.github.Chino.LodeRunner.GameInterface.Entity.Entity;
+import io.github.Chino.LodeRunner.GameInterface.Entity.Player;
 import io.github.Chino.LodeRunner.GameInterface.GDXMain;
-import io.github.Chino.LodeRunner.GameInterface.Entity.*;
 import io.github.Chino.LodeRunner.GameInterface.World.Collectible;
 import io.github.Chino.LodeRunner.GameInterface.World.WorldCreator;
 import io.github.Chino.LodeRunner.GameInterface.World.WorldManager;
@@ -118,9 +118,7 @@ public class GameScreen implements Screen{
         // Render player after the movement
         this.player.camera.update();
         this.player.render(batch);
-        
-        this.worldManager.displayHitboxes();
-        this.player.displayHitboxes();
+
         //render IAs
         batch.begin();
         for(AI ai : this.aiList){
@@ -137,8 +135,6 @@ public class GameScreen implements Screen{
         }  
         batch.end();
         for( AI ai : this.aiList){
-            ai.displayHitboxes();
-            ai.drawPath();
             ai.syncAll();
         }
 

@@ -2,16 +2,18 @@ package io.github.Chino.LodeRunner.GameInterface;
 
 import com.badlogic.gdx.Game;
 
-import io.github.Chino.LodeRunner.GameInterface.Interface.GameEndScreen;
+import io.github.Chino.LodeRunner.GameInterface.Entity.Player;
 import io.github.Chino.LodeRunner.GameInterface.Interface.GameCoopScreen;
+import io.github.Chino.LodeRunner.GameInterface.Interface.GameEndScreen;
 import io.github.Chino.LodeRunner.GameInterface.Interface.GameRuleScreen;
 import io.github.Chino.LodeRunner.GameInterface.Interface.GameScreen;
 import io.github.Chino.LodeRunner.GameInterface.Interface.GameVersusScreen;
 import io.github.Chino.LodeRunner.GameInterface.Interface.JoinClientScreen;
+import io.github.Chino.LodeRunner.GameInterface.Interface.LeaderboardScreen;
 import io.github.Chino.LodeRunner.GameInterface.Interface.LobbyScreen;
 import io.github.Chino.LodeRunner.GameInterface.Interface.MenuScreen;
 import io.github.Chino.LodeRunner.GameInterface.Interface.MultiplayerScreen;
-import io.github.Chino.LodeRunner.GameInterface.Entity.Player;
+import io.github.Chino.LodeRunner.GameInterface.Interface.Other.IntroCinematicScreen;
 
 public class GDXMain extends Game {
     private GameScreen gameScreen;
@@ -23,6 +25,8 @@ public class GDXMain extends Game {
     private JoinClientScreen joinClientScreen;
     private LobbyScreen lobbyScreen;
     private GameEndScreen gameEndScreen;
+    private LeaderboardScreen leaderboardScreen;
+    private IntroCinematicScreen introScreen;
 
     private Player clientPlayer;
 
@@ -41,6 +45,8 @@ public class GDXMain extends Game {
         this.gameruleScreen = new GameRuleScreen(this);
         this.joinClientScreen = new JoinClientScreen(this);
         this.lobbyScreen = new LobbyScreen(this);
+        this.introScreen = new IntroCinematicScreen(this);
+        this.leaderboardScreen = new LeaderboardScreen(this);
     }
     public void setNewGameEndScreen(boolean isFinish,int score){
         this.gameEndScreen = new GameEndScreen(this, isFinish,score);
@@ -49,13 +55,6 @@ public class GDXMain extends Game {
         this.gameScreen = new GameScreen(this);
     }
     public void setNewGameCoopScreen(){
-        // // If there is already a existing screen, recreate it
-        // if(this.getGameCoopScreen() != null){
-        //     this.getGameCoopScreen().dispose();
-        //     this.setNewGameCoopScreen();
-        // }else{
-        //     this.setNewGameCoopScreen();
-        // }
         this.gameCoopScreen = new GameCoopScreen(this);
     }
     public void setNewGameVersusScreen(){
@@ -88,6 +87,12 @@ public class GDXMain extends Game {
     }
     public GameEndScreen getGameEndScreen() {
         return gameEndScreen;
+    }
+    public IntroCinematicScreen getIntroScreen(){
+        return introScreen;
+    }
+    public LeaderboardScreen getLeaderboardScreen(){
+        return leaderboardScreen;
     }
     
     public Player getClientPlayer(){
