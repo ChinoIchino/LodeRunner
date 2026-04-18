@@ -2,7 +2,9 @@ package io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets;
 
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.ByteHandler.ByteBuffer;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.Packet;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForAIMovement;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForAddScore;
+import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForBreakingBlock;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForLobbyChat;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForLobbyEssentials;
 import io.github.Chino.LodeRunner.GameInterface.LanConnection.Packets.PacketTypes.PacketForNextLevel;
@@ -63,7 +65,14 @@ public class PacketDecoder {
                 packetToReturn = new PacketForNextLevel();
                 packetToReturn.write(bytes);
                 return packetToReturn;
-                
+            case 11:
+                packetToReturn = new PacketForBreakingBlock();
+                packetToReturn.write(bytes);
+                return packetToReturn;
+            case 12:
+                packetToReturn = new PacketForAIMovement();
+                packetToReturn.write(bytes);
+                return packetToReturn;
 
             default:
                 System.out.println(

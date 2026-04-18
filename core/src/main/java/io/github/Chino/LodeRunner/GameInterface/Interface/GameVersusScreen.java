@@ -31,7 +31,7 @@ import io.github.Chino.LodeRunner.GameInterface.World.WorldCreator;
 import io.github.Chino.LodeRunner.GameInterface.World.WorldManager;
 
 /** Manage the screen when the player is playing */
-public class GameCoopScreen implements Screen{
+public class GameVersusScreen implements Screen{
     private GDXMain main;
     /** Class that manage the WORLD_FILE
      *  and create the level based on it */
@@ -44,39 +44,30 @@ public class GameCoopScreen implements Screen{
     private final int SCREEN_WIDTH = 854;//480;
     private final int SCREEN_HEIGH = 480;//320;
 
-    private final int AI_NUMBER = 3;
-    public AI[] aiList = new AI[AI_NUMBER];
-
     private final double GRAVITY_POWER = 0.5;
     
     private ClientSide client;
     private SpriteBatch batch;
     // Used to draw font via the batch
     private BitmapFont font = new BitmapFont();
-
+    
     private Stage uiStage;
 
     private boolean isGameOver = false;
     private Player player;
     private boolean orientation = true;
 
-    private int playersLife;
-
     /** Contains: <PlayerId, Object[Username, LabelOfUsername, AnimationId, xPosition, yPosition]> */
     private HashMap<Integer, Object[]> playersInformations = new HashMap<>();
-    private HashMap<Integer, AI> AIInformations = new HashMap<>();
     // private int[] positionsOfPlayers;
-    private Label scoreLabel;
+    private Label[] scoreLabels;
 
-    public GameCoopScreen(GDXMain main) {
+    public GameVersusScreen(GDXMain main) {
         this.main = main;
 
         this.batch = new SpriteBatch();
-        initScoreLabel();
         
         this.player = this.main.getClientPlayer();
-
-        this.playersLife = this.playersInformations.size();
         
         this.stretchViewport = new StretchViewport(this.SCREEN_WIDTH, this.SCREEN_HEIGH);
         
@@ -89,19 +80,6 @@ public class GameCoopScreen implements Screen{
             System.out.println("\nERROR GameInterface/GameScreen.java: Constructor catched IOException will initializing the world");
         }
 
-    }
-
-    public void initAIinWorld(){
-        int resolutionX = (int)this.worldManager.worldResolution.x*16;
-        int resolutionY = (int)this.worldManager.worldResolution.y*16;
-        for(int i = 0 ; i< this.AI_NUMBER;i++){
-            // AI entity = new AI((int)(Math.random()*(resolutionX*2))-resolutionX, (int)(Math.random()*(resolutionY*2))-resolutionY, this.worldManager);
-            AI entity = new AI((int)(Math.random()*(resolutionX*2))-resolutionX, (int)(this.worldManager.getBottomYPosition() + 32),i,this.worldManager);
-            this.AIInformations.put(i,entity);
-            this.aiList[i] = entity; 
-            entity.setNearestPlayer(this.player);
-            handleAIOverlaps(entity);
-        }
     }
 
     public WorldManager getWorldManager(){
@@ -182,43 +160,6 @@ public class GameCoopScreen implements Screen{
         }
         this.batch.end();
 
-              //render IAs
-        batch.begin();
-
-        if(this.player.getId()==0){
-            for(AI ai : this.aiList){
-                try{
-                    applyTheNearestPlayerOfAnAI(ai);
-                    int animationId = ai.updateMovement(delta);
-                    handleEntityGravity(ai);
-                    if(!this.isGameOver && ai.killPlayer()){
-                        System.out.println("Player has been killed");
-                    }
-                    handleAIOverlaps(ai);
-                    if(worldManager.entityFellOutTheWorld(ai)){
-                        ai.setPosition(0, 0);
-                    }
-                    this.client.writeStream.write(TranslateToBytes.toAIMovement(ai.getId(), ai.getNearestPlayer().getId(), animationId, ai.getPosX(), ai.getPosY()));
-                    this.client.writeStream.flush();
-                }catch(IOException e){}
-                ai.render(batch);
-            }  
-        }else{
-            for(AI ai : this.aiList){
-                if(!this.isGameOver && ai.killPlayer()){
-                        System.out.println("Player has been killed");
-                        this.isGameOver = true;
-                    }
-                ai.render(batch);
-            }
-        }
-        batch.end();
-        for( AI ai : this.aiList){
-            ai.displayHitboxes();
-            ai.drawPath();
-            ai.syncAll();
-        }
-
         this.player.camera.update();
         this.player.render(batch);
                 
@@ -233,41 +174,6 @@ public class GameCoopScreen implements Screen{
 
         this.player.wasOnALadder = this.player.isOnALadder;
 
-    }//TODO: do the death system
-
-
-    private void handleAIOverlaps(AI ai){
-        if(!worldManager.entityDoesntOverlapWorld(ai.getHitbox())){
-            ai.snapToBlock(new Rectangle(ai.getPosX(),ai.getPosY(),0,0));
-        }
-        
-    }
-
-    //TODO: Not working but good idea i think
-    public void setAIInfoForGuest(int aiId,int nearestPlayerId,int animationId,int positionX,int positionY){
-        AI currentAIToModifiy = this.AIInformations.get(aiId);
-        if(!(nearestPlayerId == currentAIToModifiy.getNearestPlayer().getId())){
-            //TODO: put here the player with the id in parameter thanks to hashmap
-            currentAIToModifiy.setNearestPlayer(player);
-        }
-        switch(animationId){
-            case 0: currentAIToModifiy.spriteChangeToIdle(); break;
-            case 1: currentAIToModifiy.spriteChangeToMovingRight(); break;
-            case 2: currentAIToModifiy.spriteChangeToMovingLeft(); break;
-            default: break;
-        }
-
-        currentAIToModifiy.setPosition(positionX, positionY);
-    }
-
-    public void applyTheNearestPlayerOfAnAI(AI ai){
-        int distMax = 10000;
-        for(int i = 0;i<this.playersInformations.size();i++){
-            if(Math.abs(ai.getPosX()-((int)this.playersInformations.get(i)[3])) < distMax){
-                //TODO: find a way to get the player instance by is id and put it here
-                ai.setNearestPlayer(player);
-            }
-        }
     }
 
     private int handlePlayerInput() throws IOException{
@@ -276,6 +182,7 @@ public class GameCoopScreen implements Screen{
             player.spriteChangeToMovingLeft();
             player.physicalBodyMoveX(-this.player.speed);
             this.orientation = false;
+ 
 
             // -7 is a offset based on the player sprite
             if(player.getPosX() < (this.worldManager.worldResolution.x * -16 - 7) || !this.worldManager.entityDoesntOverlapWorld(this.player.getHitbox())){
@@ -289,13 +196,13 @@ public class GameCoopScreen implements Screen{
             player.physicalBodyMoveX(this.player.speed);
             this.orientation = true;
             
-
             // -13 is a offset based on the player sprite
             if(player.getPosX() > (this.worldManager.worldResolution.x * 16 - 13) || !this.worldManager.entityDoesntOverlapWorld(this.player.getHitbox())){
                 player.physicalBodyMoveX(-this.player.speed);
             }
             currentAnimationId = 2;
         }
+
         player.climbing = (Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.S));
         if(this.player.climbing){
 
@@ -396,6 +303,7 @@ public class GameCoopScreen implements Screen{
         }
         return currentAnimationId;
     }
+
     private void handleEntityGravity(Entity entity){
         if(entity.isOnALadder){
             entity.fallSpeed = 0;
@@ -412,11 +320,12 @@ public class GameCoopScreen implements Screen{
             entity.fallSpeed = 0;
         }
     }
+
     private void handlePlayerCollection() throws IOException{
         // Return collectible, y index position on world and x index position on world
         List<Object> possibleCollectibleList = this.worldManager.playerOverlapWithCollectible(this.player);
         if(possibleCollectibleList != null){
-            this.client.writeStream.write(TranslateToBytes.toPlayerScoreAdd(possibleCollectibleList,0));
+            this.client.writeStream.write(TranslateToBytes.toPlayerScoreAdd(possibleCollectibleList,this.player.getId()));
             this.client.writeStream.flush();
 
             if(!this.worldManager.isThereCollectibles()){
@@ -459,10 +368,11 @@ public class GameCoopScreen implements Screen{
         }
     }
 
-    public void updateScoreLabel(int newScore, int yIndexOfItem, int xIndexOfItem){
+    //TODO: idk why but score is the socre +++ for each player, need to fix that
+    public void updateScoreLabel(int playerId,int newScore, int yIndexOfItem, int xIndexOfItem){
         this.worldManager.setBlockAt(xIndexOfItem, yIndexOfItem, null);
 
-        this.scoreLabel.setText("Score: " + newScore);
+        this.scoreLabels[playerId].setText("Score of " +this.playersInformations.get(playerId)[0] +" : " + newScore);
     }
 
     @Override
@@ -485,20 +395,27 @@ public class GameCoopScreen implements Screen{
     public void show(){
         Gdx.graphics.setForegroundFPS(15);
         Gdx.input.setInputProcessor(this.uiStage);
+        this.scoreLabels = new Label[this.playersInformations.size()];
+        initScoreLabel();
     }
 
     private void initScoreLabel(){
         this.uiStage = new Stage(new ScreenViewport());
-        Label label = new Label(
-            "Score: 0",
-            new Label.LabelStyle(new BitmapFont(), Color.WHITE)
-        );
-        label.setSize(70, 30);
-        label.setPosition(10, Gdx.graphics.getHeight() - 30);
-        
-        this.scoreLabel = label;
+        int pading=0;
+        for(int i = 0 ; i < this.scoreLabels.length;i++){
+            Label label = new Label(
+                "Score: 0",
+                new Label.LabelStyle(new BitmapFont(), Color.WHITE)
+            );
+            label.setSize(70, 30);
+            label.setPosition(10, Gdx.graphics.getHeight() - 30 - pading);
+            this.scoreLabels[i] = label;
+            this.uiStage.addActor(label);
+            pading+=20;
 
-        this.uiStage.addActor(label);
+        }
+        
+
     }
     protected void initAmmountOfPlayers(Table tableOfPlayerList){
         int bottomYPosition = this.worldManager.getBottomYPosition() + 32;

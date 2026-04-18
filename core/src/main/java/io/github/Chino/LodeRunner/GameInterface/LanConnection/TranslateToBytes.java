@@ -145,7 +145,7 @@ public class TranslateToBytes{
 
         return buffer.getBytesList();
     }
-    public static byte[] toPlayerScoreAdd(List<Object> collectibleInformations){
+    public static byte[] toPlayerScoreAdd(List<Object> collectibleInformations,int playerId){
         ByteBuffer buffer = new ByteBuffer(1024);
 
         buffer.writeInt(8);
@@ -155,7 +155,35 @@ public class TranslateToBytes{
 
         buffer.writeInt((int) collectibleInformations.get(1));
         buffer.writeInt((int) collectibleInformations.get(2));
+        buffer.writeInt(playerId);
 
+        return buffer.getBytesList();
+    }
+
+    public static byte[] toBreakBlock(int x,int y){
+        ByteBuffer buffer = new ByteBuffer(1024);
+        buffer.resetCursor();
+
+        buffer.writeInt(11);
+
+        buffer.writeInt(x);
+        buffer.writeInt(y);
+        return buffer.getBytesList();
+    }
+    public static byte[] toAIMovement(int aiId,int nearestPlayerId,int animationId,int positionX,int positionY){
+        ByteBuffer buffer = new ByteBuffer(1024);
+        buffer.resetCursor();
+
+        buffer.writeInt(12);
+        
+        buffer.writeInt(aiId);
+        buffer.writeInt(nearestPlayerId);
+        
+        
+        buffer.writeInt(animationId);
+        
+        buffer.writeInt(positionX);
+        buffer.writeInt(positionY);
         return buffer.getBytesList();
     }
 }

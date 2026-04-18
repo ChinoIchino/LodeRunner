@@ -9,7 +9,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import io.github.Chino.LodeRunner.GameInterface.GDXMain;
 
-public class GameOverScreen implements Screen{
+public class GameEndScreen implements Screen{
 
     private GDXMain main;
     
@@ -18,10 +18,13 @@ public class GameOverScreen implements Screen{
     private BitmapFont bitmapFont;
     
     private Texture backgroundTexture;
+
+    private boolean isFinish;
     
-    public GameOverScreen(GDXMain gdxMain){
+    public GameEndScreen(GDXMain gdxMain,boolean isFinish){
         this.main = gdxMain;
         this.bitmapFont = new BitmapFont();
+        this.isFinish = isFinish;
     }
 
     @Override
@@ -42,10 +45,15 @@ public class GameOverScreen implements Screen{
         // Brown = 150, 89, 39
         Gdx.gl.glClearColor(150 / 255f, 89 / 255f, 39 / 255f, 1f);
 
+        //TODO: print score and rework the font placement + background full black
         this.batch.begin();
         this.batch.draw(this.backgroundTexture,0,0);
         this.bitmapFont.getData().setScale(3, 3);
-        this.bitmapFont.draw(batch, "GAME OVER !", 100,300);
+        if(isFinish){
+            this.bitmapFont.draw(batch, "GAME IS FINISH !", 100,300); 
+        }else{
+            this.bitmapFont.draw(batch, "GAME OVER !", 100,300); 
+        }
         this.bitmapFont.getData().setScale(2, 2);
         this.bitmapFont.draw(batch, "Press ENTER to return to Menu", 100, 200);
         this.batch.end();

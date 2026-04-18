@@ -9,14 +9,22 @@ public class PacketForAddScore extends Packet{
     private int valueToAdd;
     private int yIndex;
     private int xIndex;
+    private int playerId;
 
+    public PacketForAddScore(int valueToAdd, int yIndex, int xIndex,int playerId) {
+        this.valueToAdd = valueToAdd;
+        this.yIndex = yIndex;
+        this.xIndex = xIndex;
+        this.playerId = playerId;
+    }
     public PacketForAddScore(int valueToAdd, int yIndex, int xIndex) {
         this.valueToAdd = valueToAdd;
         this.yIndex = yIndex;
         this.xIndex = xIndex;
+        this.playerId = 0;
     }
     public PacketForAddScore() {
-        this(0, -1, -1);
+        this(0, -1, -1,0);
     }
 
 
@@ -30,6 +38,7 @@ public class PacketForAddScore extends Packet{
 
         inPacket.writeInt(this.yIndex);
         inPacket.writeInt(this.xIndex);
+        inPacket.writeInt(this.playerId);
     }
 
     @Override
@@ -42,6 +51,7 @@ public class PacketForAddScore extends Packet{
 
         this.yIndex = outPacket.readInt();
         this.xIndex = outPacket.readInt();
+        this.playerId = outPacket.readInt();
     }
 
     @Override
@@ -56,6 +66,7 @@ public class PacketForAddScore extends Packet{
         list.add(this.valueToAdd);
         list.add(this.yIndex);
         list.add(this.xIndex);
+        list.add(this.playerId);
 
         return list;
     }

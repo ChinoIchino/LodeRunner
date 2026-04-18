@@ -145,7 +145,7 @@ public class ClientSide extends Thread{
                         // Player has moved in the game
                         case 7:
                             if(isVersus){
-                                //TODO send information to versus screen
+                                this.main.getGameVersusScreen().handlePlayersDisplay(packetItems);
                             }else{
                                 this.main.getGameCoopScreen().handlePlayersDisplay(packetItems);
                             }
@@ -155,20 +155,52 @@ public class ClientSide extends Thread{
                             int newScore = (int) packetItems.get(0);
                             int yIndex = (int) packetItems.get(1);
                             int xIndex = (int) packetItems.get(2);
-
+                            int playerId = (int) packetItems.get(3);
                             Gdx.app.postRunnable(() -> {
-                                this.main.getGameCoopScreen().updateScoreLabel(newScore, yIndex, xIndex);
+                                if(isVersus){
+                                    this.main.getGameVersusScreen().updateScoreLabel(playerId,newScore, yIndex, xIndex);
+                                }else this.main.getGameCoopScreen().updateScoreLabel(newScore, yIndex, xIndex);
                             });
                             break;
                         case 9:
                             Gdx.app.postRunnable(() -> {
-                                this.main.getGameCoopScreen().getWorldManager().openExitToNextLevel();
+                                if(isVersus){
+                                    this.main.getGameVersusScreen().getWorldManager().openExitToNextLevel();
+                                }
+                                else {
+                                    this.main.getGameCoopScreen().getWorldManager().openExitToNextLevel();
+                                }
                             });
                             break;
                         case 10:
                             final char[][] map = (char[][]) packetItems.get(0);
                             Gdx.app.postRunnable(() -> {
-                                this.main.getGameCoopScreen().sendToNextLevel(map);
+                                if(isVersus){
+                                    this.main.getGameVersusScreen().sendToNextLevel(map);
+                                }else{
+                                    this.main.getGameCoopScreen().sendToNextLevel(map);
+                                }
+                            });
+                            break;
+                        case 11:
+                            final int blockX = (int) packetItems.get(0); 
+                            final int blockY = (int) packetItems.get(1); 
+                            Gdx.app.postRunnable(() -> {
+                                if(isVersus){
+                                    this.main.getGameVersusScreen().getWorldManager().breakBlockAtPos(blockX, blockY);
+                                }else{
+                                    this.main.getGameCoopScreen().getWorldManager().breakBlockAtPos(blockX, blockY);
+                                }
+                            });
+                            break;
+                        case 12:
+                            final int aiId = (int) packetItems.get(0); 
+                            final int nearestPlayerId = (int) packetItems.get(1); 
+                            final int animationId = (int) packetItems.get(2); 
+                            final int posX = (int) packetItems.get(3); 
+                            final int posY = (int) packetItems.get(4); 
+                            Gdx.app.postRunnable(() -> {
+                                this.main.getGameCoopScreen().setAIInfoForGuest(aiId, nearestPlayerId, animationId, posX, posY);
                             });
                             break;
                         default:

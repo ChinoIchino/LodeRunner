@@ -37,7 +37,7 @@ public class GameScreen implements Screen{
     private final int SCREEN_WIDTH = 854;//480;
     private final int SCREEN_HEIGH = 480;//320;
 
-    private final int AI_NUMBER = 0;
+    private final int AI_NUMBER = 03;
     public AI[] aiList = new AI[AI_NUMBER];
 
     private final double GRAVITY_POWER = 0.5;
@@ -82,7 +82,7 @@ public class GameScreen implements Screen{
         int resolutionY = (int)this.worldManager.worldResolution.y*16;
         for(int i = 0 ; i< this.AI_NUMBER;i++){
             // AI entity = new AI((int)(Math.random()*(resolutionX*2))-resolutionX, (int)(Math.random()*(resolutionY*2))-resolutionY, this.worldManager);
-            AI entity = new AI((int)(Math.random()*(resolutionX*2))-resolutionX, (int)(this.worldManager.getBottomYPosition() + 32),this.worldManager);
+            AI entity = new AI((int)(Math.random()*(resolutionX*2))-resolutionX, (int)(this.worldManager.getBottomYPosition() + 32),i,this.worldManager);
             
             this.aiList[i] = entity; 
             entity.setNearestPlayer(this.player);
@@ -160,8 +160,9 @@ public class GameScreen implements Screen{
 
         if(isGameOver){
             System.out.println("switching screen");
+            main.setNewGameEndScreen(isGameOver);
             this.isGameOver = false;
-            main.setScreen(main.getGameOverScreen());
+            main.setScreen(main.getGameEndScreen());
             this.dispose();
         }
     }

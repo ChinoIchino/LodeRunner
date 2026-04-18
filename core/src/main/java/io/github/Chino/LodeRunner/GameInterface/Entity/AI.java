@@ -15,6 +15,7 @@ public class AI extends Entity{
     private int posX;
     private int posY;
 
+    private final int id;
     public int speed = 3;
 
     //For AI deplacement
@@ -36,17 +37,27 @@ public class AI extends Entity{
 
     private WorldManager worldManager;
 
-    public AI(int x, int y, WorldManager worldManager) {
+    /**
+     * 
+     * @param x initial position x
+     * @param y initial position y
+     * @param id ai id to recognize instances
+     * @param worldManager need it to interact with world
+     */
+    public AI(int x, int y,int id, WorldManager worldManager) {
         initEntityTextures();
         setStartPosition(x, y);
         this.currentAISprite = this.aiSpriteIdle;
 
         this.worldManager = worldManager;
 
+        this.id = id;
+
         this.hitbox.x = this.posX;
         this.hitbox.y = this.posY;
         this.isOnGroundHitbox = new Rectangle(this.posX, this.posY - 1, 25, 1);
     }
+
 
     protected void initEntityTextures(){
         this.aiSpriteIdle = new Texture("data/textures/character/aiIdle.png");
@@ -54,6 +65,11 @@ public class AI extends Entity{
         this.aiSpriteMovingRight = new Texture("data/textures/character/aiMovingRight.png");
     }
 
+    /**
+     * To place AI in coords in param
+     * @param x to place in x axis
+     * @param y to place in y axis
+     */
     private void setStartPosition(int x, int y){
         this.posX= x;
         this.posY= y;
@@ -74,6 +90,12 @@ public class AI extends Entity{
     public int getPosY(){
         return this.posY;
     }
+    public Player getNearestPlayer() {
+        return nearestPlayer;
+    }
+    public int getId() {
+        return id;
+    }
     
     public Rectangle getHitbox(){
         return this.hitbox;
@@ -90,24 +112,41 @@ public class AI extends Entity{
         this.posY = (int) this.hitbox.y;
     }
 
+    /**
+     * @param xMovement distance x to moove hitbox
+     */
     public void physicalBodyMoveX(int xMovement){
         this.hitbox.x += xMovement;
         this.isOnGroundHitbox.x += xMovement;
     }
+    /**
+     * @param xMovement distance y to moove hitbox
+     */
     public void physicalBodyMoveY(int yMovement){
         this.hitbox.y += yMovement;
         this.isOnGroundHitbox.y += yMovement;
     }
-
+    /**
+     * @param ladderHitbox Hitbox where Entity will snap
+     */
     public void snapToLadder(Rectangle ladderHitbox){
         this.hitbox.x = (int) ladderHitbox.x;
         this.isOnGroundHitbox.x = this.hitbox.x;
     }
+    /**
+     * 
+     * @param blockHitbox has to be under AI
+     */
     public void snapToBlock(Rectangle blockHitbox){
         this.hitbox.y = (int)blockHitbox.y +32;
         this.posY = (int)blockHitbox.y +32;
         this.isOnGroundHitbox.y+=32;
     }
+
+    /**
+     * @param x coordinate to place : sprite, hitbox and ground hitbox
+     * @param y coordinate to place : sprite, hitbox and ground hitbox
+     */
     public void setPosition(int x,int y){
         this.hitbox.x = x;
         this.hitbox.y = y;
@@ -117,23 +156,41 @@ public class AI extends Entity{
         this.isOnGroundHitbox.y = y-1;
     }
 
+
+    /**
+     * 
+     * @return true if AI overlap with her nearest player ( kill him )
+     */
     public boolean killPlayer(){
         Rectangle killableHitbox = new Rectangle(this.nearestPlayer.getHitbox());
         killableHitbox.width/=2;
         return this.getHitbox().overlaps(killableHitbox);
     }
 
-    
+    /**
+     * 
+     * @param nearestPlayer apply a player like the nearest
+     */
     public void setNearestPlayer(Player nearestPlayer){
         this.nearestPlayer = nearestPlayer;
     }
+
+    /**
+     * 
+     * @param dx distance to travel
+     * @return  to see if the movement is possible
+     */
     public boolean canMove(int dx){
         Rectangle nextHitbox = new Rectangle(hitbox);
         nextHitbox.x += dx;
         return this.worldManager.entityDoesntOverlapWorld(nextHitbox);
     }
-    
-    public void updateMovement(float delta){
+    /**
+     * 
+     * @param delta GDX render fram per sec
+     * @return type of movement for coop (0 is idle, 1 is right and 2 is left)
+     */
+    public int updateMovement(float delta){
         this.isOnALadder = (worldManager.entityOverlapWithALadder(this.getHitbox()) != null);
 
         int offsetX = worldManager.getBlockMatrix()[0].length / 2;
@@ -156,7 +213,7 @@ public class AI extends Entity{
         }
         if (currentPath.size() <= 1) {
             pathTimer = 0;
-            return;
+            return-1;
         }
         if(currentPath.size() > 1 && pathIndex < currentPath.size()){
             int[] next = currentPath.get(pathIndex);
@@ -168,7 +225,7 @@ public class AI extends Entity{
             int dy = targetY - (int)this.getHitbox().y;
 
             if (currentPath == null || currentPath.size() == 0) {
-                return;
+                return-1;
             }
             
             if( this.isOnALadder&&Math.abs(dy) > 1){
@@ -180,19 +237,23 @@ public class AI extends Entity{
 
                 if(dy > 0){
                     physicalBodyMoveY(speed);
+                    return 0;
                 } else {
                     physicalBodyMoveY(-speed);
+                    return 0;
                 }
             }else{
                 if(dx > 0 && canMove(speed)){
                     spriteChangeToMovingRight();
                     if(this.speed > Math.abs(dx)) this.physicalBodyMoveX((int)(Math.abs(dx%this.speed )));
                     else this.physicalBodyMoveX(this.speed);
+                    return 1;
                 }
                 else if(dx < 0 && canMove(-speed)){
                     spriteChangeToMovingLeft();
                     if(this.speed > Math.abs(dx)) this.physicalBodyMoveX((int)-(Math.abs(dx%this.speed )));
                     else this.physicalBodyMoveX(-(this.speed));
+                    return 2;
                 }
                 else spriteChangeToIdle();
             }
@@ -204,11 +265,11 @@ public class AI extends Entity{
                 stuckTimer = 0;
             }
 
-            
+            return 0;
         }     
-                
+        return 0;
+        
     }
-
     public void render(SpriteBatch batch){
         batch.draw(this.currentAISprite, this.posX, this.posY);
     }

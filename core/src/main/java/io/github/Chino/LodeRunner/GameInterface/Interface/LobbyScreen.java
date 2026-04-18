@@ -273,7 +273,11 @@ public class LobbyScreen implements Screen{
     public void setGameModeAndFirstMap(boolean isVersus, char[][] firstMap){
         if(isVersus){
             Gdx.app.postRunnable(() ->{
+                this.main.setNewGameVersusScreen();
+
                 this.gameModeLabel.setText("Mode: Versus");
+                
+                this.main.getGameVersusScreen().sendToNextLevel(firstMap);
             });
         }else{
             Gdx.app.postRunnable(() ->{
@@ -281,6 +285,7 @@ public class LobbyScreen implements Screen{
 
                 this.gameModeLabel.setText("Mode: Coop");
                 this.main.getGameCoopScreen().sendToNextLevel(firstMap);
+                this.main.getGameCoopScreen().initAIinWorld();
             });
         }
     }
@@ -307,7 +312,12 @@ public class LobbyScreen implements Screen{
                 this.main.setScreen(this.main.getGameCoopScreen());
             });
         }else{
-            //TODO send to versus game
+            System.out.println("sendToGameInterface gameVersusScreen: " + this.main.getGameVersusScreen());
+            this.main.getGameVersusScreen().setClient(this.clientSide);
+            Gdx.app.postRunnable(() ->{
+                this.main.getGameVersusScreen().initAmmountOfPlayers(this.tablePlayersContent);
+                this.main.setScreen(this.main.getGameVersusScreen());
+            });
         }
     }
     public boolean isVersus(){
