@@ -153,6 +153,7 @@ public class GameScreen implements Screen{
 
         if(isGameOver){
             this.isGameOver = false;
+            main.getLeaderboardHandler().addPlayerToSoloLeaderboardDatabase("Guest", Integer.valueOf(this.scoreLabel.getText().substring(7)));
             main.setNewGameEndScreen(false,Integer.valueOf(this.scoreLabel.getText().substring(7)));
             main.setScreen(main.getGameEndScreen());
             this.dispose();
@@ -309,6 +310,7 @@ public class GameScreen implements Screen{
         } catch (Exception e) {
             // System.out.println("\nERROR GameInterface/GameScreen.java: Constructor catched IOException will initializing the world");
             Gdx.app.postRunnable(() ->{
+                main.getLeaderboardHandler().addPlayerToSoloLeaderboardDatabase("Guest", Integer.valueOf(this.scoreLabel.getText().substring(7)));
                 main.setNewGameEndScreen(true,Integer.valueOf(this.scoreLabel.getText().substring(7)));
                 main.setScreen(main.getGameEndScreen());
                 this.dispose();

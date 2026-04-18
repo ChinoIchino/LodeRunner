@@ -1,6 +1,7 @@
 package io.github.Chino.LodeRunner.GameInterface.Interface;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -498,11 +499,33 @@ public class GameCoopScreen implements Screen{
 
     //TODO: update leaderBoard in these two func
     public void sendToGameOverScreen(){
+        if(this.player.getId() == 0){
+            ArrayList<String> players = new ArrayList<>();
+            String currentUsername;
+            for (int currentKey : this.playersInformations.keySet()) {
+                currentUsername = (String) this.playersInformations.get(currentKey)[0];
+                players.add(currentUsername);
+            }
+            main.getLeaderboardHandler().addPlayersToCoopLeaderboardDatabase(players, Integer.valueOf(this.scoreLabel.getText().substring(7)));
+        }
+
+
         this.isGameOver = false;
         main.setNewGameEndScreen(false,Integer.valueOf(this.scoreLabel.getText().substring(7)));
         main.setScreen(main.getGameEndScreen());
     }
     public void sendToGameEndScreen(){
+        if(this.player.getId() == 0){
+            ArrayList<String> players = new ArrayList<>();
+            String currentUsername;
+            for (int currentKey : this.playersInformations.keySet()) {
+                currentUsername = (String) this.playersInformations.get(currentKey)[0];
+                players.add(currentUsername);
+            }
+            main.getLeaderboardHandler().addPlayersToCoopLeaderboardDatabase(players, Integer.valueOf(this.scoreLabel.getText().substring(7)));
+        }
+
+
         this.isGameOver = true;
         main.setNewGameEndScreen(true,Integer.valueOf(this.scoreLabel.getText().substring(7)));
         main.setScreen(main.getGameEndScreen());

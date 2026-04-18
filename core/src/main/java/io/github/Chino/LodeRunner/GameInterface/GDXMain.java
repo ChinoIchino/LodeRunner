@@ -14,6 +14,8 @@ import io.github.Chino.LodeRunner.GameInterface.Interface.LobbyScreen;
 import io.github.Chino.LodeRunner.GameInterface.Interface.MenuScreen;
 import io.github.Chino.LodeRunner.GameInterface.Interface.MultiplayerScreen;
 import io.github.Chino.LodeRunner.GameInterface.Interface.Other.IntroCinematicScreen;
+import io.github.Chino.LodeRunner.GameInterface.Leaderboard.LeaderboardCreator;
+import io.github.Chino.LodeRunner.GameInterface.Leaderboard.LeaderboardHandler;
 
 public class GDXMain extends Game {
     private GameScreen gameScreen;
@@ -28,6 +30,8 @@ public class GDXMain extends Game {
     private LeaderboardScreen leaderboardScreen;
     private IntroCinematicScreen introScreen;
 
+    private LeaderboardHandler leaderboardHandler;
+
     private Player clientPlayer;
 
     @Override
@@ -38,6 +42,7 @@ public class GDXMain extends Game {
         initScreens();
         setScreen(this.menuScreen);
 
+        this.leaderboardHandler = new LeaderboardCreator().createLeaderboardHandler();
     }
     private void initScreens(){
         this.menuScreen = new MenuScreen(this);
@@ -93,6 +98,9 @@ public class GDXMain extends Game {
     }
     public LeaderboardScreen getLeaderboardScreen(){
         return leaderboardScreen;
+    }
+    public LeaderboardHandler getLeaderboardHandler() {
+        return leaderboardHandler;
     }
     
     public Player getClientPlayer(){
